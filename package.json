@@ -24,11 +24,14 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/typeorm": "^11.0.0",
     "class-transformer": "^0.5.1",
     "joi": "^17.13.3",
     "joi-class-decorators": "^1.1.2",
+    "mysql2": "^3.13.0",
     "reflect-metadata": "^0.1.14",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "typeorm": "^0.3.21"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
