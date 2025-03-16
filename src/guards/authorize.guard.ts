@@ -9,6 +9,7 @@ export class AuthorizeGuard implements CanActivate {
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request: RequestUser = context.switchToHttp().getRequest();
     console.log(request.user);
-    if (['admin', 'superadmin'].includes(request.user.role)) return false;
+    if (!['admin', 'superadmin'].includes(request.user.role)) return false;
+    return true;
   }
 }
