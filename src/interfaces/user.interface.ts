@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UserJwtPayload  {
+export class UserJwtPayload {
   @ApiProperty({ example: '63f5812a399b006117da35f2' })
   _id: string;
 
@@ -12,7 +12,6 @@ export class UserJwtPayload  {
 
   @ApiProperty({ example: 'mobile' })
   type: string;
-
 }
 
 export class JwtTokenResponse {

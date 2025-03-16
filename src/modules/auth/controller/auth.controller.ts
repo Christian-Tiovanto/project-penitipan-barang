@@ -1,0 +1,37 @@
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { AuthService } from '../services/auth.services';
+import {
+  ApiBearerAuth,
+  ApiExtraModels,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { JwtTokenResponse } from '../classes/auth.class';
+import { CreateUserDto } from 'src/modules/user/dtos/create-user.dto';
+import { ApiTag } from '@app/enums/api-tags';
+import { LoginDto } from '../dtos/login.dto';
+import { AuthenticateGuard } from '@app/guards/authenticate.guard';
+import { AuthorizeGuard } from '@app/guards/authorize.guard';
+
+@ApiTags(ApiTag.AUTH)
+@Controller('api/v1/auth')
+@ApiExtraModels(JwtTokenResponse)
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  @ApiOperation({ summary: 'Login' })
+  @Post('login')
+  async login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @ApiOperation({
+    summary: 'Create a User',
+  })
+  @Post('register')
+  async register(@Body() createUserDto: CreateUserDto) {
+    return this.authService.register(createUserDto);
+  }
+}

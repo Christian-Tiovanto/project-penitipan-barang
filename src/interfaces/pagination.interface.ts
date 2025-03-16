@@ -15,13 +15,12 @@ export interface OffsetPagination<T> extends BasePagination<T> {
   pageSize?: number;
 }
 
-
-
-
-
-
 export class BasePaginationQuery {
-  @ApiProperty({ example: 10, required: false, description: 'Empty or zero default to 10' })
+  @ApiProperty({
+    example: 10,
+    required: false,
+    description: 'Empty or zero default to 10',
+  })
   @Transform(({ value }: TransformFnParams): string => {
     if (value === '0') {
       return '10';
@@ -32,9 +31,12 @@ export class BasePaginationQuery {
   page_size?: string;
 }
 
-
 export class OffsetPaginationWithoutSearchQuery extends BasePaginationQuery {
-  @ApiProperty({ example: 1, required: false, description: 'Empty or zero default to 1' })
+  @ApiProperty({
+    example: 1,
+    required: false,
+    description: 'Empty or zero default to 1',
+  })
   @Transform(({ value }: TransformFnParams): string => {
     if (value === '0') {
       return '1';
@@ -44,8 +46,6 @@ export class OffsetPaginationWithoutSearchQuery extends BasePaginationQuery {
   @JoiSchema(Joi.string().regex(ValidationRegex.NUMBER_STRING).optional())
   page_no?: string;
 }
-
-
 
 export class OffsetPaginationMeta {
   @ApiProperty({ example: 1 })
@@ -60,8 +60,6 @@ export class OffsetPaginationMeta {
   @ApiProperty({ example: 10 })
   page_size!: number;
 }
-
-
 
 export class MetaData {
   @ApiProperty({ example: 'string' })
@@ -78,5 +76,3 @@ export interface BasePaginationResponse<T> {
 export interface OffsetPaginationResponse<T> extends BasePaginationResponse<T> {
   meta: OffsetPaginationMeta;
 }
-
-

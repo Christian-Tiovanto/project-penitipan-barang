@@ -3,9 +3,12 @@ import {
   ArgumentsHost,
   BadRequestException,
   Catch,
+  ConflictException,
   ExceptionFilter,
+  ForbiddenException,
   HttpStatus,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Response } from 'express';
@@ -29,6 +32,18 @@ export class ExceptionHandlerFilter implements ExceptionFilter {
         break;
       case exception instanceof BadRequestException:
         res.status(HttpStatus.BAD_REQUEST);
+        this.toJson(exception, res);
+        break;
+      case exception instanceof ConflictException:
+        res.status(HttpStatus.CONFLICT);
+        this.toJson(exception, res);
+        break;
+      case exception instanceof ForbiddenException:
+        res.status(HttpStatus.FORBIDDEN);
+        this.toJson(exception, res);
+        break;
+      case exception instanceof NotFoundException:
+        res.status(HttpStatus.FORBIDDEN);
         this.toJson(exception, res);
         break;
       // res.status(HttpStatus.SERVICE_UNAVAILABLE);
