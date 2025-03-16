@@ -11,6 +11,7 @@ import { ErrorCode } from '@app/enums/error-code';
 import { RegexPatterns } from '@app/enums/regex-pattern';
 import { UpdatePasswordDto } from '../dtos/update-password.dto';
 import * as bcrypt from 'bcrypt';
+import { UpdateUserDto } from '../dtos/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -51,6 +52,12 @@ export class UserService {
     });
     return user;
   }
+
+  async getAllUser() {
+    const users = await this.userRepository.find();
+    return users;
+  }
+
   async findUserById(id: number) {
     const user = await this.userRepository.findOne({
       where: { id },
@@ -75,6 +82,18 @@ export class UserService {
     user.password = await bcrypt.hash(updatePasswordDto.password, 10);
     await this.userRepository.save(user);
     delete user.password;
+    return user;
+  }
+
+  async updateUserById(userId: number, updateUserDto: UpdateUserDto) {
+    const user = await this.findUserById(userId);
+    console.log('user');
+    console.log(user);
+    console.log(updateUserDto);
+    Object.assign(user, updateUserDto);
+    console.log('user assign');
+    console.log(user);
+    await this.userRepository.save(user);
     return user;
   }
 }

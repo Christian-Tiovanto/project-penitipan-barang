@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   ParseIntPipe,
   Patch,
@@ -10,8 +11,9 @@ import { UserService } from '../services/user.service';
 import { ApiTag } from '@app/enums/api-tags';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
-// import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { UpdatePasswordDto } from '../dtos/update-password.dto';
+import { UpdateUserDto } from '../dtos/update-user.dto';
+import { AuthorizeGuard } from '@app/guards/authorize.guard';
 
 @ApiTags(ApiTag.USER)
 @Controller('api/v1/user')
@@ -29,5 +31,38 @@ export class UserController {
     @Body() updatePasswordDto: UpdatePasswordDto,
   ) {
     return await this.userService.updateUserPassword(userId, updatePasswordDto);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get User by Id',
+  })
+  @UseGuards(AuthenticateGuard)
+  @Get(':id')
+  async getUserById(@Param('id', ParseIntPipe) userId: number) {
+    return await this.userService.getUserById(userId);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All User',
+  })
+  @UseGuards(AuthenticateGuard)
+  @Get()
+  async getAllUser() {
+    return await this.userService.getAllUser();
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update User by id',
+  })
+  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @Patch(':id')
+  async updateUserById(
+    @Param('id', ParseIntPipe) userId: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return await this.userService.updateUserById(userId, updateUserDto);
   }
 }

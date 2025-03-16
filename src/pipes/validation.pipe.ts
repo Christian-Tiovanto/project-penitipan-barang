@@ -15,6 +15,6 @@ export class DataValidationPipe implements PipeTransform {
     if (validated.error) {
       throw new ValidationException(validated.error.details[0].message);
     }
-    return validated.value;
+    return value;
   }
 }
