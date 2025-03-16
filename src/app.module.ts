@@ -1,10 +1,18 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { User } from './modules/user/models/user';
+import { UserModule } from './modules/user/user.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { DataValidationPipe } from './pipes/validation.pipe';
+import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { ExceptionHandlerFilter } from './filters/exception-handler.filter';
 
 @Module({
+  providers: [
+    { provide: APP_PIPE, useClass: DataValidationPipe },
+    { provide: APP_FILTER, useClass: ExceptionHandlerFilter },
+  ],
   imports: [
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
@@ -14,11 +22,11 @@ import { ConfigModule } from '@nestjs/config';
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      entities: [],
+      entities: [User],
       synchronize: true,
     }),
+    UserModule,
+    AuthModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
