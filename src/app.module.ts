@@ -7,6 +7,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { DataValidationPipe } from './pipes/validation.pipe';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { ExceptionHandlerFilter } from './filters/exception-handler.filter';
+import { MerchantModule } from './modules/merchant/merchant.module';
+import { Merchant } from './modules/merchant/models/merchant.entity';
 
 @Module({
   providers: [
@@ -22,11 +24,12 @@ import { ExceptionHandlerFilter } from './filters/exception-handler.filter';
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      entities: [User],
+      entities: [User, Merchant],
       synchronize: true,
     }),
     UserModule,
     AuthModule,
+    MerchantModule,
   ],
 })
 export class AppModule {}
