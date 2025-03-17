@@ -4,6 +4,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Unique,
+  UpdateDateColumn,
 } from 'typeorm';
 
 export interface IMerchant {
@@ -73,6 +74,6 @@ export class Merchant implements IMerchant {
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @CreateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 }
