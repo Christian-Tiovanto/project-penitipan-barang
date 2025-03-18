@@ -45,9 +45,12 @@ export class MerchantController {
   async getAllMerchant(
     @Query() { page_no, page_size }: BasePaginationQuery,
   ): Promise<OffsetPagination<Merchant>> {
+    const pageSize = parseInt(page_size) || 10;
+    const pageNo = parseInt(page_no) || 1;
+
     const merchants = await this.merchantService.getAllMerchant({
-      page_no,
-      page_size,
+      pageNo,
+      pageSize,
     });
     return {
       data: merchants[0],

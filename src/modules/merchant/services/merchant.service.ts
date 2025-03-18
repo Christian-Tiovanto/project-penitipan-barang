@@ -4,7 +4,11 @@ import { Repository } from 'typeorm';
 import { Merchant } from '../models/merchant.entity';
 import { CreateMerchantDto } from '../dtos/create-merchant.dto';
 import { UpdateMerchantDto } from '../dtos/update-merchant.dto';
-import { BasePaginationQuery } from '@app/interfaces/pagination.interface';
+
+interface GetAllQuery {
+  pageNo: number;
+  pageSize: number;
+}
 
 @Injectable()
 export class MerchantService {
@@ -22,11 +26,9 @@ export class MerchantService {
   }
 
   async getAllMerchant({
-    page_no,
-    page_size,
-  }: BasePaginationQuery): Promise<[Merchant[], number]> {
-    const pageNo = parseInt(page_no);
-    const pageSize = parseInt(page_size);
+    pageNo,
+    pageSize,
+  }: GetAllQuery): Promise<[Merchant[], number]> {
     const skip = (pageNo - 1) * pageSize;
     const merchants = await this.merchantRepository.findAndCount({
       skip,
