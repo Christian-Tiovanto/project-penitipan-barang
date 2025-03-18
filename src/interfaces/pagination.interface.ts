@@ -20,7 +20,7 @@ export class BasePaginationQuery {
     description: 'Empty or zero default to 10',
   })
   @Transform(({ value }: TransformFnParams): string => {
-    if (value === '0') {
+    if (value === '0' || value === undefined) {
       return '10';
     }
     return value;
@@ -34,7 +34,7 @@ export class BasePaginationQuery {
     description: 'Empty or zero default to 1',
   })
   @Transform(({ value }: TransformFnParams): string => {
-    if (value === '0') {
+    if (value === '0' || value === undefined) {
       return '1';
     }
     return value;

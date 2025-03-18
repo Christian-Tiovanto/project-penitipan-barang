@@ -38,36 +38,37 @@ export class UserService {
     delete createdUser.password;
     return createdUser;
   }
-
   async getUserByEmail(email: string) {
     const user = await this.userRepository.findOne({
-      where: { email },
+      where: { email, is_deleted: false },
       select: ['id', 'fullname', 'password', 'role'],
     });
     return user;
   }
   async getUserById(id: number) {
     const user = await this.userRepository.findOne({
-      where: { id },
+      where: { id, is_deleted: false },
     });
     return user;
   }
 
   async getAllUser() {
-    const users = await this.userRepository.find();
+    const users = await this.userRepository.find({
+      where: { is_deleted: false },
+    });
     return users;
   }
 
   async findUserById(id: number) {
     const user = await this.userRepository.findOne({
-      where: { id },
+      where: { id, is_deleted: false },
     });
     if (!user) throw new NotFoundException('No user with that id');
     return user;
   }
   async findUserByEmail(email: string) {
     const user = await this.userRepository.findOne({
-      where: { email },
+      where: { email, is_deleted: false },
       select: ['id', 'fullname', 'password', 'role'],
     });
     if (!user) throw new NotFoundException('No User with that Email');
@@ -87,13 +88,14 @@ export class UserService {
 
   async updateUserById(userId: number, updateUserDto: UpdateUserDto) {
     const user = await this.findUserById(userId);
-    console.log('user');
-    console.log(user);
-    console.log(updateUserDto);
     Object.assign(user, updateUserDto);
-    console.log('user assign');
-    console.log(user);
     await this.userRepository.save(user);
     return user;
+  }
+
+  async deleteUserById(userId: number) {
+    const user = await this.findUserById(userId);
+    user.is_deleted = true;
+    await this.userRepository.save(user);
   }
 }

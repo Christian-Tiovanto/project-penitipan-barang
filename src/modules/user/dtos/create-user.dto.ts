@@ -5,7 +5,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '@app/enums/user-role';
 
 @JoiSchemaOptions({ allowUnknown: false })
-export class CreateUserDto implements Omit<IUser, 'id'> {
+export class CreateUserDto implements Omit<IUser, 'id' | 'is_deleted'> {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
   merchant: number;

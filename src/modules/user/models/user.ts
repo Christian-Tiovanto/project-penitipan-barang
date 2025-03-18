@@ -13,7 +13,7 @@ export interface IUser {
   phone: string;
 }
 
-@Entity()
+@Entity('users')
 export class User implements IUser {
   @PrimaryGeneratedColumn()
   id: number;
@@ -38,6 +38,9 @@ export class User implements IUser {
 
   @Column({ type: 'varchar', unique: true })
   phone: string;
+
+  @Column({ type: 'boolean', default: false })
+  is_deleted: boolean;
 
   @BeforeInsert()
   async hashPassword() {

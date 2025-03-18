@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -64,5 +65,15 @@ export class UserController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return await this.userService.updateUserById(userId, updateUserDto);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Delete User by id',
+  })
+  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @Delete(':id')
+  async deleteUserById(@Param('id', ParseIntPipe) userId: number) {
+    return await this.userService.deleteUserById(userId);
   }
 }
