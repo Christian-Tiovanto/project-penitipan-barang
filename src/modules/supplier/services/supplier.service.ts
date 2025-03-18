@@ -61,7 +61,7 @@ export class SupplierService {
 
   async findSupplierById(id: number) {
     const supplier = await this.supplierRepository.findOne({
-      where: { id },
+      where: { id, is_deleted: false },
     });
     if (!supplier) throw new NotFoundException('No Supplier with that id');
     return supplier;
