@@ -1,4 +1,4 @@
-import { RequestUser } from '@app/interfaces/user-request.interface';
+import { RequestUser } from '@app/interfaces/request.interface';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Observable } from 'rxjs';
 

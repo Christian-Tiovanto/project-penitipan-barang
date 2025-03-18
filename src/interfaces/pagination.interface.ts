@@ -1,7 +1,7 @@
 import { ValidationRegex } from '@app/enums/validation-regex';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, TransformFnParams } from 'class-transformer';
-import Joi from 'joi';
+import * as Joi from 'joi';
 import { JoiSchema } from 'joi-class-decorators';
 
 export interface BasePagination<T> {
@@ -11,8 +11,6 @@ export interface BasePagination<T> {
 export interface OffsetPagination<T> extends BasePagination<T> {
   totalCount: number;
   filteredCount?: number;
-  pageNo?: number;
-  pageSize?: number;
 }
 
 export class BasePaginationQuery {
@@ -29,9 +27,7 @@ export class BasePaginationQuery {
   })
   @JoiSchema(Joi.string().regex(ValidationRegex.NUMBER_STRING).optional())
   page_size?: string;
-}
 
-export class OffsetPaginationWithoutSearchQuery extends BasePaginationQuery {
   @ApiProperty({
     example: 1,
     required: false,
