@@ -15,6 +15,8 @@ import { ProductModule } from './modules/product/product.module';
 import { ProductUnitModule } from './modules/product-unit/product-unit.module';
 import { Product } from './modules/product/models/product.entity';
 import { ProductUnit } from './modules/product-unit/models/product-unit.entity';
+import { FineModule } from './modules/fine/fine.module';
+import { Fine } from './modules/fine/models/fine.entity';
 
 @Module({
   providers: [
@@ -30,7 +32,7 @@ import { ProductUnit } from './modules/product-unit/models/product-unit.entity';
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      entities: [User, Merchant, Supplier, Product, ProductUnit],
+      entities: [User, Merchant, Supplier, Product, ProductUnit, Fine],
       synchronize: true,
     }),
     UserModule,
@@ -38,7 +40,8 @@ import { ProductUnit } from './modules/product-unit/models/product-unit.entity';
     MerchantModule,
     SupplierModule,
     ProductModule,
-    ProductUnitModule
+    ProductUnitModule,
+    FineModule
   ],
 })
 export class AppModule { }
