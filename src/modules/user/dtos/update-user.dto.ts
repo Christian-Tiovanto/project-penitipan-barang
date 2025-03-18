@@ -5,11 +5,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '@app/enums/user-role';
 
 @JoiSchemaOptions({ allowUnknown: false })
-export class UpdateUserDto implements Omit<IUser, 'id' | 'password'> {
-  @ApiProperty({ example: 1 })
-  @JoiSchema(Joi.number().optional())
-  merchant: number;
-
+export class UpdateUserDto
+  implements Omit<IUser, 'id' | 'password' | 'merchant'>
+{
   @ApiProperty({ example: 'test@gmail.com' })
   @JoiSchema(Joi.string().optional())
   email: string;
