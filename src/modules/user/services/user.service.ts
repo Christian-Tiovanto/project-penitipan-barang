@@ -13,6 +13,10 @@ import { UpdatePasswordDto } from '../dtos/update-password.dto';
 import * as bcrypt from 'bcrypt';
 import { UpdateUserDto } from '../dtos/update-user.dto';
 
+interface GetAllUserQuery {
+  pageNo: number;
+  pageSize: number;
+}
 @Injectable()
 export class UserService {
   constructor(
@@ -52,9 +56,14 @@ export class UserService {
     return user;
   }
 
-  async getAllUser() {
-    const users = await this.userRepository.find({
-      where: { is_deleted: false },
+  async getAllUser({ pageNo, pageSize }: GetAllUserQuery) {
+    const skip = (pageNo - 1) * pageSize;
+    const users = await this.userRepository.findAndCount({
+      skip,
+      take: pageSize,
+      where: {
+        is_deleted: false,
+      },
     });
     return users;
   }

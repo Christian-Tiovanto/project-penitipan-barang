@@ -6,7 +6,9 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import { ApiTag } from '@app/enums/api-tags';
@@ -15,6 +17,12 @@ import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { UpdatePasswordDto } from '../dtos/update-password.dto';
 import { UpdateUserDto } from '../dtos/update-user.dto';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
+import {
+  BasePaginationQuery,
+  OffsetPagination,
+} from '@app/interfaces/pagination.interface';
+import { User } from '../models/user';
+import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
 
 @ApiTags(ApiTag.USER)
 @Controller('api/v1/user')
@@ -49,9 +57,23 @@ export class UserController {
     summary: 'Get All User',
   })
   @UseGuards(AuthenticateGuard)
+  @UseInterceptors(OffsetPaginationInterceptor)
   @Get()
-  async getAllUser() {
-    return await this.userService.getAllUser();
+  async getAllUser(
+    @Query()
+    { page_no, page_size }: BasePaginationQuery,
+  ): Promise<OffsetPagination<User>> {
+    const pageSize = parseInt(page_size) || 10;
+    const pageNo = parseInt(page_no) || 1;
+    const users = await this.userService.getAllUser({
+      pageNo,
+      pageSize,
+    });
+    return {
+      data: users[0],
+      totalCount: users[1],
+      filteredCount: users[1],
+    };
   }
 
   @ApiBearerAuth()
