@@ -1,7 +1,9 @@
+import { Supplier } from '@app/modules/supplier/models/supplier.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   Unique,
   UpdateDateColumn,
@@ -70,6 +72,9 @@ export class Merchant implements IMerchant {
 
   @Column({ type: 'varchar' })
   logo_name: string;
+
+  @OneToMany(() => Supplier, (supplier) => supplier.merchant)
+  suppliers: Supplier[];
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;

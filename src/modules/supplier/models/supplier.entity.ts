@@ -1,7 +1,12 @@
+import { Merchant } from '@app/modules/merchant/models/merchant.entity';
+import { User } from '@app/modules/user/models/user';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -24,7 +29,7 @@ export class Supplier implements ISupplier {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'int' })
+  @ManyToOne(() => Merchant, (merchant) => merchant.suppliers)
   merchant: number;
 
   @Column({ type: 'varchar' })
@@ -39,10 +44,12 @@ export class Supplier implements ISupplier {
   @Column({ type: 'bool', default: false })
   is_deleted: boolean;
 
-  @Column({ type: 'int' })
+  @OneToOne(() => User)
+  @JoinColumn()
   created_by: number;
 
-  @Column({ type: 'int', default: false })
+  @OneToOne(() => User)
+  @JoinColumn()
   updated_by: number;
 
   @CreateDateColumn()
