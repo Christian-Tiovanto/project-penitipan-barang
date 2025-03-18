@@ -26,7 +26,7 @@ export interface IMerchant {
   updated_at: Date;
 }
 
-@Entity()
+@Entity('merchants')
 @Unique(['bank_name', 'bank_account_number'])
 export class Merchant implements IMerchant {
   @PrimaryGeneratedColumn()

@@ -19,7 +19,7 @@ export interface ISupplier {
   updated_at: Date;
 }
 
-@Entity()
+@Entity('suppliers')
 export class Supplier implements ISupplier {
   @PrimaryGeneratedColumn()
   id: number;
