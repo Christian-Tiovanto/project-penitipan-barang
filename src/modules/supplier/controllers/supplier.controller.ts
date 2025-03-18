@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -94,5 +95,15 @@ export class SupplierController {
       supplierId,
       updateSupplierDto,
     );
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Soft Delete Supplier by id',
+  })
+  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @Delete(':id')
+  async softDeleteSupplierById(@Param('id', ParseIntPipe) supplierId: number) {
+    return await this.supplierService.softDeleteSupplierById(supplierId);
   }
 }

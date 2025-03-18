@@ -78,4 +78,10 @@ export class SupplierService {
     await this.supplierRepository.save(supplier);
     return supplier;
   }
+
+  async softDeleteSupplierById(supplierId: number) {
+    const supplier = await this.findSupplierById(supplierId);
+    supplier.is_deleted = true;
+    await this.supplierRepository.save(supplier);
+  }
 }
