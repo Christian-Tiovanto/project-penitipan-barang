@@ -10,12 +10,14 @@ import { CreateSupplierDto } from '../dtos/create-supplier.dto';
 import { ErrorCode } from '@app/enums/error-code';
 import { RegexPatterns } from '@app/enums/regex-pattern';
 import { UpdateSupplierDto } from '../dtos/update-supplier.dto';
+import { MerchantService } from '@app/modules/merchant/services/merchant.service';
 
 @Injectable()
 export class SupplierService {
   constructor(
     @InjectRepository(Supplier)
     private supplierRepository: Repository<Supplier>,
+    private merchantService: MerchantService,
   ) {}
 
   async createSupplier(
@@ -23,13 +25,12 @@ export class SupplierService {
     createSupplierDto: CreateSupplierDto,
   ): Promise<Supplier> {
     let createdSupplier: Supplier;
+    await this.merchantService.findMerchantById(createSupplierDto.merchant);
     try {
       createSupplierDto.created_by = userId;
       const supplier = this.supplierRepository.create(createSupplierDto);
       createdSupplier = await this.supplierRepository.save(supplier);
     } catch (err) {
-      console.log('err');
-      console.log(err);
       const queryError = err as QueryFailedError & {
         driverError: { errno: ErrorCode; sqlMessage: string };
       };

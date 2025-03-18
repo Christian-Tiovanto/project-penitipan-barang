@@ -8,5 +8,6 @@ import { Merchant } from './models/merchant.entity';
   imports: [TypeOrmModule.forFeature([Merchant])],
   providers: [MerchantService],
   controllers: [MerchantController],
+  exports: [MerchantService],
 })
 export class MerchantModule {}
