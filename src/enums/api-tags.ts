@@ -3,4 +3,6 @@ export enum ApiTag {
   AUTH = 'auth',
   MERCHANT = 'merchant',
   SUPPLIER = 'supplier',
+  PRODUCT = 'product',
+  PRODUCT_UNIT = 'product-unit',
 }

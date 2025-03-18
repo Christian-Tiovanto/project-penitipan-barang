@@ -15,7 +15,7 @@ export class MerchantService {
   constructor(
     @InjectRepository(Merchant)
     private merchantRepository: Repository<Merchant>,
-  ) {}
+  ) { }
 
   async createMerchant(
     createMerchantDto: CreateMerchantDto,

@@ -11,6 +11,10 @@ import { MerchantModule } from './modules/merchant/merchant.module';
 import { Merchant } from './modules/merchant/models/merchant.entity';
 import { Supplier } from './modules/supplier/models/supplier.entity';
 import { SupplierModule } from './modules/supplier/supplier.module';
+import { ProductModule } from './modules/product/product.module';
+import { ProductUnitModule } from './modules/product-unit/product-unit.module';
+import { Product } from './modules/product/models/product.entity';
+import { ProductUnit } from './modules/product-unit/models/product-unit.entity';
 
 @Module({
   providers: [
@@ -26,13 +30,15 @@ import { SupplierModule } from './modules/supplier/supplier.module';
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      entities: [User, Merchant, Supplier],
+      entities: [User, Merchant, Supplier, Product, ProductUnit],
       synchronize: true,
     }),
     UserModule,
     AuthModule,
     MerchantModule,
     SupplierModule,
+    ProductModule,
+    ProductUnitModule
   ],
 })
-export class AppModule {}
+export class AppModule { }

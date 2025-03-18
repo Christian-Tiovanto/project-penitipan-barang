@@ -27,7 +27,7 @@ import { Merchant } from '../models/merchant.entity';
 @ApiTags(ApiTag.MERCHANT)
 @Controller('api/v1/merchant')
 export class MerchantController {
-  constructor(private readonly merchantService: MerchantService) {}
+  constructor(private readonly merchantService: MerchantService) { }
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a Merchant' })
