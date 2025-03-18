@@ -6,7 +6,9 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { MerchantService } from '../services/merchant.service';
 import { CreateMerchantDto } from '../dtos/create-merchant.dto';
@@ -15,6 +17,12 @@ import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { ApiTag } from '@app/enums/api-tags';
 import { UpdateMerchantDto } from '../dtos/update-merchant.dto';
+import {
+  BasePaginationQuery,
+  OffsetPagination,
+} from '@app/interfaces/pagination.interface';
+import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
+import { Merchant } from '../models/merchant.entity';
 
 @ApiTags(ApiTag.MERCHANT)
 @Controller('api/v1/merchant')
@@ -31,10 +39,21 @@ export class MerchantController {
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all Merchant' })
+  @UseInterceptors(OffsetPaginationInterceptor<Merchant>)
   @UseGuards(AuthenticateGuard)
   @Get()
-  async getAllMerchant() {
-    return await this.merchantService.getAllMerchant();
+  async getAllMerchant(
+    @Query() { page_no, page_size }: BasePaginationQuery,
+  ): Promise<OffsetPagination<Merchant>> {
+    const merchants = await this.merchantService.getAllMerchant({
+      page_no,
+      page_size,
+    });
+    return {
+      data: merchants[0],
+      totalCount: merchants[1],
+      filteredCount: merchants[1],
+    };
   }
 
   @ApiBearerAuth()
