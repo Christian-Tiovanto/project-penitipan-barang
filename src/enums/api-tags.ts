@@ -5,4 +5,5 @@ export enum ApiTag {
   SUPPLIER = 'supplier',
   PRODUCT = 'product',
   PRODUCT_UNIT = 'product-unit',
+  FINE = 'fine',
 }
