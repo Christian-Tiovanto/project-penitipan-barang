@@ -12,6 +12,11 @@ import { RegexPatterns } from '@app/enums/regex-pattern';
 import { UpdateSupplierDto } from '../dtos/update-supplier.dto';
 import { MerchantService } from '@app/modules/merchant/services/merchant.service';
 
+interface GetAllSupplier {
+  pageNo: number;
+  pageSize: number;
+}
+
 @Injectable()
 export class SupplierService {
   constructor(
@@ -44,8 +49,13 @@ export class SupplierService {
     return createdSupplier;
   }
 
-  async getAllSupplier() {
-    const suppliers = await this.supplierRepository.find();
+  async getAllSupplier({ pageNo, pageSize }: GetAllSupplier) {
+    const skip = (pageNo - 1) * pageSize;
+    const suppliers = await this.supplierRepository.findAndCount({
+      where: { is_deleted: false },
+      skip,
+      take: pageSize,
+    });
     return suppliers;
   }
 
