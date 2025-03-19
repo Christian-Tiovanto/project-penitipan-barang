@@ -1,3 +1,5 @@
+import { ErrorCode } from '@app/enums/error-code';
+import { RegexPatterns } from '@app/enums/regex-pattern';
 import { ValidationException } from '@app/exceptions/validation.exception';
 import {
   ArgumentsHost,
@@ -12,6 +14,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { QueryFailedError } from 'typeorm';
 import * as util from 'util';
 
 @Catch()
@@ -46,6 +49,26 @@ export class ExceptionHandlerFilter implements ExceptionFilter {
         res.status(HttpStatus.FORBIDDEN);
         this.toJson(exception, res);
         break;
+      case exception instanceof QueryFailedError: {
+        const queryError = exception as QueryFailedError & {
+          driverError: { errno: ErrorCode; sqlMessage: string };
+        };
+        if (queryError.driverError.errno === ErrorCode.DUPLICATE_ENTRY) {
+          const duplicateValue = new RegExp(RegexPatterns.DuplicateEntry).exec(
+            queryError.driverError.sqlMessage,
+          );
+          throw new ConflictException(
+            `${duplicateValue[1]} value already exist`,
+          );
+        }
+        if (queryError.driverError.errno === ErrorCode.FOREIGN_KEY_CONSTRAINT) {
+          throw new ConflictException(
+            'invalid data, foreign key constraint error. missing referenced resources',
+          );
+        }
+        throw new InternalServerErrorException(exception.message);
+      }
+
       // res.status(HttpStatus.SERVICE_UNAVAILABLE);
       // this.toJson(exception, res, 'Service unavailable');
       // break;
