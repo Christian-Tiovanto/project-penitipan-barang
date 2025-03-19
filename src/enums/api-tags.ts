@@ -6,4 +6,5 @@ export enum ApiTag {
   PRODUCT = 'product',
   PRODUCT_UNIT = 'product-unit',
   FINE = 'fine',
+  CUSTOMER = 'customer',
 }
