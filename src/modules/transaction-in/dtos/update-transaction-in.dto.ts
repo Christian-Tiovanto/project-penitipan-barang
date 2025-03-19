@@ -9,26 +9,23 @@ export class UpdateTransactionInDto
     Omit<ITransactionIn, 'id' | 'merchant' | 'created_at' | 'updated_at'>
 {
   @ApiProperty({ example: 'Supplier Name' })
-  @JoiSchema(Joi.string().optional())
+  @JoiSchema(Joi.string().required())
   product: number;
 
   @ApiProperty({ example: 'Supplier Name' })
-  @JoiSchema(Joi.string().optional())
+  @JoiSchema(Joi.string().required())
   qty: number;
-
-  @ApiProperty({ example: 'Supplier Name' })
-  @JoiSchema(Joi.string().optional())
-  remaining_qty: number;
-
-  @ApiProperty({ example: 'Supplier Name' })
-  @JoiSchema(Joi.string().optional())
-  final_qty: number;
 
   @ApiProperty({ example: 'Supplier Name' })
   @JoiSchema(Joi.string().optional())
   price: number;
 
   @ApiProperty({ example: 'Supplier Name' })
-  @JoiSchema(Joi.string().optional())
-  unit: string;
+  @JoiSchema(Joi.string().required())
+  unit: number;
+
+  unit_name: string;
+  conversion_to_kg: number;
+  remaining_qty: number;
+  final_qty: number;
 }

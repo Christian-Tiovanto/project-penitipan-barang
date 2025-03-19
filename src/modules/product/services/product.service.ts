@@ -62,12 +62,19 @@ export class ProductService {
     return this.productRepository.save(product);
   }
 
-  async updateProductQtyWithEntityManager(
+  async addProductQtyWithEntityManager(
     entityManager: EntityManager,
     product: Product,
     qtyAdd: number,
   ): Promise<Product> {
     product.qty += qtyAdd;
+    return entityManager.save(product);
+  }
+
+  async updateProductQtyWithEntityManager(
+    entityManager: EntityManager,
+    product: Product,
+  ): Promise<Product> {
     return entityManager.save(product);
   }
 

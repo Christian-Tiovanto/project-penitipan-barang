@@ -25,8 +25,10 @@ export class CreateTransactionInDto
 
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.string().required())
-  unit: string;
+  unit: number;
 
+  unit_name: string;
+  conversion_to_kg: number;
   final_qty: number;
   remaining_qty: number;
 }

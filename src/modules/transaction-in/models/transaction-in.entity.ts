@@ -1,4 +1,5 @@
 import { Merchant } from '@app/modules/merchant/models/merchant.entity';
+import { ProductUnit } from '@app/modules/product-unit/models/product-unit.entity';
 import { Product } from '@app/modules/product/models/product.entity';
 import {
   Column,
@@ -17,7 +18,9 @@ export interface ITransactionIn {
   remaining_qty: number;
   final_qty: number;
   price: number;
-  unit: string;
+  unit: number;
+  unit_name: string;
+  conversion_to_kg: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -45,8 +48,14 @@ export class TransactionIn implements ITransactionIn {
   @Column({ type: 'int' })
   price: number;
 
+  @ManyToOne(() => ProductUnit, (productUnit) => productUnit)
+  unit: number;
+
   @Column({ type: 'varchar' })
-  unit: string;
+  unit_name: string;
+
+  @Column({ type: 'int' })
+  conversion_to_kg: number;
 
   @CreateDateColumn()
   created_at: Date;

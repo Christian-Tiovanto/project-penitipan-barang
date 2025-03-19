@@ -16,7 +16,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
-import { UpdateTransactionInDto } from '../dtos/update-supplier.dto';
+import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
 import {
   BasePaginationQuery,
   OffsetPagination,
@@ -84,7 +84,7 @@ export class TransactionInController {
     @Param('id', ParseIntPipe) supplierId: number,
     @Body() updateSupplierDto: UpdateTransactionInDto,
   ) {
-    return await this.transactionInService.updateTransactionInById(
+    return await this.transactionInService.updateTransactionInByIdWithEM(
       supplierId,
       updateSupplierDto,
     );
