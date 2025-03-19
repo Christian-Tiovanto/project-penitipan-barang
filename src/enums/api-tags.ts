@@ -8,4 +8,5 @@ export enum ApiTag {
   FINE = 'fine',
   CUSTOMER = 'customer',
   PAYMENT_METHOD = 'payment-method',
+  MERCHANT_PAYMENT = 'merchant-payment',
 }

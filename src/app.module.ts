@@ -21,6 +21,8 @@ import { CustomerModule } from './modules/customer/customer.module';
 import { Customer } from './modules/customer/models/customer.entity';
 import { PaymentMethod } from './modules/payment-method/models/payment-method.entity';
 import { PaymentMethodModule } from './modules/payment-method/payment-method.module';
+import { MerchantPaymentModule } from './modules/merchant-payment/merchant-payment.module';
+import { MerchantPayment } from './modules/merchant-payment/models/merchant-payment.entity';
 
 @Module({
   providers: [
@@ -36,7 +38,7 @@ import { PaymentMethodModule } from './modules/payment-method/payment-method.mod
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      entities: [User, Merchant, Supplier, Product, ProductUnit, Fine, Customer, PaymentMethod],
+      entities: [User, Merchant, Supplier, Product, ProductUnit, Fine, Customer, PaymentMethod, MerchantPayment],
       synchronize: true,
     }),
     UserModule,
@@ -48,6 +50,7 @@ import { PaymentMethodModule } from './modules/payment-method/payment-method.mod
     FineModule,
     CustomerModule,
     PaymentMethodModule,
+    MerchantPaymentModule,
   ],
 })
 export class AppModule { }
