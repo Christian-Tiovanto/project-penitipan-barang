@@ -1,3 +1,4 @@
+import { TransactionIn } from '@app/modules/transaction-in/models/transaction-in.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
@@ -5,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 export interface IProduct {
@@ -71,4 +73,7 @@ export class Product implements IProduct {
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })
   @UpdateDateColumn()
   updated_at: Date;
+
+  @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.merchant)
+  transaction_in: TransactionIn[];
 }
