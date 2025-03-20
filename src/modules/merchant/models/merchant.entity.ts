@@ -77,7 +77,7 @@ export class Merchant implements IMerchant {
   @OneToMany(() => Supplier, (supplier) => supplier.merchant)
   suppliers: Supplier[];
 
-  @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.merchant)
+  @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.merchantId)
   transaction_in: TransactionIn[];
 
   @CreateDateColumn({ type: 'timestamp' })

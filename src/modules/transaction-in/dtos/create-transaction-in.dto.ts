@@ -5,15 +5,19 @@ import { ApiProperty } from '@nestjs/swagger';
 
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateTransactionInDto
-  implements Omit<ITransactionIn, 'id' | 'created_at' | 'updated_at'>
+  implements
+    Omit<
+      ITransactionIn,
+      'id' | 'created_at' | 'updated_at' | 'merchant' | 'product' | 'unit'
+    >
 {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
-  merchant: number;
+  merchantId: number;
 
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
-  product: number;
+  productId: number;
 
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
@@ -24,8 +28,8 @@ export class CreateTransactionInDto
   price: number;
 
   @ApiProperty({ example: 1 })
-  @JoiSchema(Joi.string().required())
-  unit: number;
+  @JoiSchema(Joi.number().required())
+  unitId: number;
 
   unit_name: string;
   conversion_to_kg: number;

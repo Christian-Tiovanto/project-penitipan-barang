@@ -1,3 +1,4 @@
+import { Product } from '@app/modules/product/models/product.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
@@ -5,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
 } from 'typeorm';
 
 export interface IProductUnit {
@@ -24,7 +26,7 @@ export class ProductUnit implements IProductUnit {
   id: number;
 
   @ApiProperty({ example: 1 })
-  @Column({ type: 'decimal' })
+  @ManyToOne(() => Product, (product) => product.product_unit)
   product: number;
 
   @ApiProperty({ example: 'Product-unit Name' })

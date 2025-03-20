@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { TransactionIn } from '../models/transaction-in.entity';
+import { ITransactionIn, TransactionIn } from '../models/transaction-in.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
 import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
 import { MerchantService } from '@app/modules/merchant/services/merchant.service';
 import { ProductService } from '@app/modules/product/services/product.service';
 import { ProductUnitService } from '@app/modules/product-unit/services/product-unit.service';
+import { IProductUnit } from '@app/modules/product-unit/models/product-unit.entity';
 
 interface GetAllSupplier {
   pageNo: number;
@@ -27,18 +28,19 @@ export class TransactionInService {
     createTransactionInDto: CreateTransactionInDto,
   ): Promise<TransactionIn> {
     await this.merchantService.findMerchantById(
-      createTransactionInDto.merchant,
+      createTransactionInDto.merchantId,
     );
     const productUnit = await this.productUnitService.findProductUnitById(
-      createTransactionInDto.unit,
+      createTransactionInDto.unitId,
     );
     createTransactionInDto.qty =
       createTransactionInDto.qty * productUnit.conversion_to_kg;
     createTransactionInDto.conversion_to_kg = productUnit.conversion_to_kg;
+    createTransactionInDto.unit_name = productUnit.name;
     const transaction = await this.transactionInRepository.manager.transaction(
       async (entityManager: EntityManager) => {
         const product = await this.productService.findProductById(
-          createTransactionInDto.product,
+          createTransactionInDto.productId,
         );
         createTransactionInDto.final_qty =
           createTransactionInDto.qty + product.qty;
@@ -83,11 +85,29 @@ export class TransactionInService {
     updateTransactionInDto: UpdateTransactionInDto,
   ) {
     const transactionIn = await this.findTransactionInById(transactionInId);
-    const productUnit = await this.productUnitService.findProductUnitById(
-      updateTransactionInDto.unit,
-    );
+    let currentProductUnit: Pick<IProductUnit, 'conversion_to_kg' | 'name'> = {
+      conversion_to_kg: transactionIn.conversion_to_kg,
+      name: transactionIn.unit_name,
+    };
+    const currentQty: Pick<ITransactionIn, 'qty'> = {
+      qty: transactionIn.qty / transactionIn.conversion_to_kg,
+    };
+    if (updateTransactionInDto.unitId) {
+      currentProductUnit = await this.productUnitService.findProductUnitById(
+        updateTransactionInDto.unitId,
+      );
+      updateTransactionInDto.unit_name = currentProductUnit.name;
+      updateTransactionInDto.conversion_to_kg =
+        currentProductUnit.conversion_to_kg;
+    }
+    if (updateTransactionInDto.qty) {
+      currentQty.qty = updateTransactionInDto.qty;
+    }
+    if (!updateTransactionInDto.productId) {
+      updateTransactionInDto.productId = transactionIn.productId;
+    }
     updateTransactionInDto.qty =
-      transactionIn.qty * productUnit.conversion_to_kg;
+      currentQty.qty * currentProductUnit.conversion_to_kg;
     await this.transactionInRepository.manager.transaction(
       async (entityManager: EntityManager) => {
         await this.updateTransactionInProduct(
@@ -110,7 +130,7 @@ export class TransactionInService {
     entityManager: EntityManager,
   ) {
     const product = await this.productService.findProductById(
-      transactionIn.product,
+      transactionIn.productId,
     );
     const qtyToUpdate = transactionIn.qty - updateTransactionInDto.qty;
     product.qty = product.qty - qtyToUpdate;
@@ -126,7 +146,7 @@ export class TransactionInService {
     updateTransactionInDto: UpdateTransactionInDto,
     entityManager: EntityManager,
   ) {
-    if (transactionIn.product === updateTransactionInDto.product) {
+    if (transactionIn.productId === updateTransactionInDto.productId) {
       await this.updateTransactionInProductQty(
         transactionIn,
         updateTransactionInDto,
@@ -134,7 +154,7 @@ export class TransactionInService {
       );
     } else {
       const previousProduct = await this.productService.findProductById(
-        transactionIn.product,
+        transactionIn.productId,
       );
       previousProduct.qty = previousProduct.qty - transactionIn.qty;
       await this.productService.updateProductQtyWithEntityManager(
@@ -142,7 +162,7 @@ export class TransactionInService {
         previousProduct,
       );
       const updatedToProduct = await this.productService.findProductById(
-        updateTransactionInDto.product,
+        updateTransactionInDto.productId,
       );
       updateTransactionInDto.final_qty =
         updateTransactionInDto.qty + updatedToProduct.qty;

@@ -36,6 +36,12 @@ export class TransactionIn implements ITransactionIn {
   @ManyToOne(() => Product, (product) => product.transaction_in)
   product: number;
 
+  @Column({ nullable: true })
+  merchantId: number;
+
+  @Column({ nullable: true })
+  productId: number;
+
   @Column({ type: 'int', default: 0 })
   qty: number;
 
@@ -50,6 +56,9 @@ export class TransactionIn implements ITransactionIn {
 
   @ManyToOne(() => ProductUnit, (productUnit) => productUnit)
   unit: number;
+
+  @Column({ nullable: true })
+  unitId: number;
 
   @Column({ type: 'varchar' })
   unit_name: string;

@@ -1,3 +1,4 @@
+import { ProductUnit } from '@app/modules/product-unit/models/product-unit.entity';
 import { TransactionIn } from '@app/modules/transaction-in/models/transaction-in.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import {
@@ -74,6 +75,9 @@ export class Product implements IProduct {
   @UpdateDateColumn()
   updated_at: Date;
 
-  @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.merchant)
+  @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.merchantId)
   transaction_in: TransactionIn[];
+
+  @OneToMany(() => ProductUnit, (productUnit) => productUnit.product)
+  product_unit: ProductUnit[];
 }

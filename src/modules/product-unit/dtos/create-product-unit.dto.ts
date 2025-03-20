@@ -7,11 +7,11 @@ import { IProductUnit } from '../models/product-unit.entity';
 export class CreateProductUnitDto
   implements Omit<IProductUnit, 'id' | 'created_at' | 'updated_at'>
 {
-  @ApiProperty({ example: 'Product Unit Name' })
+  @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
   product: number;
 
-  @ApiProperty({ example: 'Product Unit Name' })
+  @ApiProperty({ example: 'Kotak' })
   @JoiSchema(Joi.string().required())
   name: string;
 

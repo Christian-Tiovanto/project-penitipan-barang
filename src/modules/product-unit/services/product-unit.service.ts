@@ -14,7 +14,7 @@ export class ProductUnitService {
   constructor(
     @InjectRepository(ProductUnit)
     private readonly productUnitRepository: Repository<ProductUnit>,
-  ) { }
+  ) {}
 
   async getAllProductUnits({
     pageNo,
@@ -29,7 +29,9 @@ export class ProductUnitService {
   }
 
   async getProductUnitById(productUnitId: number): Promise<ProductUnit> {
-    return await this.productUnitRepository.findOne({ where: { id: productUnitId } });
+    return await this.productUnitRepository.findOne({
+      where: { id: productUnitId },
+    });
   }
 
   async findProductUnitById(productUnitId: number): Promise<ProductUnit> {
@@ -43,7 +45,9 @@ export class ProductUnitService {
     return productUnit;
   }
 
-  async createProductUnit(createProductDto: CreateProductUnitDto): Promise<ProductUnit> {
+  async createProductUnit(
+    createProductDto: CreateProductUnitDto,
+  ): Promise<ProductUnit> {
     const newProductUnit = this.productUnitRepository.create(createProductDto);
     return await this.productUnitRepository.save(newProductUnit);
   }

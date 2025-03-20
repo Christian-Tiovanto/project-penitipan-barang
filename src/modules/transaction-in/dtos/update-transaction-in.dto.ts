@@ -6,23 +6,26 @@ import { ApiProperty } from '@nestjs/swagger';
 @JoiSchemaOptions({ allowUnknown: false })
 export class UpdateTransactionInDto
   implements
-    Omit<ITransactionIn, 'id' | 'merchant' | 'created_at' | 'updated_at'>
+    Omit<
+      ITransactionIn,
+      'id' | 'merchant' | 'created_at' | 'updated_at' | 'product' | 'unit'
+    >
 {
-  @ApiProperty({ example: 'Supplier Name' })
-  @JoiSchema(Joi.string().required())
-  product: number;
+  @ApiProperty({ example: 1 })
+  @JoiSchema(Joi.number().optional())
+  productId: number;
 
-  @ApiProperty({ example: 'Supplier Name' })
-  @JoiSchema(Joi.string().required())
+  @ApiProperty({ example: 10 })
+  @JoiSchema(Joi.number().optional())
   qty: number;
 
-  @ApiProperty({ example: 'Supplier Name' })
-  @JoiSchema(Joi.string().optional())
+  @ApiProperty({ example: 500 })
+  @JoiSchema(Joi.number().optional())
   price: number;
 
-  @ApiProperty({ example: 'Supplier Name' })
-  @JoiSchema(Joi.string().required())
-  unit: number;
+  @ApiProperty({ example: 1 })
+  @JoiSchema(Joi.number().optional())
+  unitId: number;
 
   unit_name: string;
   conversion_to_kg: number;
