@@ -42,14 +42,14 @@ export class TransactionInService {
         const product = await this.productService.findProductById(
           createTransactionInDto.productId,
         );
-        createTransactionInDto.final_qty =
-          createTransactionInDto.qty + product.qty;
+        const updatedProduct =
+          await this.productService.addProductQtyWithEntityManager(
+            entityManager,
+            product,
+            createTransactionInDto.qty,
+          );
+        createTransactionInDto.final_qty = updatedProduct.qty;
         createTransactionInDto.remaining_qty = createTransactionInDto.qty;
-        await this.productService.addProductQtyWithEntityManager(
-          entityManager,
-          product,
-          createTransactionInDto.qty,
-        );
         const transactionIn = entityManager.create(
           TransactionIn,
           createTransactionInDto,
@@ -138,7 +138,7 @@ export class TransactionInService {
       entityManager,
       product,
     );
-    updateTransactionInDto.final_qty = transactionIn.final_qty - qtyToUpdate;
+    updateTransactionInDto.final_qty = product.qty;
   }
 
   private async updateTransactionInProduct(
@@ -164,13 +164,13 @@ export class TransactionInService {
       const updatedToProduct = await this.productService.findProductById(
         updateTransactionInDto.productId,
       );
-      updateTransactionInDto.final_qty =
-        updateTransactionInDto.qty + updatedToProduct.qty;
-      await this.productService.addProductQtyWithEntityManager(
-        entityManager,
-        updatedToProduct,
-        updateTransactionInDto.qty,
-      );
+      const updatedProduct =
+        await this.productService.addProductQtyWithEntityManager(
+          entityManager,
+          updatedToProduct,
+          updateTransactionInDto.qty,
+        );
+      updateTransactionInDto.final_qty = updatedProduct.qty;
     }
   }
 }
