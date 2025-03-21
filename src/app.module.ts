@@ -26,7 +26,6 @@ import { PaymentMethodModule } from './modules/payment-method/payment-method.mod
 import { MerchantPaymentModule } from './modules/merchant-payment/merchant-payment.module';
 import { MerchantPayment } from './modules/merchant-payment/models/merchant-payment.entity';
 
-
 @Module({
   providers: [
     { provide: APP_PIPE, useClass: DataValidationPipe },
@@ -49,7 +48,9 @@ import { MerchantPayment } from './modules/merchant-payment/models/merchant-paym
         ProductUnit,
         Fine,
         Customer,
-        TransactionIn, PaymentMethod, MerchantPayment
+        TransactionIn,
+        PaymentMethod,
+        MerchantPayment,
       ],
       synchronize: true,
     }),
