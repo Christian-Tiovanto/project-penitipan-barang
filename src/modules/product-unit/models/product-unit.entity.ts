@@ -12,6 +12,7 @@ import {
 export interface IProductUnit {
   id: number;
   product: number;
+  productId: number;
   name: string;
   conversion_to_kg: number;
   created_at: Date;
@@ -27,6 +28,10 @@ export class ProductUnit implements IProductUnit {
   @ApiProperty({ example: 1 })
   @ManyToOne(() => Product, (product) => product.product_unit)
   product: number;
+
+  @ApiProperty({ example: 1 })
+  @Column({ nullable: true })
+  productId: number;
 
   @ApiProperty({ example: 'Product-unit Name' })
   @Column({ type: 'varchar' })

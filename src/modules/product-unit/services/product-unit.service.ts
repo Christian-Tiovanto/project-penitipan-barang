@@ -43,6 +43,20 @@ export class ProductUnitService {
     }
     return productUnit;
   }
+  async findProductUnitByIdNProductId(
+    productUnitId: number,
+    productId: number,
+  ): Promise<ProductUnit> {
+    const productUnit = await this.productUnitRepository.findOne({
+      where: { id: productUnitId, productId: productId },
+    });
+    if (!productUnit) {
+      throw new NotFoundException(
+        `Product Unit with id ${productUnitId} not found`,
+      );
+    }
+    return productUnit;
+  }
 
   async createProductUnit(
     createProductDto: CreateProductUnitDto,

@@ -10,4 +10,4 @@ import { CustomerService } from './services/customer.service';
   providers: [CustomerService],
   exports: [CustomerService],
 })
-export class CustomerModule { }
+export class CustomerModule {}

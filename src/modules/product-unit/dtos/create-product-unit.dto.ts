@@ -5,11 +5,11 @@ import { IProductUnit } from '../models/product-unit.entity';
 
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateProductUnitDto
-  implements Omit<IProductUnit, 'id' | 'created_at' | 'updated_at'>
+  implements Omit<IProductUnit, 'id' | 'created_at' | 'updated_at' | 'product'>
 {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
-  product: number;
+  productId: number;
 
   @ApiProperty({ example: 'Kotak' })
   @JoiSchema(Joi.string().required())
