@@ -8,7 +8,6 @@ import { DataValidationPipe } from './pipes/validation.pipe';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { ExceptionHandlerFilter } from './filters/exception-handler.filter';
 import { MerchantModule } from './modules/merchant/merchant.module';
-import { Merchant } from './modules/merchant/models/merchant.entity';
 import { Supplier } from './modules/supplier/models/supplier.entity';
 import { SupplierModule } from './modules/supplier/supplier.module';
 import { ProductModule } from './modules/product/product.module';
@@ -21,6 +20,7 @@ import { CustomerModule } from './modules/customer/customer.module';
 import { Customer } from './modules/customer/models/customer.entity';
 import { TransactionInModule } from './modules/transaction-in/transaction-in.module';
 import { TransactionIn } from './modules/transaction-in/models/transaction-in.entity';
+import { Merchant } from './modules/merchant/models/merchant.entity';
 
 @Module({
   providers: [
