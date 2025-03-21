@@ -25,10 +25,6 @@ export class CreateTransactionInDto
 
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
-  price: number;
-
-  @ApiProperty({ example: 1 })
-  @JoiSchema(Joi.number().required())
   unitId: number;
 
   unit: string;

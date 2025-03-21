@@ -7,6 +7,7 @@ import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
 import { ProductService } from '@app/modules/product/services/product.service';
 import { ProductUnitService } from '@app/modules/product-unit/services/product-unit.service';
 import { IProductUnit } from '@app/modules/product-unit/models/product-unit.entity';
+import { CustomerService } from '@app/modules/customer/services/customer.service';
 
 interface GetAllSupplier {
   pageNo: number;
@@ -20,29 +21,35 @@ export class TransactionInService {
     private transactionInRepository: Repository<TransactionIn>,
     private productService: ProductService,
     private productUnitService: ProductUnitService,
+    private customerService: CustomerService,
   ) {}
 
   async createTransactionIn(
     createTransactionInDto: CreateTransactionInDto,
   ): Promise<TransactionIn> {
-    const productUnit = await this.productUnitService.findProductUnitById(
-      createTransactionInDto.unitId,
+    const product = await this.productService.findProductById(
+      createTransactionInDto.productId,
     );
-    createTransactionInDto.qty =
+    const productUnit =
+      await this.productUnitService.findProductUnitByIdNProductId(
+        createTransactionInDto.unitId,
+        createTransactionInDto.productId,
+      );
+    await this.customerService.findCustomerById(
+      createTransactionInDto.customerId,
+    );
+    createTransactionInDto.remaining_qty = createTransactionInDto.qty;
+    createTransactionInDto.converted_qty =
       createTransactionInDto.qty * productUnit.conversion_to_kg;
     createTransactionInDto.conversion_to_kg = productUnit.conversion_to_kg;
     createTransactionInDto.unit = productUnit.name;
     const transaction = await this.transactionInRepository.manager.transaction(
       async (entityManager: EntityManager) => {
-        const product = await this.productService.findProductById(
-          createTransactionInDto.productId,
-        );
         await this.productService.addProductQtyWithEntityManager(
           entityManager,
           product,
-          createTransactionInDto.qty,
+          createTransactionInDto.converted_qty,
         );
-        createTransactionInDto.remaining_qty = createTransactionInDto.qty;
         const transactionIn = entityManager.create(
           TransactionIn,
           createTransactionInDto,
@@ -78,17 +85,25 @@ export class TransactionInService {
     updateTransactionInDto: UpdateTransactionInDto,
   ) {
     const transactionIn = await this.findTransactionInById(transactionInId);
+    await this.customerService.findCustomerById(
+      updateTransactionInDto.customerId,
+    );
     let currentProductUnit: Pick<IProductUnit, 'conversion_to_kg' | 'name'> = {
       conversion_to_kg: transactionIn.conversion_to_kg,
       name: transactionIn.unit,
     };
     const currentQty: Pick<ITransactionIn, 'qty'> = {
-      qty: transactionIn.qty / transactionIn.conversion_to_kg,
+      qty: transactionIn.qty,
     };
+    if (!updateTransactionInDto.productId) {
+      updateTransactionInDto.productId = transactionIn.productId;
+    }
     if (updateTransactionInDto.unitId) {
-      currentProductUnit = await this.productUnitService.findProductUnitById(
-        updateTransactionInDto.unitId,
-      );
+      currentProductUnit =
+        await this.productUnitService.findProductUnitByIdNProductId(
+          updateTransactionInDto.unitId,
+          updateTransactionInDto.productId,
+        );
       updateTransactionInDto.unit = currentProductUnit.name;
       updateTransactionInDto.conversion_to_kg =
         currentProductUnit.conversion_to_kg;
@@ -96,10 +111,7 @@ export class TransactionInService {
     if (updateTransactionInDto.qty) {
       currentQty.qty = updateTransactionInDto.qty;
     }
-    if (!updateTransactionInDto.productId) {
-      updateTransactionInDto.productId = transactionIn.productId;
-    }
-    updateTransactionInDto.qty =
+    updateTransactionInDto.converted_qty =
       currentQty.qty * currentProductUnit.conversion_to_kg;
     await this.transactionInRepository.manager.transaction(
       async (entityManager: EntityManager) => {
@@ -109,7 +121,8 @@ export class TransactionInService {
           entityManager,
         );
 
-        updateTransactionInDto.remaining_qty = updateTransactionInDto.qty;
+        updateTransactionInDto.remaining_qty =
+          updateTransactionInDto.converted_qty;
         Object.assign(transactionIn, updateTransactionInDto);
         await entityManager.save(transactionIn);
       },
@@ -125,7 +138,8 @@ export class TransactionInService {
     const product = await this.productService.findProductById(
       transactionIn.productId,
     );
-    const qtyToUpdate = transactionIn.qty - updateTransactionInDto.qty;
+    const qtyToUpdate =
+      transactionIn.converted_qty - updateTransactionInDto.converted_qty;
     product.qty = product.qty - qtyToUpdate;
     await this.productService.updateProductQtyWithEntityManager(
       entityManager,
@@ -148,7 +162,7 @@ export class TransactionInService {
       const previousProduct = await this.productService.findProductById(
         transactionIn.productId,
       );
-      previousProduct.qty = previousProduct.qty - transactionIn.qty;
+      previousProduct.qty = previousProduct.qty - transactionIn.converted_qty;
       await this.productService.updateProductQtyWithEntityManager(
         entityManager,
         previousProduct,
@@ -159,7 +173,7 @@ export class TransactionInService {
       await this.productService.addProductQtyWithEntityManager(
         entityManager,
         updatedToProduct,
-        updateTransactionInDto.qty,
+        updateTransactionInDto.converted_qty,
       );
     }
   }
