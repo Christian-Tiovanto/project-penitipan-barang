@@ -1,5 +1,4 @@
-import { Merchant } from '@app/modules/merchant/models/merchant.entity';
-import { ProductUnit } from '@app/modules/product-unit/models/product-unit.entity';
+import { Customer } from '@app/modules/customer/models/customer.entity';
 import { Product } from '@app/modules/product/models/product.entity';
 import {
   Column,
@@ -12,14 +11,14 @@ import {
 
 export interface ITransactionIn {
   id: number;
-  merchant: number;
   product: number;
+  productId: number;
+  customer: number;
+  customerId: number;
   qty: number;
+  converted_qty: number;
   remaining_qty: number;
-  final_qty: number;
-  price: number;
-  unit: number;
-  unit_name: string;
+  unit: string;
   conversion_to_kg: number;
   created_at: Date;
   updated_at: Date;
@@ -30,14 +29,14 @@ export class TransactionIn implements ITransactionIn {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Merchant, (merchant) => merchant.transaction_in)
-  merchant: number;
+  @ManyToOne(() => Customer, (customer) => customer.transaction_in)
+  customer: number;
+
+  @Column({ nullable: true })
+  customerId: number;
 
   @ManyToOne(() => Product, (product) => product.transaction_in)
   product: number;
-
-  @Column({ nullable: true })
-  merchantId: number;
 
   @Column({ nullable: true })
   productId: number;
@@ -46,22 +45,16 @@ export class TransactionIn implements ITransactionIn {
   qty: number;
 
   @Column({ type: 'int', default: 0 })
+  converted_qty: number;
+
+  @Column({ type: 'int', default: 0 })
   remaining_qty: number;
 
   @Column({ type: 'int', default: 0 })
   final_qty: number;
 
-  @Column({ type: 'int' })
-  price: number;
-
-  @ManyToOne(() => ProductUnit, (productUnit) => productUnit)
-  unit: number;
-
-  @Column({ nullable: true })
-  unitId: number;
-
   @Column({ type: 'varchar' })
-  unit_name: string;
+  unit: string;
 
   @Column({ type: 'int' })
   conversion_to_kg: number;

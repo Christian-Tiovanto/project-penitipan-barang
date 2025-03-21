@@ -4,7 +4,6 @@ import { ITransactionIn, TransactionIn } from '../models/transaction-in.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
 import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
-import { MerchantService } from '@app/modules/merchant/services/merchant.service';
 import { ProductService } from '@app/modules/product/services/product.service';
 import { ProductUnitService } from '@app/modules/product-unit/services/product-unit.service';
 import { IProductUnit } from '@app/modules/product-unit/models/product-unit.entity';
@@ -19,7 +18,6 @@ export class TransactionInService {
   constructor(
     @InjectRepository(TransactionIn)
     private transactionInRepository: Repository<TransactionIn>,
-    private merchantService: MerchantService,
     private productService: ProductService,
     private productUnitService: ProductUnitService,
   ) {}
@@ -27,28 +25,23 @@ export class TransactionInService {
   async createTransactionIn(
     createTransactionInDto: CreateTransactionInDto,
   ): Promise<TransactionIn> {
-    await this.merchantService.findMerchantById(
-      createTransactionInDto.merchantId,
-    );
     const productUnit = await this.productUnitService.findProductUnitById(
       createTransactionInDto.unitId,
     );
     createTransactionInDto.qty =
       createTransactionInDto.qty * productUnit.conversion_to_kg;
     createTransactionInDto.conversion_to_kg = productUnit.conversion_to_kg;
-    createTransactionInDto.unit_name = productUnit.name;
+    createTransactionInDto.unit = productUnit.name;
     const transaction = await this.transactionInRepository.manager.transaction(
       async (entityManager: EntityManager) => {
         const product = await this.productService.findProductById(
           createTransactionInDto.productId,
         );
-        const updatedProduct =
-          await this.productService.addProductQtyWithEntityManager(
-            entityManager,
-            product,
-            createTransactionInDto.qty,
-          );
-        createTransactionInDto.final_qty = updatedProduct.qty;
+        await this.productService.addProductQtyWithEntityManager(
+          entityManager,
+          product,
+          createTransactionInDto.qty,
+        );
         createTransactionInDto.remaining_qty = createTransactionInDto.qty;
         const transactionIn = entityManager.create(
           TransactionIn,
@@ -87,7 +80,7 @@ export class TransactionInService {
     const transactionIn = await this.findTransactionInById(transactionInId);
     let currentProductUnit: Pick<IProductUnit, 'conversion_to_kg' | 'name'> = {
       conversion_to_kg: transactionIn.conversion_to_kg,
-      name: transactionIn.unit_name,
+      name: transactionIn.unit,
     };
     const currentQty: Pick<ITransactionIn, 'qty'> = {
       qty: transactionIn.qty / transactionIn.conversion_to_kg,
@@ -96,7 +89,7 @@ export class TransactionInService {
       currentProductUnit = await this.productUnitService.findProductUnitById(
         updateTransactionInDto.unitId,
       );
-      updateTransactionInDto.unit_name = currentProductUnit.name;
+      updateTransactionInDto.unit = currentProductUnit.name;
       updateTransactionInDto.conversion_to_kg =
         currentProductUnit.conversion_to_kg;
     }
@@ -138,7 +131,6 @@ export class TransactionInService {
       entityManager,
       product,
     );
-    updateTransactionInDto.final_qty = product.qty;
   }
 
   private async updateTransactionInProduct(
@@ -164,13 +156,11 @@ export class TransactionInService {
       const updatedToProduct = await this.productService.findProductById(
         updateTransactionInDto.productId,
       );
-      const updatedProduct =
-        await this.productService.addProductQtyWithEntityManager(
-          entityManager,
-          updatedToProduct,
-          updateTransactionInDto.qty,
-        );
-      updateTransactionInDto.final_qty = updatedProduct.qty;
+      await this.productService.addProductQtyWithEntityManager(
+        entityManager,
+        updatedToProduct,
+        updateTransactionInDto.qty,
+      );
     }
   }
 }

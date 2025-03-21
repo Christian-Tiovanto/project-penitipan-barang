@@ -8,12 +8,12 @@ export class CreateTransactionInDto
   implements
     Omit<
       ITransactionIn,
-      'id' | 'created_at' | 'updated_at' | 'merchant' | 'product' | 'unit'
+      'id' | 'created_at' | 'updated_at' | 'customer' | 'product'
     >
 {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
-  merchantId: number;
+  customerId: number;
 
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
@@ -31,8 +31,8 @@ export class CreateTransactionInDto
   @JoiSchema(Joi.number().required())
   unitId: number;
 
-  unit_name: string;
+  unit: string;
   conversion_to_kg: number;
-  final_qty: number;
   remaining_qty: number;
+  converted_qty: number;
 }
