@@ -21,6 +21,11 @@ import { Customer } from './modules/customer/models/customer.entity';
 import { TransactionInModule } from './modules/transaction-in/transaction-in.module';
 import { TransactionIn } from './modules/transaction-in/models/transaction-in.entity';
 import { Merchant } from './modules/merchant/models/merchant.entity';
+import { PaymentMethod } from './modules/payment-method/models/payment-method.entity';
+import { PaymentMethodModule } from './modules/payment-method/payment-method.module';
+import { MerchantPaymentModule } from './modules/merchant-payment/merchant-payment.module';
+import { MerchantPayment } from './modules/merchant-payment/models/merchant-payment.entity';
+
 
 @Module({
   providers: [
@@ -44,7 +49,7 @@ import { Merchant } from './modules/merchant/models/merchant.entity';
         ProductUnit,
         Fine,
         Customer,
-        TransactionIn,
+        TransactionIn, PaymentMethod, MerchantPayment
       ],
       synchronize: true,
     }),
@@ -57,6 +62,8 @@ import { Merchant } from './modules/merchant/models/merchant.entity';
     FineModule,
     CustomerModule,
     TransactionInModule,
+    PaymentMethodModule,
+    MerchantPaymentModule,
   ],
 })
 export class AppModule {}
