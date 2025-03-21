@@ -1,10 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Product } from '../models/product.entity';
 import { CreateProductDto } from '../dtos/create-product.dto';
 import { UpdateProductDto } from '../dtos/update-product.dto';
-import { BasePaginationQuery } from '@app/interfaces/pagination.interface';
 
 interface GetAllQuery {
   pageNo: number;
@@ -15,7 +14,7 @@ export class ProductService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
-  ) { }
+  ) {}
 
   async getAllProducts({
     pageNo,
@@ -25,13 +24,15 @@ export class ProductService {
     const products = await this.productRepository.findAndCount({
       skip,
       take: pageSize,
-      where: { is_deleted: false }
+      where: { is_deleted: false },
     });
     return products;
   }
 
   async getProductById(productId: number): Promise<Product> {
-    return await this.productRepository.findOne({ where: { id: productId, is_deleted: false } });
+    return await this.productRepository.findOne({
+      where: { id: productId, is_deleted: false },
+    });
   }
 
   async findProductById(productId: number): Promise<Product> {
@@ -59,6 +60,22 @@ export class ProductService {
     Object.assign(product, updateProductDto);
 
     return this.productRepository.save(product);
+  }
+
+  async addProductQtyWithEntityManager(
+    entityManager: EntityManager,
+    product: Product,
+    qtyAdd: number,
+  ): Promise<Product> {
+    product.qty += qtyAdd;
+    return entityManager.save(product);
+  }
+
+  async updateProductQtyWithEntityManager(
+    entityManager: EntityManager,
+    product: Product,
+  ): Promise<Product> {
+    return entityManager.save(product);
   }
 
   async deleteProduct(productId: number): Promise<void> {

@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { Customer } from '../models/customer.entity';
 import { CreateCustomerDto } from '../dtos/create-customer.dto';
 import { UpdateCustomerDto } from '../dtos/update-customer.dto';
-import { BasePaginationQuery } from '@app/interfaces/pagination.interface';
 
 interface GetAllQuery {
   pageNo: number;
@@ -15,7 +14,7 @@ export class CustomerService {
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
-  ) { }
+  ) {}
 
   async getAllCustomers({
     pageNo,
@@ -25,13 +24,15 @@ export class CustomerService {
     const customers = await this.customerRepository.findAndCount({
       skip,
       take: pageSize,
-      where: { is_deleted: false }
+      where: { is_deleted: false },
     });
     return customers;
   }
 
   async getCustomerById(customerId: number): Promise<Customer> {
-    return await this.customerRepository.findOne({ where: { id: customerId, is_deleted: false } });
+    return await this.customerRepository.findOne({
+      where: { id: customerId, is_deleted: false },
+    });
   }
 
   async findCustomerById(customerId: number): Promise<Customer> {
@@ -45,7 +46,9 @@ export class CustomerService {
     return customer;
   }
 
-  async createCustomer(createCustomerDto: CreateCustomerDto): Promise<Customer> {
+  async createCustomer(
+    createCustomerDto: CreateCustomerDto,
+  ): Promise<Customer> {
     const newCustomer = this.customerRepository.create(createCustomerDto);
     return await this.customerRepository.save(newCustomer);
   }

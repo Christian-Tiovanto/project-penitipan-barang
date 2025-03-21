@@ -1,4 +1,5 @@
 import { Supplier } from '@app/modules/supplier/models/supplier.entity';
+import { TransactionIn } from '@app/modules/transaction-in/models/transaction-in.entity';
 import {
   Column,
   CreateDateColumn,
@@ -75,6 +76,9 @@ export class Merchant implements IMerchant {
 
   @OneToMany(() => Supplier, (supplier) => supplier.merchant)
   suppliers: Supplier[];
+
+  @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.merchantId)
+  transaction_in: TransactionIn[];
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
