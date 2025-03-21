@@ -17,9 +17,5 @@ export class CreateProductUnitDto
 
   @ApiProperty({ example: 1000 })
   @JoiSchema(Joi.number().required())
-  qty: number;
-
-  @ApiProperty({ example: 1000 })
-  @JoiSchema(Joi.number().required())
   conversion_to_kg: number;
 }

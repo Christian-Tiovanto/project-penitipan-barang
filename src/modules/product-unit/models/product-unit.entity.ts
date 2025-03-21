@@ -13,7 +13,6 @@ export interface IProductUnit {
   id: number;
   product: number;
   name: string;
-  qty: number;
   conversion_to_kg: number;
   created_at: Date;
   updated_at: Date;
@@ -32,10 +31,6 @@ export class ProductUnit implements IProductUnit {
   @ApiProperty({ example: 'Product-unit Name' })
   @Column({ type: 'varchar' })
   name: string;
-
-  @ApiProperty({ example: 1000 })
-  @Column({ type: 'decimal' })
-  qty: number;
 
   @ApiProperty({ example: 1000 })
   @Column({ type: 'decimal' })

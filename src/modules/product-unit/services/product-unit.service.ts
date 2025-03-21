@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { ProductUnit } from '../models/product-unit.entity';
 import { CreateProductUnitDto } from '../dtos/create-product-unit.dto';
 import { UpdateProductUnitDto } from '../dtos/update-product-unit.dto';
-import { BasePaginationQuery } from '@app/interfaces/pagination.interface';
 interface GetAllQuery {
   pageNo: number;
   pageSize: number;
