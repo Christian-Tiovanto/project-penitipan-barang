@@ -9,5 +9,5 @@ export enum ApiTag {
   CUSTOMER = 'customer',
   TRANSACTION_IN = 'transaction-in',
   PAYMENT_METHOD = 'payment-method',
-  MERCHANT_PAYMENT = 'merchant-payment',
+  CUSTOMER_PAYMENT = 'customer-payment',
 }

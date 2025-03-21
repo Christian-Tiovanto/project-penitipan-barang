@@ -23,8 +23,9 @@ import { TransactionIn } from './modules/transaction-in/models/transaction-in.en
 import { Merchant } from './modules/merchant/models/merchant.entity';
 import { PaymentMethod } from './modules/payment-method/models/payment-method.entity';
 import { PaymentMethodModule } from './modules/payment-method/payment-method.module';
-import { MerchantPaymentModule } from './modules/merchant-payment/merchant-payment.module';
-import { MerchantPayment } from './modules/merchant-payment/models/merchant-payment.entity';
+import { CustomerPaymentModule } from './modules/customer-payment/customer-payment.module';
+import { CustomerPayment } from './modules/customer-payment/models/customer-payment.entity';
+import { ArPaymentModule } from './modules/ar-paidoff/ar-payment.module';
 
 @Module({
   providers: [
@@ -50,7 +51,7 @@ import { MerchantPayment } from './modules/merchant-payment/models/merchant-paym
         Customer,
         TransactionIn,
         PaymentMethod,
-        MerchantPayment,
+        CustomerPayment,
       ],
       synchronize: true,
     }),
@@ -64,7 +65,8 @@ import { MerchantPayment } from './modules/merchant-payment/models/merchant-paym
     CustomerModule,
     TransactionInModule,
     PaymentMethodModule,
-    MerchantPaymentModule,
+    CustomerPaymentModule,
+    ArPaymentModule,
   ],
 })
 export class AppModule {}
