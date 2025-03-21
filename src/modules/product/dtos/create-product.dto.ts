@@ -7,10 +7,6 @@ import { IProduct } from '../models/product.entity';
 export class CreateProductDto
   implements Omit<IProduct, 'id' | 'created_at' | 'updated_at'>
 {
-  @ApiProperty({ example: 1 })
-  @JoiSchema(Joi.number().required())
-  merchant: number;
-
   @ApiProperty({ example: 'Product Name' })
   @JoiSchema(Joi.string().required())
   name: string;
@@ -18,10 +14,6 @@ export class CreateProductDto
   @ApiProperty({ example: 1000 })
   @JoiSchema(Joi.number().required())
   price: number;
-
-  @ApiProperty({ example: 'Category Name' })
-  @JoiSchema(Joi.string().required())
-  category: string;
 
   @ApiProperty({ example: 'http://example.com/image.jpg' })
   @JoiSchema(Joi.string().uri().required())

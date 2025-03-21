@@ -12,10 +12,8 @@ import {
 
 export interface IProduct {
   id: number;
-  merchant: number;
   name: string;
   price: number;
-  category: string;
   image_url: string;
   file_name: string;
   qty: number;
@@ -31,10 +29,6 @@ export class Product implements IProduct {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ApiProperty({ example: 1 })
-  @Column({ type: 'decimal' })
-  merchant: number;
-
   @ApiProperty({ example: 'Product Name' })
   @Column({ type: 'varchar' })
   name: string;
@@ -42,10 +36,6 @@ export class Product implements IProduct {
   @ApiProperty({ example: 1000 })
   @Column({ type: 'decimal' })
   price: number;
-
-  @ApiProperty({ example: 'Category Name' })
-  @Column({ type: 'varchar' })
-  category: string;
 
   @ApiProperty({ example: 'http://example.com/image.jpg' })
   @Column({ type: 'varchar' })

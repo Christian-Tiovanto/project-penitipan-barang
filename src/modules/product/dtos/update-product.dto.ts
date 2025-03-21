@@ -6,7 +6,9 @@ import { IProduct } from '../models/product.entity';
 @JoiSchemaOptions({
   allowUnknown: false,
 })
-export class UpdateProductDto implements Partial<Omit<IProduct, 'id' | 'created_at' | 'updated_at'>>{
+export class UpdateProductDto
+  implements Partial<Omit<IProduct, 'id' | 'created_at' | 'updated_at'>>
+{
   @ApiProperty({ example: 'Product Name' })
   @JoiSchema(Joi.string().optional())
   name?: string;
@@ -14,10 +16,6 @@ export class UpdateProductDto implements Partial<Omit<IProduct, 'id' | 'created_
   @ApiProperty({ example: 1000 })
   @JoiSchema(Joi.number().optional())
   price?: number;
-
-  @ApiProperty({ example: 'Category Name' })
-  @JoiSchema(Joi.string().optional())
-  category?: string;
 
   @ApiProperty({ example: 'http://example.com/image.jpg' })
   @JoiSchema(Joi.string().uri().optional())
