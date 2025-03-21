@@ -1,3 +1,5 @@
+import { Customer } from '@app/modules/customer/models/customer.entity';
+import { PaymentMethod } from '@app/modules/payment-method/models/payment-method.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
@@ -5,34 +7,42 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
 } from 'typeorm';
 
-export interface IMerchantPayment {
+export interface ICustomerPayment {
   id: number;
-  merchant: number;
-  payment_method: number,
+  customer: number;
+  customerId: number;
+  payment_method: number;
+  payment_methodId: number;
   charge: number;
-  up_price: number;
+  min_pay: number;
   status: boolean;
-  sort: boolean,
-  min_pay: number,
   created_at: Date;
   updated_at: Date;
 }
 
-@Entity('merchant_payments')
-export class MerchantPayment implements IMerchantPayment {
+@Entity('customer_payments')
+export class CustomerPayment implements ICustomerPayment {
   @ApiProperty({ example: 1 })
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ApiProperty({ example: 1 })
-  @Column({ type: 'decimal' })
-  merchant: number;
+  @ManyToOne(() => Customer, (customer) => customer.customer_payment)
+  customer: number;
 
   @ApiProperty({ example: 1 })
-  @Column({ type: 'decimal' })
+  @Column({ nullable: true })
+  customerId: number;
+
+  @ApiProperty({ example: 1 })
+  @ManyToOne(() => PaymentMethod, (paymentMethod) => paymentMethod)
   payment_method: number;
+
+  @ApiProperty({ example: 1 })
+  @Column({ nullable: true })
+  payment_methodId: number;
 
   @ApiProperty({ example: 1000 })
   @Column({ type: 'float' })

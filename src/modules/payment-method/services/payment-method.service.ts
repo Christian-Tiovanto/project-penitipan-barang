@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { PaymentMethod } from '../models/payment-method.entity';
 import { CreatePaymentMethodDto } from '../dtos/create-payment-method.dto';
 import { UpdatePaymentMethodDto } from '../dtos/update-payment-method.dto';
-import { BasePaginationQuery } from '@app/interfaces/pagination.interface';
 
 interface GetAllQuery {
   pageNo: number;
@@ -16,7 +15,7 @@ export class PaymentMethodService {
   constructor(
     @InjectRepository(PaymentMethod)
     private readonly paymentMethodRepository: Repository<PaymentMethod>,
-  ) { }
+  ) {}
 
   async getAllPaymentMethods({
     pageNo,
@@ -31,7 +30,9 @@ export class PaymentMethodService {
   }
 
   async getPaymentMethodById(paymentMethodId: number): Promise<PaymentMethod> {
-    return await this.paymentMethodRepository.findOne({ where: { id: paymentMethodId } });
+    return await this.paymentMethodRepository.findOne({
+      where: { id: paymentMethodId },
+    });
   }
 
   async findPaymentMethodById(paymentMethodId: number): Promise<PaymentMethod> {
@@ -40,13 +41,19 @@ export class PaymentMethodService {
     });
 
     if (!paymentMethod) {
-      throw new NotFoundException(`Payment Method with id ${paymentMethodId} not found`);
+      throw new NotFoundException(
+        `Payment Method with id ${paymentMethodId} not found`,
+      );
     }
     return paymentMethod;
   }
 
-  async createPaymentMethod(createPaymentMethodDto: CreatePaymentMethodDto): Promise<PaymentMethod> {
-    const newPaymentMethod = this.paymentMethodRepository.create(createPaymentMethodDto);
+  async createPaymentMethod(
+    createPaymentMethodDto: CreatePaymentMethodDto,
+  ): Promise<PaymentMethod> {
+    const newPaymentMethod = this.paymentMethodRepository.create(
+      createPaymentMethodDto,
+    );
     return await this.paymentMethodRepository.save(newPaymentMethod);
   }
 

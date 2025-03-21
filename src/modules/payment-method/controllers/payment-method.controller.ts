@@ -18,14 +18,17 @@ import { UpdatePaymentMethodDto } from '../dtos/update-payment-method.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
-import { BasePaginationQuery, OffsetPagination } from '@app/interfaces/pagination.interface';
+import {
+  BasePaginationQuery,
+  OffsetPagination,
+} from '@app/interfaces/pagination.interface';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 
 @ApiTags(ApiTag.PAYMENT_METHOD)
 @Controller('api/v1/payment-method')
 export class PaymentMethodController {
-  constructor(private readonly paymentMethodService: PaymentMethodService) { }
+  constructor(private readonly paymentMethodService: PaymentMethodService) {}
 
   @ApiBearerAuth()
   @ApiOperation({
@@ -40,10 +43,12 @@ export class PaymentMethodController {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
 
-    const paymentMethods = await this.paymentMethodService.getAllPaymentMethods({
-      pageNo,
-      pageSize,
-    });
+    const paymentMethods = await this.paymentMethodService.getAllPaymentMethods(
+      {
+        pageNo,
+        pageSize,
+      },
+    );
     return {
       data: paymentMethods[0],
       totalCount: paymentMethods[1],
@@ -60,7 +65,9 @@ export class PaymentMethodController {
   async getPaymentMethodById(
     @Param('id', ParseIntPipe) paymentMethodId: number,
   ): Promise<PaymentMethod> {
-    return await this.paymentMethodService.getPaymentMethodById(paymentMethodId);
+    return await this.paymentMethodService.getPaymentMethodById(
+      paymentMethodId,
+    );
   }
 
   @ApiBearerAuth()
@@ -69,8 +76,12 @@ export class PaymentMethodController {
   })
   @UseGuards(AuthenticateGuard, AuthorizeGuard)
   @Post()
-  async createPaymentMethod(@Body() createPaymentMethodDto: CreatePaymentMethodDto) {
-    return await this.paymentMethodService.createPaymentMethod(createPaymentMethodDto);
+  async createPaymentMethod(
+    @Body() createPaymentMethodDto: CreatePaymentMethodDto,
+  ) {
+    return await this.paymentMethodService.createPaymentMethod(
+      createPaymentMethodDto,
+    );
   }
 
   @ApiBearerAuth()
@@ -83,7 +94,10 @@ export class PaymentMethodController {
     @Param('id', ParseIntPipe) paymentMethodId: number,
     @Body() updatePaymentMethodDto: UpdatePaymentMethodDto,
   ) {
-    return await this.paymentMethodService.updatePaymentMethod(paymentMethodId, updatePaymentMethodDto);
+    return await this.paymentMethodService.updatePaymentMethod(
+      paymentMethodId,
+      updatePaymentMethodDto,
+    );
   }
 
   @ApiBearerAuth()
@@ -92,7 +106,9 @@ export class PaymentMethodController {
   })
   @UseGuards(AuthenticateGuard, AuthorizeGuard)
   @Delete(':id')
-  async deletePaymentMethod(@Param('id', ParseIntPipe) paymentMethodId: number) {
+  async deletePaymentMethod(
+    @Param('id', ParseIntPipe) paymentMethodId: number,
+  ) {
     return await this.paymentMethodService.deletePaymentMethod(paymentMethodId);
   }
 }

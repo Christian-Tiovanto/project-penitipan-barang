@@ -1,3 +1,4 @@
+import { CustomerPayment } from '@app/modules/customer-payment/models/customer-payment.entity';
 import { TransactionIn } from '@app/modules/transaction-in/models/transaction-in.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import {
@@ -49,6 +50,12 @@ export class Customer implements ICustomer {
   @UpdateDateColumn()
   updated_at: Date;
 
-  @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.productId)
+  @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.customerId)
   transaction_in: TransactionIn[];
+
+  @OneToMany(
+    () => CustomerPayment,
+    (customerPayment) => customerPayment.customerId,
+  )
+  customer_payment: CustomerPayment[];
 }
