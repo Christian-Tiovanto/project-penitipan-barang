@@ -25,7 +25,8 @@ import { PaymentMethod } from './modules/payment-method/models/payment-method.en
 import { PaymentMethodModule } from './modules/payment-method/payment-method.module';
 import { CustomerPaymentModule } from './modules/customer-payment/customer-payment.module';
 import { CustomerPayment } from './modules/customer-payment/models/customer-payment.entity';
-import { ArPaymentModule } from './modules/ar-paidoff/ar-payment.module';
+import { ArPaymentModule } from './modules/ar-payment/ar-payment.module';
+import { CashflowModule } from './modules/cashflow/cashflow.module';
 
 @Module({
   providers: [
@@ -67,6 +68,7 @@ import { ArPaymentModule } from './modules/ar-paidoff/ar-payment.module';
     PaymentMethodModule,
     CustomerPaymentModule,
     ArPaymentModule,
+    CashflowModule,
   ],
 })
 export class AppModule {}
