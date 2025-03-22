@@ -33,7 +33,7 @@ export class CustomerPayment implements ICustomerPayment {
   customer: number;
 
   @ApiProperty({ example: 1 })
-  @Column({ nullable: true })
+  @Column()
   customerId: number;
 
   @ApiProperty({ example: 1 })
@@ -41,7 +41,7 @@ export class CustomerPayment implements ICustomerPayment {
   payment_method: number;
 
   @ApiProperty({ example: 1 })
-  @Column({ nullable: true })
+  @Column()
   payment_methodId: number;
 
   @ApiProperty({ example: 1000 })

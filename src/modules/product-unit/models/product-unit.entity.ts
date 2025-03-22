@@ -30,7 +30,7 @@ export class ProductUnit implements IProductUnit {
   product: number;
 
   @ApiProperty({ example: 1 })
-  @Column({ nullable: true })
+  @Column()
   productId: number;
 
   @ApiProperty({ example: 'Product-unit Name' })

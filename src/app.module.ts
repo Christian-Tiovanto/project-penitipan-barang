@@ -27,6 +27,8 @@ import { CustomerPaymentModule } from './modules/customer-payment/customer-payme
 import { CustomerPayment } from './modules/customer-payment/models/customer-payment.entity';
 import { ArPaymentModule } from './modules/ar-payment/ar-payment.module';
 import { CashflowModule } from './modules/cashflow/cashflow.module';
+import { Cashflow } from './modules/cashflow/models/cashflow.entity';
+import { ArPayment } from './modules/ar-payment/models/ar-payment.entity';
 
 @Module({
   providers: [
@@ -53,6 +55,8 @@ import { CashflowModule } from './modules/cashflow/cashflow.module';
         TransactionIn,
         PaymentMethod,
         CustomerPayment,
+        Cashflow,
+        ArPayment,
       ],
       synchronize: true,
     }),

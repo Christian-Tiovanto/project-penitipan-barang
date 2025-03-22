@@ -32,13 +32,13 @@ export class TransactionIn implements ITransactionIn {
   @ManyToOne(() => Customer, (customer) => customer.transaction_in)
   customer: number;
 
-  @Column({ nullable: true })
+  @Column()
   customerId: number;
 
   @ManyToOne(() => Product, (product) => product.transaction_in)
   product: number;
 
-  @Column({ nullable: true })
+  @Column()
   productId: number;
 
   @Column({ type: 'int', default: 0 })
