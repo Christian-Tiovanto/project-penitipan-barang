@@ -1,0 +1,180 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ITransactionIn, TransactionIn } from '../models/transaction-in.entity';
+import { EntityManager, Repository } from 'typeorm';
+import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
+import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
+import { ProductService } from '@app/modules/product/services/product.service';
+import { ProductUnitService } from '@app/modules/product-unit/services/product-unit.service';
+import { IProductUnit } from '@app/modules/product-unit/models/product-unit.entity';
+import { CustomerService } from '@app/modules/customer/services/customer.service';
+
+interface GetAllSupplier {
+  pageNo: number;
+  pageSize: number;
+}
+
+@Injectable()
+export class TransactionInService {
+  constructor(
+    @InjectRepository(TransactionIn)
+    private transactionInRepository: Repository<TransactionIn>,
+    private productService: ProductService,
+    private productUnitService: ProductUnitService,
+    private customerService: CustomerService,
+  ) {}
+
+  async createTransactionIn(
+    createTransactionInDto: CreateTransactionInDto,
+  ): Promise<TransactionIn> {
+    const product = await this.productService.findProductById(
+      createTransactionInDto.productId,
+    );
+    const productUnit =
+      await this.productUnitService.findProductUnitByIdNProductId(
+        createTransactionInDto.unitId,
+        createTransactionInDto.productId,
+      );
+    await this.customerService.findCustomerById(
+      createTransactionInDto.customerId,
+    );
+    createTransactionInDto.remaining_qty = createTransactionInDto.qty;
+    createTransactionInDto.converted_qty =
+      createTransactionInDto.qty * productUnit.conversion_to_kg;
+    createTransactionInDto.conversion_to_kg = productUnit.conversion_to_kg;
+    createTransactionInDto.unit = productUnit.name;
+    const transaction = await this.transactionInRepository.manager.transaction(
+      async (entityManager: EntityManager) => {
+        await this.productService.addProductQtyWithEntityManager(
+          entityManager,
+          product,
+          createTransactionInDto.converted_qty,
+        );
+        const transactionIn = entityManager.create(
+          TransactionIn,
+          createTransactionInDto,
+        );
+        const createdTransactionIn = await entityManager.save(transactionIn);
+        return createdTransactionIn;
+      },
+    );
+
+    return transaction;
+  }
+
+  async getAllTransactionIn({ pageNo, pageSize }: GetAllSupplier) {
+    const skip = (pageNo - 1) * pageSize;
+    const transactions = await this.transactionInRepository.findAndCount({
+      skip,
+      take: pageSize,
+    });
+    return transactions;
+  }
+
+  async findTransactionInById(id: number) {
+    const transactionIn = await this.transactionInRepository.findOne({
+      where: { id },
+    });
+    if (!transactionIn)
+      throw new NotFoundException('No Transaction In with that id');
+    return transactionIn;
+  }
+
+  async updateTransactionInByIdWithEM(
+    transactionInId: number,
+    updateTransactionInDto: UpdateTransactionInDto,
+  ) {
+    const transactionIn = await this.findTransactionInById(transactionInId);
+    await this.customerService.findCustomerById(
+      updateTransactionInDto.customerId,
+    );
+    let currentProductUnit: Pick<IProductUnit, 'conversion_to_kg' | 'name'> = {
+      conversion_to_kg: transactionIn.conversion_to_kg,
+      name: transactionIn.unit,
+    };
+    const currentQty: Pick<ITransactionIn, 'qty'> = {
+      qty: transactionIn.qty,
+    };
+    if (!updateTransactionInDto.productId) {
+      updateTransactionInDto.productId = transactionIn.productId;
+    }
+    if (updateTransactionInDto.unitId) {
+      currentProductUnit =
+        await this.productUnitService.findProductUnitByIdNProductId(
+          updateTransactionInDto.unitId,
+          updateTransactionInDto.productId,
+        );
+      updateTransactionInDto.unit = currentProductUnit.name;
+      updateTransactionInDto.conversion_to_kg =
+        currentProductUnit.conversion_to_kg;
+    }
+    if (updateTransactionInDto.qty) {
+      currentQty.qty = updateTransactionInDto.qty;
+    }
+    updateTransactionInDto.converted_qty =
+      currentQty.qty * currentProductUnit.conversion_to_kg;
+    await this.transactionInRepository.manager.transaction(
+      async (entityManager: EntityManager) => {
+        await this.updateTransactionInProduct(
+          transactionIn,
+          updateTransactionInDto,
+          entityManager,
+        );
+
+        updateTransactionInDto.remaining_qty =
+          updateTransactionInDto.converted_qty;
+        Object.assign(transactionIn, updateTransactionInDto);
+        await entityManager.save(transactionIn);
+      },
+    );
+    return transactionIn;
+  }
+
+  private async updateTransactionInProductQty(
+    transactionIn: TransactionIn,
+    updateTransactionInDto: UpdateTransactionInDto,
+    entityManager: EntityManager,
+  ) {
+    const product = await this.productService.findProductById(
+      transactionIn.productId,
+    );
+    const qtyToUpdate =
+      transactionIn.converted_qty - updateTransactionInDto.converted_qty;
+    product.qty = product.qty - qtyToUpdate;
+    await this.productService.updateProductQtyWithEntityManager(
+      entityManager,
+      product,
+    );
+  }
+
+  private async updateTransactionInProduct(
+    transactionIn: TransactionIn,
+    updateTransactionInDto: UpdateTransactionInDto,
+    entityManager: EntityManager,
+  ) {
+    if (transactionIn.productId === updateTransactionInDto.productId) {
+      await this.updateTransactionInProductQty(
+        transactionIn,
+        updateTransactionInDto,
+        entityManager,
+      );
+    } else {
+      const previousProduct = await this.productService.findProductById(
+        transactionIn.productId,
+      );
+      previousProduct.qty = previousProduct.qty - transactionIn.converted_qty;
+      await this.productService.updateProductQtyWithEntityManager(
+        entityManager,
+        previousProduct,
+      );
+      const updatedToProduct = await this.productService.findProductById(
+        updateTransactionInDto.productId,
+      );
+      await this.productService.addProductQtyWithEntityManager(
+        entityManager,
+        updatedToProduct,
+        updateTransactionInDto.converted_qty,
+      );
+    }
+  }
+}

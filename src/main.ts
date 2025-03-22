@@ -9,6 +9,7 @@ async function bootstrap() {
     .setTitle('Endpoint Penitipan Barang')
     .setDescription('List Endpoint Penitipan Barang')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);

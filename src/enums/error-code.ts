@@ -1,0 +1,4 @@
+export enum ErrorCode {
+  DUPLICATE_ENTRY = 1062,
+  FOREIGN_KEY_CONSTRAINT = 1452,
+}

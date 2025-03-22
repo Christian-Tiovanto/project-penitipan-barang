@@ -1,0 +1,102 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { TransactionInService } from '../services/transaction-in.service';
+import { ApiTag } from '@app/enums/api-tags';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AuthenticateGuard } from '@app/guards/authenticate.guard';
+import { AuthorizeGuard } from '@app/guards/authorize.guard';
+import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
+import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
+import {
+  BasePaginationQuery,
+  OffsetPagination,
+} from '@app/interfaces/pagination.interface';
+import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
+import { TransactionIn } from '../models/transaction-in.entity';
+
+@ApiTags(ApiTag.TRANSACTION_IN)
+@Controller('api/v1/transaction-in')
+export class TransactionInController {
+  constructor(private readonly transactionInService: TransactionInService) {}
+
+  @ApiOperation({ summary: 'Create a Transaction In' })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @Post()
+  async createTransactionIn(
+    @Body() createTransactionInDto: CreateTransactionInDto,
+  ) {
+    return await this.transactionInService.createTransactionIn(
+      createTransactionInDto,
+    );
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All Transaction In',
+  })
+  @UseInterceptors(OffsetPaginationInterceptor)
+  @UseGuards(AuthenticateGuard)
+  @Get()
+  async getAllTransactionIn(
+    @Query() { page_no, page_size }: BasePaginationQuery,
+  ): Promise<OffsetPagination<TransactionIn>> {
+    const pageSize = parseInt(page_size) || 10;
+    const pageNo = parseInt(page_no) || 1;
+    const transactions = await this.transactionInService.getAllTransactionIn({
+      pageNo,
+      pageSize,
+    });
+    return {
+      data: transactions[0],
+      totalCount: transactions[1],
+      filteredCount: transactions[1],
+    };
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get Transaction In by Id',
+  })
+  @UseGuards(AuthenticateGuard)
+  @Get(':id')
+  async getTransactionInById(@Param('id', ParseIntPipe) supplierId: number) {
+    return await this.transactionInService.findTransactionInById(supplierId);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update Transaction In by id',
+  })
+  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @Patch(':id')
+  async updateTransactionInById(
+    @Param('id', ParseIntPipe) supplierId: number,
+    @Body() updateSupplierDto: UpdateTransactionInDto,
+  ) {
+    return await this.transactionInService.updateTransactionInByIdWithEM(
+      supplierId,
+      updateSupplierDto,
+    );
+  }
+
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Soft Delete Supplier by id',
+  // })
+  // @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  // @Delete(':id')
+  // async softDeleteSupplierById(@Param('id', ParseIntPipe) supplierId: number) {
+  //   return await this.transactionInService.softDeleteSupplierById(supplierId);
+  // }
+}

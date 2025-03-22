@@ -1,7 +1,7 @@
 import { ValidationRegex } from '@app/enums/validation-regex';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, TransformFnParams } from 'class-transformer';
-import Joi from 'joi';
+import * as Joi from 'joi';
 import { JoiSchema } from 'joi-class-decorators';
 
 export interface BasePagination<T> {
@@ -11,32 +11,30 @@ export interface BasePagination<T> {
 export interface OffsetPagination<T> extends BasePagination<T> {
   totalCount: number;
   filteredCount?: number;
-  pageNo?: number;
-  pageSize?: number;
 }
 
-
-
-
-
-
 export class BasePaginationQuery {
-  @ApiProperty({ example: 10, required: false, description: 'Empty or zero default to 10' })
+  @ApiProperty({
+    example: 10,
+    required: false,
+    description: 'Empty or zero default to 10',
+  })
   @Transform(({ value }: TransformFnParams): string => {
-    if (value === '0') {
+    if (value === '0' || value === undefined) {
       return '10';
     }
     return value;
   })
   @JoiSchema(Joi.string().regex(ValidationRegex.NUMBER_STRING).optional())
   page_size?: string;
-}
 
-
-export class OffsetPaginationWithoutSearchQuery extends BasePaginationQuery {
-  @ApiProperty({ example: 1, required: false, description: 'Empty or zero default to 1' })
+  @ApiProperty({
+    example: 1,
+    required: false,
+    description: 'Empty or zero default to 1',
+  })
   @Transform(({ value }: TransformFnParams): string => {
-    if (value === '0') {
+    if (value === '0' || value === undefined) {
       return '1';
     }
     return value;
@@ -44,8 +42,6 @@ export class OffsetPaginationWithoutSearchQuery extends BasePaginationQuery {
   @JoiSchema(Joi.string().regex(ValidationRegex.NUMBER_STRING).optional())
   page_no?: string;
 }
-
-
 
 export class OffsetPaginationMeta {
   @ApiProperty({ example: 1 })
@@ -60,8 +56,6 @@ export class OffsetPaginationMeta {
   @ApiProperty({ example: 10 })
   page_size!: number;
 }
-
-
 
 export class MetaData {
   @ApiProperty({ example: 'string' })
@@ -78,5 +72,3 @@ export interface BasePaginationResponse<T> {
 export interface OffsetPaginationResponse<T> extends BasePaginationResponse<T> {
   meta: OffsetPaginationMeta;
 }
-
-
