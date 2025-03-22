@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { ArPayment } from '../models/ar-payment.entity';
 import { CreateArPaymentDto } from '../dtos/create-ar-payment.dto';
 import { CustomerPaymentService } from '@app/modules/customer-payment/services/customer-payment.service';
+import { CashflowService } from '@app/modules/cashflow/services/cashflow.service';
 interface GetAllQuery {
   pageNo: number;
   pageSize: number;
@@ -14,6 +15,7 @@ export class ArPaymentService {
     @InjectRepository(ArPayment)
     private readonly arPaymentRepository: Repository<ArPayment>,
     private readonly customerPaymentService: CustomerPaymentService,
+    private readonly cashflowService: CashflowService,
   ) {}
 
   async getAllArPayments({

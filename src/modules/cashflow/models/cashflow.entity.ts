@@ -8,6 +8,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 
 export interface ICashflow {
@@ -27,6 +28,7 @@ export class Cashflow implements ICashflow {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @JoinColumn({ name: 'created_byId' })
   @ManyToOne(() => User, (user) => user)
   created_by: number;
 
