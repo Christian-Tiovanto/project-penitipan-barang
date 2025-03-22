@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ArPayment } from './models/ar-payment.entity';
-import { ProductUnitController } from './controllers/ar-payment.controller';
+import { ArPaymentController } from './controllers/ar-payment.controller';
 import { ArPaymentService } from './services/ar-payment.service';
 import { CustomerPaymentModule } from '../customer-payment/customer-payment.module';
 import { CashflowModule } from '../cashflow/cashflow.module';
@@ -12,7 +12,7 @@ import { CashflowModule } from '../cashflow/cashflow.module';
     CustomerPaymentModule,
     CashflowModule,
   ],
-  controllers: [ProductUnitController],
+  controllers: [ArPaymentController],
   providers: [ArPaymentService],
   exports: [ArPaymentService],
 })

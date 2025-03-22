@@ -22,9 +22,9 @@ import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 
-@ApiTags(ApiTag.PRODUCT_UNIT)
-@Controller('api/v1/product-unit')
-export class ProductUnitController {
+@ApiTags(ApiTag.AR_PAYMENT)
+@Controller('api/v1/ar-payment')
+export class ArPaymentController {
   constructor(private readonly arPaymentService: ArPaymentService) {}
 
   @ApiBearerAuth()

@@ -1,4 +1,5 @@
-import { Product } from '@app/modules/product/models/product.entity';
+import { CustomerPayment } from '@app/modules/customer-payment/models/customer-payment.entity';
+import { Customer } from '@app/modules/customer/models/customer.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
@@ -30,21 +31,21 @@ export class ArPayment implements IArPayment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Product, (product) => product.product_unit)
+  // @ManyToOne(() => Product, (product) => product.product_unit)
   accreceivable: number;
 
-  @ApiProperty({ example: 1 })
+  // @ApiProperty({ example: 1 })
   @Column()
   accreceivableId: number;
 
-  @ManyToOne(() => Product, (product) => product.product_unit)
+  @ManyToOne(() => CustomerPayment, (customerPayment) => customerPayment)
   customer_payment: number;
 
   @ApiProperty({ example: 1 })
   @Column()
   customer_paymentId: number;
 
-  @ManyToOne(() => Product, (product) => product.product_unit)
+  @ManyToOne(() => Customer, (customer) => customer)
   customer: number;
 
   @ApiProperty({ example: 1 })

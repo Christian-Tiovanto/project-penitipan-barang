@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Cashflow } from '../models/cashflow.entity';
 import { CreateCashflowDto } from '../dtos/create-cashflow.dto';
 import { UserService } from '@app/modules/user/services/user.service';
@@ -82,6 +82,25 @@ export class CashflowService {
 
     const newCashflow = this.cashflowRepository.create(createCashflowDto);
     return await this.cashflowRepository.save(newCashflow);
+  }
+  async createCashflowFromArPaymentWithEM(
+    entityManager: EntityManager,
+    createCashflowDto: CreateCashflowDto,
+  ): Promise<Cashflow> {
+    if (createCashflowDto.amount < 1) {
+      throw new BadRequestException("Amount can't be less than 0");
+    }
+    const latestCashflow = await this.findLatestCashFlow();
+    const latestTotalAmount = latestCashflow?.total_amount || 0;
+
+    createCashflowDto.total_amount = this.calculateTotalAmount(
+      latestTotalAmount,
+      createCashflowDto.amount,
+      createCashflowDto.type,
+    );
+
+    const newCashflow = entityManager.create(Cashflow, createCashflowDto);
+    return await entityManager.save(newCashflow);
   }
 
   private calculateTotalAmount(

@@ -28,12 +28,15 @@ export class CreateArPaymentDto
   @JoiSchema(Joi.number().required())
   customerId: number;
 
+  @ApiProperty({ example: 20000 })
   @JoiSchema(Joi.number().min(1).required())
   total_paid: number;
 
+  @ApiProperty({ example: new Date() })
   @JoiSchema(Joi.date().required())
   transfer_date: Date;
 
+  @ApiProperty({ example: 'REF-1' })
   @JoiSchema(Joi.number().optional())
   reference_no: string;
 }

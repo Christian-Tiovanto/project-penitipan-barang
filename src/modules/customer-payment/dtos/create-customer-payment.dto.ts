@@ -23,6 +23,10 @@ export class CreateCustomerPaymentDto
   @JoiSchema(Joi.number().required())
   charge: number;
 
+  @ApiProperty({ example: 1000 })
+  @JoiSchema(Joi.number().required())
+  up_price: number;
+
   @ApiProperty({ example: true })
   @JoiSchema(Joi.boolean().optional())
   status: boolean;

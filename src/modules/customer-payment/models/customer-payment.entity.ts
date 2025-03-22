@@ -18,6 +18,7 @@ export interface ICustomerPayment {
   payment_methodId: number;
   charge: number;
   min_pay: number;
+  up_price: number;
   status: boolean;
   created_at: Date;
   updated_at: Date;
