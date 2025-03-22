@@ -22,7 +22,5 @@ export class CreateCashflowDto
   @JoiSchema(Joi.number().min(1).required())
   amount: number;
 
-  @ApiProperty({ example: 10000 })
-  @JoiSchema(Joi.number().required())
   created_byId?: number;
 }
