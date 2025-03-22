@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { Cashflow } from '../models/cashflow.entity';
 import { CreateCashflowDto } from '../dtos/create-cashflow.dto';
 import { UserService } from '@app/modules/user/services/user.service';
+import { CashflowType } from '@app/enums/cashflow-type';
 
 interface GetAllQuery {
   pageNo: number;
@@ -49,17 +50,47 @@ export class CashflowService {
     }
     return customer;
   }
+  async findLatestCashFlow(): Promise<Cashflow> {
+    const cashflow = await this.cashflowRepository.find({
+      order: { created_at: 'DESC' },
+      take: 1,
+    });
+    return cashflow[0];
+  }
 
   async createCashflow(
+    userId: number,
     createCashflowDto: CreateCashflowDto,
   ): Promise<Cashflow> {
+    if (userId) {
+      createCashflowDto.created_byId = userId;
+    }
     if (createCashflowDto.amount < 1) {
       throw new BadRequestException("Amount can't be less than 0");
     }
     if (createCashflowDto.created_byId) {
       await this.userService.findUserById(createCashflowDto.created_byId);
     }
+    const latestCashflow = await this.findLatestCashFlow();
+    const latestTotalAmount = latestCashflow?.total_amount || 0;
+
+    createCashflowDto.total_amount = this.calculateTotalAmount(
+      latestTotalAmount,
+      createCashflowDto.amount,
+      createCashflowDto.type,
+    );
+
     const newCashflow = this.cashflowRepository.create(createCashflowDto);
     return await this.cashflowRepository.save(newCashflow);
+  }
+
+  private calculateTotalAmount(
+    latestTotalAmount: number,
+    amount: number,
+    type: CashflowType,
+  ): number {
+    return type === CashflowType.IN
+      ? latestTotalAmount + amount
+      : latestTotalAmount - amount;
   }
 }

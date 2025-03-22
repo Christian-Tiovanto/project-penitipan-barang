@@ -14,6 +14,7 @@ export interface ICashflow {
   id: number;
   type: string;
   amount: number;
+  total_amount: number;
   created_by: number;
   created_byId?: number;
   created_at: Date;
@@ -33,11 +34,27 @@ export class Cashflow implements ICashflow {
   @Column({ type: 'enum', enum: CashflowType })
   type: CashflowType;
 
-  @ApiProperty({ example: 'Customer Name' })
-  @Column({ type: 'decimal' })
+  @ApiProperty({ example: 20000 })
+  @Column({
+    type: 'decimal',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
   amount: number;
 
-  @ApiProperty({ example: 'Customer Name' })
+  @ApiProperty({ example: 50000 })
+  @Column({
+    type: 'decimal',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
+  total_amount: number;
+
+  @ApiProperty({ example: 1 })
   @Column({ nullable: true })
   created_byId: number;
 

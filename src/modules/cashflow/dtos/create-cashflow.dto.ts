@@ -7,8 +7,11 @@ import { CashflowType } from '@app/enums/cashflow-type';
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateCashflowDto
   implements
-    Omit<ICashflow, 'id' | 'created_at' | 'updated_at' | 'created_by'>,
-    Partial<Pick<ICashflow, 'created_byId'>>
+    Omit<
+      ICashflow,
+      'id' | 'created_at' | 'updated_at' | 'created_by' | 'total_amount'
+    >,
+    Partial<Pick<ICashflow, 'created_byId' | 'total_amount'>>
 {
   @ApiProperty({ example: CashflowType.IN })
   @JoiSchema(
@@ -23,4 +26,5 @@ export class CreateCashflowDto
   amount: number;
 
   created_byId?: number;
+  total_amount?: number;
 }

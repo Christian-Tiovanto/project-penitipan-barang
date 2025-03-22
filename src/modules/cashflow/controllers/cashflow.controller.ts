@@ -21,6 +21,8 @@ import {
 } from '@app/interfaces/pagination.interface';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
+import { CurrentUser } from '@app/decorators/current-user.decorator';
+import { JwtPayload } from '@app/interfaces/jwt-payload.interface';
 
 @ApiTags(ApiTag.CASHFLOW)
 @Controller('api/v1/cashflow')
@@ -69,7 +71,13 @@ export class CashflowController {
   })
   @UseGuards(AuthenticateGuard, AuthorizeGuard)
   @Post()
-  async createCashflow(@Body() createCashflowDto: CreateCashflowDto) {
-    return await this.cashflowService.createCashflow(createCashflowDto);
+  async createCashflow(
+    @Body() createCashflowDto: CreateCashflowDto,
+    @CurrentUser() currentUser: JwtPayload,
+  ) {
+    return await this.cashflowService.createCashflow(
+      currentUser.id,
+      createCashflowDto,
+    );
   }
 }
