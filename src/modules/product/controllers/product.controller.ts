@@ -18,14 +18,17 @@ import { UpdateProductDto } from '../dtos/update-product.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
-import { BasePaginationQuery, OffsetPagination } from '@app/interfaces/pagination.interface';
+import {
+  BasePaginationQuery,
+  OffsetPagination,
+} from '@app/interfaces/pagination.interface';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 
 @ApiTags(ApiTag.PRODUCT)
 @Controller('api/v1/product')
 export class ProductController {
-  constructor(private readonly productService: ProductService) { }
+  constructor(private readonly productService: ProductService) {}
 
   @ApiBearerAuth()
   @ApiOperation({
@@ -60,7 +63,7 @@ export class ProductController {
   async getProductById(
     @Param('id', ParseIntPipe) productId: number,
   ): Promise<Product> {
-    return await this.productService.getProductById(productId);
+    return await this.productService.findProductById(productId);
   }
 
   @ApiBearerAuth()

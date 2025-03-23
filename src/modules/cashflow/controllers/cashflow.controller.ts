@@ -62,7 +62,7 @@ export class CashflowController {
   async getCashflowById(
     @Param('id', ParseIntPipe) cashflowId: number,
   ): Promise<Cashflow> {
-    return await this.cashflowService.getCashflowById(cashflowId);
+    return await this.cashflowService.findCashflowById(cashflowId);
   }
 
   @ApiBearerAuth()

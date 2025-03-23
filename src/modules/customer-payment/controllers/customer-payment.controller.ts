@@ -66,7 +66,7 @@ export class CustomerPaymentController {
   async getCustomerPaymentById(
     @Param('id', ParseIntPipe) customerPaymentId: number,
   ): Promise<CustomerPayment> {
-    return await this.customerPaymentService.getCustomerrPaymentById(
+    return await this.customerPaymentService.findCustomerPaymentById(
       customerPaymentId,
     );
   }

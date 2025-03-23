@@ -18,14 +18,17 @@ import { UpdateFineDto } from '../dtos/update-fine.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
-import { BasePaginationQuery, OffsetPagination } from '@app/interfaces/pagination.interface';
+import {
+  BasePaginationQuery,
+  OffsetPagination,
+} from '@app/interfaces/pagination.interface';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 
 @ApiTags(ApiTag.FINE)
 @Controller('api/v1/fine')
 export class FineController {
-  constructor(private readonly fineService: FineService) { }
+  constructor(private readonly fineService: FineService) {}
 
   @ApiBearerAuth()
   @ApiOperation({
@@ -57,10 +60,8 @@ export class FineController {
   })
   @UseGuards(AuthenticateGuard)
   @Get(':id')
-  async getFineById(
-    @Param('id', ParseIntPipe) fineId: number,
-  ): Promise<Fine> {
-    return await this.fineService.getFineById(fineId);
+  async getFineById(@Param('id', ParseIntPipe) fineId: number): Promise<Fine> {
+    return await this.fineService.findFineById(fineId);
   }
 
   @ApiBearerAuth()

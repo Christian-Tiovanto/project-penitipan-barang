@@ -17,16 +17,18 @@ import { CreateProductUnitDto } from '../dtos/create-product-unit.dto';
 import { UpdateProductUnitDto } from '../dtos/update-product-unit.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
-import { BasePaginationQuery, OffsetPagination } from '@app/interfaces/pagination.interface';
+import {
+  BasePaginationQuery,
+  OffsetPagination,
+} from '@app/interfaces/pagination.interface';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 
 @ApiTags(ApiTag.PRODUCT_UNIT)
 @Controller('api/v1/product-unit')
-
 export class ProductUnitController {
-  constructor(private readonly productUnitService: ProductUnitService) { }
+  constructor(private readonly productUnitService: ProductUnitService) {}
 
   @ApiBearerAuth()
   @ApiOperation({
@@ -60,7 +62,7 @@ export class ProductUnitController {
   async getProductUnitById(
     @Param('id', ParseIntPipe) productUnitId: number,
   ): Promise<ProductUnit> {
-    return await this.productUnitService.getProductUnitById(productUnitId);
+    return await this.productUnitService.findProductUnitById(productUnitId);
   }
 
   @ApiBearerAuth()
@@ -83,7 +85,10 @@ export class ProductUnitController {
     @Param('id', ParseIntPipe) productUnitId: number,
     @Body() updateProductDto: UpdateProductUnitDto,
   ) {
-    return await this.productUnitService.updateProductUnit(productUnitId, updateProductDto);
+    return await this.productUnitService.updateProductUnit(
+      productUnitId,
+      updateProductDto,
+    );
   }
 
   @ApiBearerAuth()

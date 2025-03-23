@@ -63,7 +63,7 @@ export class CustomerController {
   async getCustomerById(
     @Param('id', ParseIntPipe) customerId: number,
   ): Promise<Customer> {
-    return await this.customerService.getCustomerById(customerId);
+    return await this.customerService.findCustomerById(customerId);
   }
 
   @ApiBearerAuth()
