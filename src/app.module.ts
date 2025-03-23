@@ -29,6 +29,8 @@ import { ArPaymentModule } from './modules/ar-payment/ar-payment.module';
 import { CashflowModule } from './modules/cashflow/cashflow.module';
 import { Cashflow } from './modules/cashflow/models/cashflow.entity';
 import { ArPayment } from './modules/ar-payment/models/ar-payment.entity';
+import { ChargeModule } from './modules/charge/charge.module';
+import { Charge } from './modules/charge/models/charge.entity';
 
 @Module({
   providers: [
@@ -57,6 +59,7 @@ import { ArPayment } from './modules/ar-payment/models/ar-payment.entity';
         CustomerPayment,
         Cashflow,
         ArPayment,
+        Charge,
       ],
       synchronize: true,
     }),
@@ -73,6 +76,7 @@ import { ArPayment } from './modules/ar-payment/models/ar-payment.entity';
     CustomerPaymentModule,
     ArPaymentModule,
     CashflowModule,
+    ChargeModule,
   ],
 })
 export class AppModule {}
