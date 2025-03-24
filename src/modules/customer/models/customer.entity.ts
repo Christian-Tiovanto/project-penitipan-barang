@@ -1,5 +1,9 @@
+import { Ar } from '@app/modules/accreceivable/models/ar.entity';
 import { CustomerPayment } from '@app/modules/customer-payment/models/customer-payment.entity';
+import { Invoice } from '@app/modules/invoice/models/invoice.entity';
+import { Spb } from '@app/modules/spb/models/spb.entity';
 import { TransactionIn } from '@app/modules/transaction-in/models/transaction-in.entity';
+import { TransactionOut } from '@app/modules/transaction-out/models/transaction-out.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
@@ -52,6 +56,18 @@ export class Customer implements ICustomer {
 
   @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.customerId)
   transaction_in: TransactionIn[];
+
+  @OneToMany(() => TransactionOut, (transaction_out) => transaction_out.customerId)
+  transaction_out: TransactionOut[];
+
+  @OneToMany(() => Invoice, (invoice) => invoice.customerId)
+  invoice: Invoice[];
+
+  @OneToMany(() => Spb, (spb) => spb.customerId)
+  spb: Spb[];
+
+  @OneToMany(() => Ar, (ar) => ar.customerId)
+  ar: Ar[];
 
   @OneToMany(
     () => CustomerPayment,

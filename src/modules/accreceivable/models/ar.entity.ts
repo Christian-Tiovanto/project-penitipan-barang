@@ -1,5 +1,5 @@
 import { Customer } from '@app/modules/customer/models/customer.entity';
-import { PaymentMethod } from '@app/modules/payment-method/models/payment-method.entity';
+import { Invoice } from '@app/modules/invoice/models/invoice.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
@@ -7,43 +7,48 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
   ManyToOne,
 } from 'typeorm';
 
-export interface ICustomerPayment {
+export interface IAr {
   id: number;
   customer: number;
   customerId: number;
-  payment_method: number;
-  payment_methodId: number;
-  charge: number;
-  min_pay: number;
-  up_price: number;
-  status: boolean;
+  invoice: number;
+  invoiceId: number;
+  ar_no: string;
+  total_bill: number;
+  to_paid: number;
+  status: string;
+  paid_date: Date;
   created_at: Date;
   updated_at: Date;
 }
 
-@Entity('customer_payments')
-export class CustomerPayment implements ICustomerPayment {
+@Entity('ar')
+export class Ar implements IAr {
   @ApiProperty({ example: 1 })
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Customer, (customer) => customer.customer_payment)
+  @ManyToOne(() => Customer, (customer) => customer.ar)
   customer: number;
 
   @ApiProperty({ example: 1 })
   @Column({ type: 'int', nullable: true })
   customerId: number;
 
-  @ApiProperty({ example: 1 })
-  @ManyToOne(() => PaymentMethod, (paymentMethod) => paymentMethod)
-  payment_method: number;
+  @OneToOne(() => Invoice, (invoice) => invoice.ar)
+  invoice: number;
 
   @ApiProperty({ example: 1 })
   @Column({ type: 'int', nullable: true })
-  payment_methodId: number;
+  invoiceId: number;
+
+  @ApiProperty({ example: 'Ar No' })
+  @Column({ type: 'varchar' })
+  ar_no: string;
 
   @ApiProperty({ example: 1000 })
   @Column({
@@ -53,7 +58,7 @@ export class CustomerPayment implements ICustomerPayment {
       from: (value: string) => parseFloat(value),
     },
   })
-  charge: number;
+  total_bill: number;
 
   @ApiProperty({ example: 1000 })
   @Column({
@@ -63,25 +68,15 @@ export class CustomerPayment implements ICustomerPayment {
       from: (value: string) => parseFloat(value),
     },
   })
-  up_price: number;
+  to_paid: number;
 
-  @ApiProperty({ example: true })
-  @Column({ type: 'boolean', default: true })
-  status: boolean;
+  @ApiProperty({ example: 'status' })
+  @Column({ type: 'varchar' })
+  status: string;
 
-  @ApiProperty({ example: true })
-  @Column({ type: 'boolean', default: true })
-  sort: boolean;
-
-  @ApiProperty({ example: 1000 })
-  @Column({
-    type: 'decimal',
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => parseFloat(value),
-    },
-  })
-  min_pay: number;
+  @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })
+  @Column({ type: 'datetime', nullable: true })
+  paid_date: Date;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })
   @CreateDateColumn()

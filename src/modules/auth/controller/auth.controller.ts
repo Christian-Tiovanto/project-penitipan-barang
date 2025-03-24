@@ -17,7 +17,7 @@ import { AuthorizeGuard } from '@app/guards/authorize.guard';
 @Controller('api/v1/auth')
 @ApiExtraModels(JwtTokenResponse)
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @ApiOperation({ summary: 'Login' })
   @Post('login')

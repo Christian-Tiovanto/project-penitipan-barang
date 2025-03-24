@@ -7,20 +7,14 @@ import { AuthModule } from './modules/auth/auth.module';
 import { DataValidationPipe } from './pipes/validation.pipe';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { ExceptionHandlerFilter } from './filters/exception-handler.filter';
-import { MerchantModule } from './modules/merchant/merchant.module';
-import { Supplier } from './modules/supplier/models/supplier.entity';
-import { SupplierModule } from './modules/supplier/supplier.module';
 import { ProductModule } from './modules/product/product.module';
 import { ProductUnitModule } from './modules/product-unit/product-unit.module';
 import { Product } from './modules/product/models/product.entity';
 import { ProductUnit } from './modules/product-unit/models/product-unit.entity';
-import { FineModule } from './modules/fine/fine.module';
-import { Fine } from './modules/fine/models/fine.entity';
 import { CustomerModule } from './modules/customer/customer.module';
 import { Customer } from './modules/customer/models/customer.entity';
 import { TransactionInModule } from './modules/transaction-in/transaction-in.module';
 import { TransactionIn } from './modules/transaction-in/models/transaction-in.entity';
-import { Merchant } from './modules/merchant/models/merchant.entity';
 import { PaymentMethod } from './modules/payment-method/models/payment-method.entity';
 import { PaymentMethodModule } from './modules/payment-method/payment-method.module';
 import { CustomerPaymentModule } from './modules/customer-payment/customer-payment.module';
@@ -31,6 +25,11 @@ import { Cashflow } from './modules/cashflow/models/cashflow.entity';
 import { ArPayment } from './modules/ar-payment/models/ar-payment.entity';
 import { ChargeModule } from './modules/charge/charge.module';
 import { Charge } from './modules/charge/models/charge.entity';
+import { TransactionOut } from './modules/transaction-out/models/transaction-out.entity';
+import { TransactionOutModule } from './modules/transaction-out/transaction-out.module';
+import { Ar } from './modules/accreceivable/models/ar.entity';
+import { Spb } from './modules/spb/models/spb.entity';
+import { Invoice } from './modules/invoice/models/invoice.entity';
 
 @Module({
   providers: [
@@ -48,11 +47,8 @@ import { Charge } from './modules/charge/models/charge.entity';
       database: process.env.DB_NAME,
       entities: [
         User,
-        Merchant,
-        Supplier,
         Product,
         ProductUnit,
-        Fine,
         Customer,
         TransactionIn,
         PaymentMethod,
@@ -60,16 +56,17 @@ import { Charge } from './modules/charge/models/charge.entity';
         Cashflow,
         ArPayment,
         Charge,
+        TransactionOut,
+        Ar,
+        Spb,
+        Invoice,
       ],
       synchronize: true,
     }),
     UserModule,
     AuthModule,
-    MerchantModule,
-    SupplierModule,
     ProductModule,
     ProductUnitModule,
-    FineModule,
     CustomerModule,
     TransactionInModule,
     PaymentMethodModule,
@@ -77,6 +74,7 @@ import { Charge } from './modules/charge/models/charge.entity';
     ArPaymentModule,
     CashflowModule,
     ChargeModule,
+    TransactionOutModule,
   ],
 })
-export class AppModule {}
+export class AppModule { }

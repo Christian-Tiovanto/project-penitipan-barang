@@ -14,7 +14,7 @@ export class ProductService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
-  ) {}
+  ) { }
 
   async getAllProducts({
     pageNo,
@@ -46,6 +46,17 @@ export class ProductService {
     return product;
   }
 
+  async lockingProductById(entityManager: EntityManager, productId: number): Promise<Product> {
+    const product = await this.findProductById(productId)
+
+    await entityManager.findOne(Product, {
+      where: { id: productId },
+      lock: { mode: "pessimistic_write" },
+    });
+
+    return product;
+  }
+
   async createProduct(createProductDto: CreateProductDto): Promise<Product> {
     const newProduct = this.productRepository.create(createProductDto);
     return await this.productRepository.save(newProduct);
@@ -68,6 +79,15 @@ export class ProductService {
     qtyAdd: number,
   ): Promise<Product> {
     product.qty += qtyAdd;
+    return entityManager.save(product);
+  }
+
+  async withdrawProductQtyWithEntityManager(
+    entityManager: EntityManager,
+    product: Product,
+    qtyWithdraw: number,
+  ): Promise<Product> {
+    product.qty -= qtyWithdraw;
     return entityManager.save(product);
   }
 
