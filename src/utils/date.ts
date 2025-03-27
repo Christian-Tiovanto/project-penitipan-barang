@@ -18,11 +18,12 @@ export function isOutsideBusinessHours(date: Date): boolean {
     const hours = date.getHours();
     const startHour = 8;
     const endHour = 17;
-
-    console.log(`hour ${hours}`);
-    console.log(`starthour ${startHour}`);
-    console.log(`end hour ${endHour}`);
-
-
     return hours < startHour || hours >= endHour;
 }
+
+export function convertToWIB(utcDate: Date): Date {
+    const wibOffset = 7;
+    return new Date(utcDate.getTime() + wibOffset * 60 * 60 * 1000);
+}
+
+

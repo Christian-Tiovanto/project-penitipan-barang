@@ -4,6 +4,7 @@ import { EntityManager, Repository } from 'typeorm';
 import { Product } from '../models/product.entity';
 import { CreateProductDto } from '../dtos/create-product.dto';
 import { UpdateProductDto } from '../dtos/update-product.dto';
+import { InsufficientStockException } from '@app/exceptions/validation.exception';
 
 interface GetAllQuery {
   pageNo: number;
@@ -46,13 +47,17 @@ export class ProductService {
     return product;
   }
 
-  async lockingProductById(entityManager: EntityManager, productId: number): Promise<Product> {
+  async lockingProductById(entityManager: EntityManager, productId: number, requiredQty: number): Promise<Product> {
     const product = await this.findProductById(productId)
 
     await entityManager.findOne(Product, {
       where: { id: productId },
       lock: { mode: "pessimistic_write" },
     });
+
+    if (product.qty < requiredQty) {
+      throw new InsufficientStockException(`Insufficient stock: required ${requiredQty}, but only ${product.qty} available in Stock`);
+    }
 
     return product;
   }

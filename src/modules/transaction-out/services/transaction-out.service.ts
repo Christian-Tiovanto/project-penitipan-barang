@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, IsNull, Repository } from 'typeorm';
 import { TransactionOut } from '../models/transaction-out.entity';
 import { CreateTransactionOutDto, CreateTransactionOutWithSpbDto } from '../dtos/create-transaction-out.dto';
 import { UpdateTransactionOutDto } from '../dtos/update-transaction-out.dto';
@@ -10,7 +10,7 @@ import { ProductUnitService } from '@app/modules/product-unit/services/product-u
 import { CustomerService } from '@app/modules/customer/services/customer.service';
 import { TransactionIn } from '@app/modules/transaction-in/models/transaction-in.entity';
 import { TransactionInService } from '@app/modules/transaction-in/services/transaction-in.service';
-import { isOutsideBusinessHours, isPastDays, pastDaysCount } from '@app/utils/date';
+import { convertToWIB, isOutsideBusinessHours, isPastDays, pastDaysCount } from '@app/utils/date';
 import { Invoice } from '@app/modules/invoice/models/invoice.entity';
 import { CreateInvoiceDto } from '@app/modules/invoice/dtos/create-invoice.dto';
 import { create } from 'domain';
@@ -20,6 +20,9 @@ import { InvoiceService } from '@app/modules/invoice/services/invoice.service';
 import { ArService } from '@app/modules/accreceivable/services/ar.service';
 import { SpbService } from '@app/modules/spb/services/spb.service';
 import { ChargeService } from '@app/modules/charge/services/charge.service';
+import { InvoiceStatus } from '@app/enums/invoice-status';
+import { ArStatus } from '@app/enums/ar-status';
+import { ChargeType } from '@app/enums/charge-type';
 
 
 interface GetAllQuery {
@@ -35,6 +38,7 @@ export class TransactionOutService {
     private productService: ProductService,
     private transactionInService: TransactionInService,
     private invoiceService: InvoiceService,
+    private customerService: CustomerService,
     private arService: ArService,
     private spbService: SpbService,
     private chargeService: ChargeService,
@@ -73,11 +77,10 @@ export class TransactionOutService {
     spbId: number,
 
   ): Promise<void> {
-    const trans = await entityManager.find(TransactionOut, { where: { invoiceId: null } })
-    console.log(trans);
-    await entityManager.update(TransactionOut,
-      { invoiceId: null },
-      { invoiceId, spbId },
+    await entityManager.update(
+      TransactionOut,
+      { invoiceId: IsNull(), spbId: IsNull() },
+      { invoiceId, spbId }
     );
     return;
   }
@@ -85,7 +88,6 @@ export class TransactionOutService {
   async createTransactionOut(createTransactionOutWithSpbDto: CreateTransactionOutWithSpbDto): Promise<Invoice> {
     const transaction = await this.transactionOutRepository.manager.transaction(
       async (entityManager: EntityManager) => {
-        console.log("masuk")
         let amount: number = 0;
         let totalQty: number = 0;
         const customerId = createTransactionOutWithSpbDto.customerId;
@@ -93,61 +95,34 @@ export class TransactionOutService {
         const clockOut = createTransactionOutWithSpbDto.clock_out;
 
         const totalConvertedQty: number = createTransactionOutWithSpbDto.transaction_outs.reduce((sum, transaction) => sum + transaction.converted_qty, 0);
-        console.log(totalConvertedQty)
 
-        let totalCharge: number = 0
+        let totalCharge: number = 0;
+        let totalFine: number = 0;
 
-        let totalFine: number = 0
+        const valueCharge = await this.chargeService.findChargeById(1);
 
         for (const transactionOut of createTransactionOutWithSpbDto.transaction_outs) {
-          //locking product
+
           const product = await this.productService.lockingProductById(
             entityManager,
             transactionOut.productId,
+            transactionOut.converted_qty
           );
 
-          let productQty: number = transactionOut.converted_qty
+          let productQty: number = transactionOut.converted_qty;
 
-          //perhitungan harga
-          let totalPrice: number = transactionOut.converted_qty * product.price
-          amount += totalPrice
+          let totalPrice: number = transactionOut.converted_qty * product.price;
+          amount += totalPrice;
 
-          const productTransactionIns = await this.transactionInService.getTransactionInsWithRemainingQty(product.id, customerId)
+          const productTransactionIns = await this.transactionInService.getTransactionInsWithRemainingQty(product.id, customerId, transactionOut.converted_qty);
           for (const transactionIn of productTransactionIns) {
             if (productQty == 0) { break; }
             let qtyOut: number;
             let totalDays: number;
 
-            //locking trans in
-            await this.transactionInService.lockingTransactionInById(entityManager, transactionIn.id)
+            await this.transactionInService.lockingTransactionInById(entityManager, transactionIn.id);
 
-            //menghitung charga(keluar diluar jam kerja) 
-            let charge: number = 0;
-            // let chargeTransIn: number
-            const valueCharge = await this.chargeService.findChargeById(1)
-            let chargeAmount: number = 0
-            if (valueCharge.type == "percentage") {
-              chargeAmount = valueCharge.amount * totalPrice / 100
-            } else {
-              chargeAmount = valueCharge.amount
-            }
 
-            console.log(chargeAmount);
-
-            if (isOutsideBusinessHours(new Date)) {
-              console.log('charge out')
-              charge += chargeAmount
-            }
-            // mengecek charge masuk nya juga !!!
-            if (isOutsideBusinessHours(transactionIn.created_at)) {
-              console.log("charge in")
-              // chargeTransIn = 5000
-              charge += chargeAmount
-            }
-
-            totalCharge += charge //+ chargeTransIn
-
-            //menghitung fine (30 hari kerja lewat 1 detik saja harga x 2)
             let fine: number = 0;
             if (isPastDays(transactionIn.created_at, 120)) {
               fine = totalPrice * 4;
@@ -163,8 +138,6 @@ export class TransactionOutService {
             totalFine += fine;
 
             if (transactionIn.remaining_qty > productQty) {
-              //tidak mengecek qty di product karena sudah pasti ada jikalau di transaction in ada qty sisa
-              // kurangi stock product dan di transaction in
               await this.productService.withdrawProductQtyWithEntityManager(
                 entityManager,
                 product,
@@ -175,52 +148,55 @@ export class TransactionOutService {
                 transactionIn,
                 productQty,)
 
-              //harus di convert ke unit product in
-              qtyOut = productQty / transactionIn.conversion_to_kg
-              totalQty += qtyOut
-              transactionOut.converted_qty = productQty
-              productQty = 0
+              qtyOut = productQty / transactionIn.conversion_to_kg;
+              totalQty += qtyOut;
+              transactionOut.converted_qty = productQty;
+              productQty = 0;
             } else {
-              productQty -= transactionIn.remaining_qty
+              productQty -= transactionIn.remaining_qty;
 
-              qtyOut = transactionIn.remaining_qty / transactionIn.conversion_to_kg
-              totalQty += qtyOut
+              qtyOut = transactionIn.remaining_qty / transactionIn.conversion_to_kg;
+              totalQty += qtyOut;
 
-              transactionOut.converted_qty = transactionIn.remaining_qty
+              transactionOut.converted_qty = transactionIn.remaining_qty;
 
               await this.productService.withdrawProductQtyWithEntityManager(
                 entityManager,
                 product,
-                transactionIn.remaining_qty,)
+                transactionIn.remaining_qty,);
 
               await this.transactionInService.withdrawRemainingQtyWithEntityManager(
                 entityManager,
                 transactionIn,
-                transactionIn.remaining_qty,)
-
-              //harus di converted ke unit product in
-
+                transactionIn.remaining_qty,);
             }
 
+            let charge: number = 0;
+            let chargeAmountIn: number = 0;
 
-            //sign data
-            transactionOut.productId = transactionIn.productId
-            transactionOut.customerId = customerId
-            transactionOut.conversion_to_kg = transactionIn.conversion_to_kg
-            transactionOut.qty = qtyOut
-            // transactionOut.converted_qty = productQty // ini harus sebelum di kurang
-            //invoice id?
-            transactionOut.price = product.price
-            //spd id??
-            transactionOut.total_charge = charge
-            //charge in?
-            transactionOut.total_days = totalDays
+            if (valueCharge.type == ChargeType.PERCENTAGE) {
+              chargeAmountIn = valueCharge.amount * totalPrice / 100;
+            } else {
+              chargeAmountIn = valueCharge.amount * transactionOut.converted_qty;
+            }
+
+            if (isOutsideBusinessHours(convertToWIB(transactionIn.created_at))) {
+              charge += chargeAmountIn;
+            }
+
+            totalCharge += charge;
+
+            transactionOut.productId = transactionIn.productId;
+            transactionOut.customerId = customerId;
+            transactionOut.conversion_to_kg = transactionIn.conversion_to_kg;
+            transactionOut.qty = qtyOut;
+            transactionOut.price = product.price;
+            transactionOut.total_charge = charge;
+            transactionOut.total_days = totalDays;
             transactionOut.total_fine = fine;
-            transactionOut.total_price = product.price * transactionOut.converted_qty
+            transactionOut.total_price = product.price * transactionOut.converted_qty;
             transactionOut.unit = transactionIn.unit;
-            transactionOut.transaction_inId = transactionIn.id
-
-            console.log(transactionOut);
+            transactionOut.transaction_inId = transactionIn.id;
 
             const transactionOutSave = entityManager.create(
               TransactionOut,
@@ -230,22 +206,41 @@ export class TransactionOutService {
             await entityManager.save(transactionOutSave);
           }
         }
+
+        const customer = await this.customerService.findCustomerById(customerId);
+
+        let invoiceMaxId: number = await this.invoiceService.getMaxIdInvoice();
+        invoiceMaxId += 1;
+        const invoiceNo = `${customer.code}-${String(invoiceMaxId).padStart(5, "0")}`;
+
+        let arMaxId: number = await this.arService.getMaxIdAr();
+        arMaxId += 1;
+        const arNo = `${customer.code}-${String(arMaxId).padStart(5, "0")}`;
+
+        //perhitungan charge out
+        let chargeAmountOut: number = 0;
+        if (valueCharge.type == ChargeType.PERCENTAGE) {
+          chargeAmountOut = valueCharge.amount * amount / 100;
+        } else {
+          chargeAmountOut = valueCharge.amount * totalConvertedQty;
+        }
+
+        if (isOutsideBusinessHours(convertToWIB(new Date))) {
+          totalCharge += chargeAmountOut;
+        }
+
         const createInvoice = new CreateInvoiceDto();
         createInvoice.total_amount = amount;
         createInvoice.customerId = customerId;
         createInvoice.discount = 0;
         createInvoice.fine = totalFine;
-        createInvoice.invoice_no = "CUSTOMERID-INCREMENT";
-        createInvoice.status = "PENDING";
+        createInvoice.invoice_no = invoiceNo;
+        createInvoice.status = InvoiceStatus.PENDING;
         createInvoice.tax = 0;
         createInvoice.total_order = totalQty;
         createInvoice.total_order_converted = totalConvertedQty;
         createInvoice.charge = totalCharge;
-
-        console.log(createInvoice);
-
         const invoice = await this.invoiceService.createInvoice(createInvoice, entityManager)
-
 
         const createSpb = new CreateSpbDto();
         createSpb.clock_out = clockOut;
@@ -256,19 +251,16 @@ export class TransactionOutService {
         const spb = await this.spbService.createSpb(createSpb, entityManager);
 
         const createAr = new CreateArDto();
-        createAr.ar_no = invoice.invoice_no
+        createAr.ar_no = arNo;
         createAr.customerId = customerId;
         createAr.invoiceId = invoice.id
-        createAr.status = "PENDING";
-        createAr.to_paid = (invoice.total_amount + invoice.fine + invoice.charge + invoice.tax) - invoice.discount
+        createAr.status = ArStatus.PENDING;
+        createAr.to_paid = (invoice.total_amount + invoice.fine + invoice.charge + invoice.tax) - invoice.discount;
         createAr.paid_date = null;
-        createAr.total_bill = (invoice.total_amount + invoice.fine + invoice.charge + invoice.tax) - invoice.discount
+        createAr.total_bill = (invoice.total_amount + invoice.fine + invoice.charge + invoice.tax) - invoice.discount;
         const ar = await this.arService.createAr(createAr, entityManager);
 
-        console.log(invoice.id)
-        console.log(spb.id)
-
-        await this.updateTransactionOutNull(entityManager, invoice.id, spb.id)
+        await this.updateTransactionOutNull(entityManager, invoice.id, spb.id);
         return invoice;
       },
     );

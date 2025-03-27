@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
 import { IAr } from '../models/ar.entity';
+import { ArStatus } from '@app/enums/ar-status';
 
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateArDto
@@ -12,6 +13,6 @@ export class CreateArDto
   ar_no: string;
   total_bill: number;
   to_paid: number;
-  status: string;
+  status: ArStatus;
   paid_date: Date;
 }

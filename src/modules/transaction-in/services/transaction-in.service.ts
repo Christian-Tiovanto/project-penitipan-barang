@@ -8,6 +8,7 @@ import { ProductService } from '@app/modules/product/services/product.service';
 import { ProductUnitService } from '@app/modules/product-unit/services/product-unit.service';
 import { IProductUnit } from '@app/modules/product-unit/models/product-unit.entity';
 import { CustomerService } from '@app/modules/customer/services/customer.service';
+import { InsufficientStockException } from '@app/exceptions/validation.exception';
 
 interface GetAllSupplier {
   pageNo: number;
@@ -91,11 +92,21 @@ export class TransactionInService {
     return transactionIn;
   }
 
-  async getTransactionInsWithRemainingQty(productId: number, customerId: number) {
-    return await this.transactionInRepository.find({
+  async getTransactionInsWithRemainingQty(productId: number, customerId: number, requiredQty: number) {
+    const transactionIns = await this.transactionInRepository.find({
       where: { productId, customerId, remaining_qty: MoreThan(0) },
       order: { created_at: 'ASC' },
     });
+
+    const totalRemainingQty = transactionIns.reduce((sum, tx) => sum + tx.remaining_qty, 0);
+    if (totalRemainingQty < requiredQty) {
+      throw new InsufficientStockException(`Insufficient stock: required ${requiredQty}, but only ${totalRemainingQty} available in Transaction In`);
+    }
+
+    if (!transactionIns.length) {
+      throw new NotFoundException(`No transactions In found for productId ${productId} and customerId ${customerId}`);
+    }
+    return transactionIns
   }
 
   async updateTransactionInByIdWithEM(

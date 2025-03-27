@@ -1,3 +1,4 @@
+import { InvoiceStatus } from '@app/enums/invoice-status';
 import { Ar } from '@app/modules/accreceivable/models/ar.entity';
 import { Customer } from '@app/modules/customer/models/customer.entity';
 import { Spb } from '@app/modules/spb/models/spb.entity';
@@ -118,8 +119,8 @@ export class Invoice implements IInvoice {
   })
   tax: number;
 
-  @ApiProperty({ example: 'status' })
-  @Column({ type: 'varchar' })
+  @ApiProperty({ example: 'pending' })
+  @Column({ enum: InvoiceStatus, type: 'enum' })
   status: string;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })

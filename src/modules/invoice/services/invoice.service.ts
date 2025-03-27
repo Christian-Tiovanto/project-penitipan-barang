@@ -45,6 +45,18 @@ export class InvoiceService {
         return invoice;
     }
 
+    async getMaxIdInvoice(): Promise<number> {
+        const maxInvoice = await this.invoiceRepository.find({
+            order: { id: "DESC" },
+            select: ["id"],
+            take: 1,
+        });
+        const maxId = maxInvoice.length > 0 ? maxInvoice[0].id : 0;
+        return maxId;
+    }
+
+
+
     async createInvoice(createInvoiceDto: CreateInvoiceDto, entityManager?: EntityManager): Promise<Invoice> {
         const repo = entityManager ? entityManager.getRepository(Invoice) : this.invoiceRepository;
         const newInvoice = repo.create(createInvoiceDto);

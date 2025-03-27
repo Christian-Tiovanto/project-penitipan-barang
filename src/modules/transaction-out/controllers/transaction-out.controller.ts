@@ -70,20 +70,19 @@ export class TransactionOutController {
   @UseGuards(AuthenticateGuard, AuthorizeGuard)
   @Post()
   async createTransactionOut(@Body() createTransactionOutWithSpbDto: CreateTransactionOutWithSpbDto) {
-    console.log("masuk");
     return await this.transactionOutService.createTransactionOut(createTransactionOutWithSpbDto);
   }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Update Transaction Out by Id',
-  })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
-  @Patch(':id')
-  async updateTransactionOut(
-    @Param('id', ParseIntPipe) transactionOutId: number,
-    @Body() updateTransactionOutDto: UpdateTransactionOutDto,
-  ) {
-    return await this.transactionOutService.updateTransactionOut(transactionOutId, updateTransactionOutDto);
-  }
+  //   @ApiBearerAuth()
+  //   @ApiOperation({
+  //     summary: 'Update Transaction Out by Id',
+  //   })
+  //   @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  //   @Patch(':id')
+  //   async updateTransactionOut(
+  //     @Param('id', ParseIntPipe) transactionOutId: number,
+  //     @Body() updateTransactionOutDto: UpdateTransactionOutDto,
+  //   ) {
+  //     return await this.transactionOutService.updateTransactionOut(transactionOutId, updateTransactionOutDto);
+  //   }
 }

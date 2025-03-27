@@ -9,6 +9,7 @@ import { InvoiceModule } from '../invoice/invoice.module';
 import { ArModule } from '../accreceivable/ar.module';
 import { SpbModule } from '../spb/spb.module';
 import { ChargeModule } from '../charge/charge.module';
+import { CustomerModule } from '../customer/customer.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([TransactionOut]),
@@ -18,6 +19,7 @@ import { ChargeModule } from '../charge/charge.module';
     ArModule,
     SpbModule,
     ChargeModule,
+    CustomerModule,
   ],
   controllers: [TransactionOutController],
   providers: [TransactionOutService],

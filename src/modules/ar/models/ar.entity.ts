@@ -1,3 +1,4 @@
+import { ArStatus } from '@app/enums/ar-status';
 import { Customer } from '@app/modules/customer/models/customer.entity';
 import { Invoice } from '@app/modules/invoice/models/invoice.entity';
 import { ApiProperty } from '@nestjs/swagger';
@@ -70,8 +71,8 @@ export class Ar implements IAr {
   })
   to_paid: number;
 
-  @ApiProperty({ example: 'status' })
-  @Column({ type: 'varchar' })
+  @ApiProperty({ example: 'pending' })
+  @Column({ enum: ArStatus, type: 'enum' })
   status: string;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })

@@ -45,6 +45,16 @@ export class ArService {
         return ar;
     }
 
+    async getMaxIdAr(): Promise<number> {
+        const maxAr = await this.arRepository.find({
+            order: { id: "DESC" },
+            select: ["id"],
+            take: 1,
+        });
+        const maxId = maxAr.length > 0 ? maxAr[0].id : 0;
+        return maxId;
+    }
+
     async createAr(createArDto: CreateArDto, entityManager?: EntityManager): Promise<Ar> {
         const repo = entityManager ? entityManager.getRepository(Ar) : this.arRepository;
         const newAr = repo.create(createArDto);
