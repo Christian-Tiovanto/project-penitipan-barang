@@ -17,13 +17,13 @@ export class UpdateProductDto
   @JoiSchema(Joi.number().optional())
   price?: number;
 
-  @ApiProperty({ example: 'http://example.com/image.jpg' })
-  @JoiSchema(Joi.string().uri().optional())
-  image_url?: string;
+  // @ApiProperty({ example: 'http://example.com/image.jpg' })
+  // @JoiSchema(Joi.string().uri().optional())
+  // image_url?: string;
 
-  @ApiProperty({ example: 'filename.jpg' })
-  @JoiSchema(Joi.string().optional())
-  file_name?: string;
+  // @ApiProperty({ example: 'filename.jpg' })
+  // @JoiSchema(Joi.string().optional())
+  // file_name?: string;
 
   @ApiProperty({ example: 10 })
   @JoiSchema(Joi.number().integer().optional())

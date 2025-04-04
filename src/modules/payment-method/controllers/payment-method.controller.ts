@@ -28,22 +28,32 @@ import { AuthorizeGuard } from '@app/guards/authorize.guard';
 @ApiTags(ApiTag.PAYMENT_METHOD)
 @Controller('api/v1/payment-method')
 export class PaymentMethodController {
-  constructor(private readonly paymentMethodService: PaymentMethodService) {}
-
+  constructor(private readonly paymentMethodService: PaymentMethodService) { }
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get All Payment Method',
   })
+  @UseGuards(AuthenticateGuard)
+  @Get('/all')
+
+  async getAllPaymentMethods(): Promise<PaymentMethod[]> {
+    return await this.paymentMethodService.getAllPaymentMethods();
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All Payment Method Pagination',
+  })
   @UseInterceptors(OffsetPaginationInterceptor<PaymentMethod>)
   @UseGuards(AuthenticateGuard)
   @Get()
-  async getAllPaymentMethods(
+  async getAllPaymentMethodsPagination(
     @Query() { page_no, page_size }: BasePaginationQuery,
   ): Promise<OffsetPagination<PaymentMethod>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
 
-    const paymentMethods = await this.paymentMethodService.getAllPaymentMethods(
+    const paymentMethods = await this.paymentMethodService.getAllPaymentMethodsPagination(
       {
         pageNo,
         pageSize,

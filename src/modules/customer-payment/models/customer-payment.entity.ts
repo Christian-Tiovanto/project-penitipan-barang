@@ -8,6 +8,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 
 export interface ICustomerPayment {
@@ -18,7 +19,7 @@ export interface ICustomerPayment {
   payment_methodId: number;
   charge: number;
   min_pay: number;
-  up_price: number;
+  // up_price: number;
   status: boolean;
   created_at: Date;
   updated_at: Date;
@@ -34,24 +35,36 @@ export class CustomerPayment implements ICustomerPayment {
   customer: number;
 
   @ApiProperty({ example: 1 })
-  @Column()
+  @Column({ type: 'int', nullable: true })
   customerId: number;
 
-  @ApiProperty({ example: 1 })
-  @ManyToOne(() => PaymentMethod, (paymentMethod) => paymentMethod)
+  @ManyToOne(() => PaymentMethod, (paymentMethod) => paymentMethod.customer_payment)
+  @JoinColumn({ name: "payment_methodId" })
   payment_method: number;
 
   @ApiProperty({ example: 1 })
-  @Column()
+  @Column({ type: 'int', nullable: true })
   payment_methodId: number;
 
   @ApiProperty({ example: 1000 })
-  @Column({ type: 'float' })
+  @Column({
+    type: 'decimal',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
   charge: number;
 
-  @ApiProperty({ example: 1000 })
-  @Column({ type: 'decimal' })
-  up_price: number;
+  // @ApiProperty({ example: 1000 })
+  // @Column({
+  //   type: 'decimal',
+  //   transformer: {
+  //     to: (value: number) => value,
+  //     from: (value: string) => parseFloat(value),
+  //   },
+  // })
+  // up_price: number;
 
   @ApiProperty({ example: true })
   @Column({ type: 'boolean', default: true })
@@ -62,7 +75,13 @@ export class CustomerPayment implements ICustomerPayment {
   sort: boolean;
 
   @ApiProperty({ example: 1000 })
-  @Column({ type: 'float' })
+  @Column({
+    type: 'decimal',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
   min_pay: number;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })

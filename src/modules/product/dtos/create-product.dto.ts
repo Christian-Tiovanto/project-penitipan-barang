@@ -15,13 +15,13 @@ export class CreateProductDto
   @JoiSchema(Joi.number().required())
   price: number;
 
-  @ApiProperty({ example: 'http://example.com/image.jpg' })
-  @JoiSchema(Joi.string().uri().required())
-  image_url: string;
+  // @ApiProperty({ example: 'http://example.com/image.jpg' })
+  // @JoiSchema(Joi.string().uri().required())
+  // image_url: string;
 
-  @ApiProperty({ example: 'filename.jpg' })
-  @JoiSchema(Joi.string().required())
-  file_name: string;
+  // @ApiProperty({ example: 'filename.jpg' })
+  // @JoiSchema(Joi.string().required())
+  // file_name: string;
 
   @ApiProperty({ example: 10 })
   @JoiSchema(Joi.number().integer().required())

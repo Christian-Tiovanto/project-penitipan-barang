@@ -25,7 +25,13 @@ export class Charge implements ICharge {
   @Column({ enum: ChargeType, type: 'enum' })
   type: string;
   @ApiProperty({ example: 'Payment Method Name' })
-  @Column({ type: 'decimal' })
+  @Column({
+    type: 'decimal',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
   amount: number;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })

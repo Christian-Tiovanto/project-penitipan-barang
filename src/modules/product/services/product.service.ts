@@ -4,6 +4,7 @@ import { EntityManager, Repository } from 'typeorm';
 import { Product } from '../models/product.entity';
 import { CreateProductDto } from '../dtos/create-product.dto';
 import { UpdateProductDto } from '../dtos/update-product.dto';
+import { InsufficientStockException } from '@app/exceptions/validation.exception';
 
 interface GetAllQuery {
   pageNo: number;
@@ -14,9 +15,13 @@ export class ProductService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
-  ) {}
+  ) { }
 
-  async getAllProducts({
+  async getAllProducts(): Promise<Product[]> {
+    return await this.productRepository.find(); // Assuming using TypeORM
+  }
+
+  async getAllProductsPagination({
     pageNo,
     pageSize,
   }: GetAllQuery): Promise<[Product[], number]> {
@@ -46,6 +51,21 @@ export class ProductService {
     return product;
   }
 
+  async lockingProductById(entityManager: EntityManager, productId: number, requiredQty: number): Promise<Product> {
+    const product = await this.findProductById(productId)
+
+    await entityManager.findOne(Product, {
+      where: { id: productId },
+      lock: { mode: "pessimistic_write" },
+    });
+
+    if (product.qty < requiredQty) {
+      throw new InsufficientStockException(`Insufficient stock: required ${requiredQty}, but only ${product.qty} available in Stock`);
+    }
+
+    return product;
+  }
+
   async createProduct(createProductDto: CreateProductDto): Promise<Product> {
     const newProduct = this.productRepository.create(createProductDto);
     return await this.productRepository.save(newProduct);
@@ -68,6 +88,15 @@ export class ProductService {
     qtyAdd: number,
   ): Promise<Product> {
     product.qty += qtyAdd;
+    return entityManager.save(product);
+  }
+
+  async withdrawProductQtyWithEntityManager(
+    entityManager: EntityManager,
+    product: Product,
+    qtyWithdraw: number,
+  ): Promise<Product> {
+    product.qty -= qtyWithdraw;
     return entityManager.save(product);
   }
 

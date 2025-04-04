@@ -14,9 +14,13 @@ export class CustomerService {
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
-  ) {}
+  ) { }
 
-  async getAllCustomers({
+  async getAllCustomers(): Promise<Customer[]> {
+    return await this.customerRepository.find();
+  }
+
+  async getAllCustomersPagination({
     pageNo,
     pageSize,
   }: GetAllQuery): Promise<[Customer[], number]> {

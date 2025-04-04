@@ -6,9 +6,9 @@ import { UserRole } from '@app/enums/user-role';
 
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateUserDto implements Omit<IUser, 'id' | 'is_deleted'> {
-  @ApiProperty({ example: 1 })
-  @JoiSchema(Joi.number().required())
-  merchant: number;
+  // @ApiProperty({ example: 1 })
+  // @JoiSchema(Joi.number().required())
+  // merchant: number;
 
   @ApiProperty({ example: 'test@gmail.com' })
   @JoiSchema(Joi.string().required())
@@ -33,11 +33,11 @@ export class CreateUserDto implements Omit<IUser, 'id' | 'is_deleted'> {
   @JoiSchema(Joi.string().min(6).max(24).required())
   password: string;
 
-  @ApiProperty({ example: 'Jl. Merak Jingga' })
-  @JoiSchema(Joi.string().optional())
-  address: string;
+  // @ApiProperty({ example: 'Jl. Merak Jingga' })
+  // @JoiSchema(Joi.string().optional())
+  // address: string;
 
-  @ApiProperty({ example: '081312345678' })
-  @JoiSchema(Joi.string().required())
-  phone: string;
+  // @ApiProperty({ example: '081312345678' })
+  // @JoiSchema(Joi.string().required())
+  // phone: string;
 }

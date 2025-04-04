@@ -19,9 +19,13 @@ export class CustomerPaymentService {
     private readonly customerPaymentRepository: Repository<CustomerPayment>,
     private readonly customerService: CustomerService,
     private readonly paymentMethodService: PaymentMethodService,
-  ) {}
+  ) { }
 
-  async getAllCustomerPayments({
+  async getAllCustomerPayments(): Promise<CustomerPayment[]> {
+    return await this.customerPaymentRepository.find();
+  }
+
+  async getAllCustomerPaymentsPagination({
     pageNo,
     pageSize,
   }: GetAllQuery): Promise<[CustomerPayment[], number]> {
@@ -29,6 +33,7 @@ export class CustomerPaymentService {
     const merchantPayments = await this.customerPaymentRepository.findAndCount({
       skip,
       take: pageSize,
+      relations: ['customer', 'payment_method'],
     });
     return merchantPayments;
   }
@@ -46,6 +51,7 @@ export class CustomerPaymentService {
   ): Promise<CustomerPayment> {
     const customerPayment = await this.customerPaymentRepository.findOne({
       where: { id: customerPaymentId },
+      relations: ['customer', 'payment_method'],
     });
 
     if (!customerPayment) {

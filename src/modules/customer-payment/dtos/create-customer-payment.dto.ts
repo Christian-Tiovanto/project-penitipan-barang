@@ -6,10 +6,10 @@ import { ICustomerPayment } from '../models/customer-payment.entity';
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateCustomerPaymentDto
   implements
-    Omit<
-      ICustomerPayment,
-      'id' | 'created_at' | 'updated_at' | 'customer' | 'payment_method'
-    >
+  Omit<
+    ICustomerPayment,
+    'id' | 'created_at' | 'updated_at' | 'customer' | 'payment_method'
+  >
 {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
@@ -23,9 +23,9 @@ export class CreateCustomerPaymentDto
   @JoiSchema(Joi.number().required())
   charge: number;
 
-  @ApiProperty({ example: 1000 })
-  @JoiSchema(Joi.number().required())
-  up_price: number;
+  // @ApiProperty({ example: 1000 })
+  // @JoiSchema(Joi.number().required())
+  // up_price: number;
 
   @ApiProperty({ example: true })
   @JoiSchema(Joi.boolean().optional())

@@ -28,21 +28,32 @@ import { AuthorizeGuard } from '@app/guards/authorize.guard';
 @ApiTags(ApiTag.PRODUCT_UNIT)
 @Controller('api/v1/product-unit')
 export class ProductUnitController {
-  constructor(private readonly productUnitService: ProductUnitService) {}
+  constructor(private readonly productUnitService: ProductUnitService) { }
 
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get All Product Unit',
   })
+  @UseGuards(AuthenticateGuard)
+  @Get('/all')
+
+  async getAllProductUnits(): Promise<ProductUnit[]> {
+    return await this.productUnitService.getAllProductUnits();
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All Product Unit Pagination',
+  })
   @UseInterceptors(OffsetPaginationInterceptor<ProductUnit>)
   @UseGuards(AuthenticateGuard)
   @Get()
-  async getAllProductUnits(
+  async getAllProductUnitsPagination(
     @Query() { page_no, page_size }: BasePaginationQuery,
   ): Promise<OffsetPagination<ProductUnit>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
-    const productUnits = await this.productUnitService.getAllProductUnits({
+    const productUnits = await this.productUnitService.getAllProductUnitsPagination({
       pageNo,
       pageSize,
     });

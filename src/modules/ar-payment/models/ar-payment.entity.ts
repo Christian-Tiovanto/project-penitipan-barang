@@ -35,24 +35,30 @@ export class ArPayment implements IArPayment {
   accreceivable: number;
 
   // @ApiProperty({ example: 1 })
-  @Column()
+  @Column({ type: 'int', nullable: true })
   accreceivableId: number;
 
   @ManyToOne(() => CustomerPayment, (customerPayment) => customerPayment)
   customer_payment: number;
 
   @ApiProperty({ example: 1 })
-  @Column()
+  @Column({ type: 'int', nullable: true })
   customer_paymentId: number;
 
   @ManyToOne(() => Customer, (customer) => customer)
   customer: number;
 
   @ApiProperty({ example: 1 })
-  @Column()
+  @Column({ type: 'int', nullable: true })
   customerId: number;
 
-  @Column({ type: 'decimal' })
+  @Column({
+    type: 'decimal',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
   total_paid: number;
 
   @Column({ type: 'timestamp' })
