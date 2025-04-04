@@ -13,9 +13,13 @@ export class ProductUnitService {
   constructor(
     @InjectRepository(ProductUnit)
     private readonly productUnitRepository: Repository<ProductUnit>,
-  ) {}
+  ) { }
 
-  async getAllProductUnits({
+  async getAllProductUnits(): Promise<ProductUnit[]> {
+    return await this.productUnitRepository.find();
+  }
+
+  async getAllProductUnitsPagination({
     pageNo,
     pageSize,
   }: GetAllQuery): Promise<[ProductUnit[], number]> {
@@ -23,6 +27,7 @@ export class ProductUnitService {
     const products = await this.productUnitRepository.findAndCount({
       skip,
       take: pageSize,
+      relations: ['product'],
     });
     return products;
   }
@@ -30,12 +35,14 @@ export class ProductUnitService {
   async getProductUnitById(productUnitId: number): Promise<ProductUnit> {
     return await this.productUnitRepository.findOne({
       where: { id: productUnitId },
+      relations: ['product'],
     });
   }
 
   async findProductUnitById(productUnitId: number): Promise<ProductUnit> {
     const productUnit = await this.productUnitRepository.findOne({
       where: { id: productUnitId },
+      relations: ['product'],
     });
 
     if (!productUnit) {

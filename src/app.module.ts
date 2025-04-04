@@ -27,7 +27,7 @@ import { ChargeModule } from './modules/charge/charge.module';
 import { Charge } from './modules/charge/models/charge.entity';
 import { TransactionOut } from './modules/transaction-out/models/transaction-out.entity';
 import { TransactionOutModule } from './modules/transaction-out/transaction-out.module';
-import { Ar } from './modules/accreceivable/models/ar.entity';
+import { Ar } from './modules/ar/models/ar.entity';
 import { Spb } from './modules/spb/models/spb.entity';
 import { Invoice } from './modules/invoice/models/invoice.entity';
 

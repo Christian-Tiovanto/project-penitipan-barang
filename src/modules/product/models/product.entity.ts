@@ -15,8 +15,8 @@ export interface IProduct {
   id: number;
   name: string;
   price: number;
-  image_url: string;
-  file_name: string;
+  // image_url: string;
+  // file_name: string;
   qty: number;
   desc: string;
   is_deleted: boolean;
@@ -44,13 +44,13 @@ export class Product implements IProduct {
   })
   price: number;
 
-  @ApiProperty({ example: 'http://example.com/image.jpg' })
-  @Column({ type: 'varchar' })
-  image_url: string;
+  // @ApiProperty({ example: 'http://example.com/image.jpg' })
+  // @Column({ type: 'varchar' })
+  // image_url: string;
 
-  @ApiProperty({ example: 'filename.jpg' })
-  @Column({ type: 'varchar' })
-  file_name: string;
+  // @ApiProperty({ example: 'filename.jpg' })
+  // @Column({ type: 'varchar' })
+  // file_name: string;
 
   @ApiProperty({ example: 10 })
   @Column({

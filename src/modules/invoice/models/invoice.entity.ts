@@ -1,5 +1,5 @@
 import { InvoiceStatus } from '@app/enums/invoice-status';
-import { Ar } from '@app/modules/accreceivable/models/ar.entity';
+import { Ar } from '@app/modules/ar/models/ar.entity';
 import { Customer } from '@app/modules/customer/models/customer.entity';
 import { Spb } from '@app/modules/spb/models/spb.entity';
 import { TransactionOut } from '@app/modules/transaction-out/models/transaction-out.entity';

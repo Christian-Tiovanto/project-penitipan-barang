@@ -1,4 +1,4 @@
-import { Ar } from '@app/modules/accreceivable/models/ar.entity';
+import { Ar } from '@app/modules/ar/models/ar.entity';
 import { CustomerPayment } from '@app/modules/customer-payment/models/customer-payment.entity';
 import { Invoice } from '@app/modules/invoice/models/invoice.entity';
 import { Spb } from '@app/modules/spb/models/spb.entity';

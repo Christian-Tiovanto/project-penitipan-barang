@@ -1,3 +1,4 @@
+import { CustomerPayment } from '@app/modules/customer-payment/models/customer-payment.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
@@ -5,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 export interface IPaymentMethod {
@@ -31,4 +33,11 @@ export class PaymentMethod implements IPaymentMethod {
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })
   @UpdateDateColumn()
   updated_at: Date;
+
+  @OneToMany(
+    () => CustomerPayment,
+    (customerPayment) => customerPayment.payment_methodId,
+  )
+  customer_payment: CustomerPayment[];
+
 }

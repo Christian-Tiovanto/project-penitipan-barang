@@ -15,9 +15,13 @@ export class PaymentMethodService {
   constructor(
     @InjectRepository(PaymentMethod)
     private readonly paymentMethodRepository: Repository<PaymentMethod>,
-  ) {}
+  ) { }
 
-  async getAllPaymentMethods({
+  async getAllPaymentMethods(): Promise<PaymentMethod[]> {
+    return await this.paymentMethodRepository.find();
+  }
+
+  async getAllPaymentMethodsPagination({
     pageNo,
     pageSize,
   }: GetAllQuery): Promise<[PaymentMethod[], number]> {

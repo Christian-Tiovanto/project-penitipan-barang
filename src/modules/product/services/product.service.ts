@@ -17,7 +17,11 @@ export class ProductService {
     private readonly productRepository: Repository<Product>,
   ) { }
 
-  async getAllProducts({
+  async getAllProducts(): Promise<Product[]> {
+    return await this.productRepository.find(); // Assuming using TypeORM
+  }
+
+  async getAllProductsPagination({
     pageNo,
     pageSize,
   }: GetAllQuery): Promise<[Product[], number]> {
