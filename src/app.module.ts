@@ -62,6 +62,7 @@ import { Invoice } from './modules/invoice/models/invoice.entity';
         Invoice,
       ],
       synchronize: true,
+      logger: 'advanced-console',
     }),
     UserModule,
     AuthModule,
@@ -77,4 +78,4 @@ import { Invoice } from './modules/invoice/models/invoice.entity';
     TransactionOutModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}

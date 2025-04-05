@@ -101,6 +101,9 @@ export class TransactionIn implements ITransactionIn {
   @UpdateDateColumn()
   updated_at: Date;
 
-  @OneToMany(() => TransactionOut, (transaction_out) => transaction_out.transaction_inId)
+  @OneToMany(
+    () => TransactionOut,
+    (transaction_out) => transaction_out.transaction_inId,
+  )
   transaction_out: TransactionOut[];
 }

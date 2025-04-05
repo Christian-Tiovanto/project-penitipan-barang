@@ -17,12 +17,10 @@ import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
 import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
-import {
-  BasePaginationQuery,
-  OffsetPagination,
-} from '@app/interfaces/pagination.interface';
+import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
 import { TransactionIn } from '../models/transaction-in.entity';
+import { GetAllTransactionInQuery } from '../classes/transaction-in.query';
 
 @ApiTags(ApiTag.TRANSACTION_IN)
 @Controller('api/v1/transaction-in')
@@ -49,13 +47,15 @@ export class TransactionInController {
   @UseGuards(AuthenticateGuard)
   @Get()
   async getAllTransactionIn(
-    @Query() { page_no, page_size }: BasePaginationQuery,
+    @Query() { page_no, page_size, sort, order }: GetAllTransactionInQuery,
   ): Promise<OffsetPagination<TransactionIn>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
     const transactions = await this.transactionInService.getAllTransactionIn({
       pageNo,
       pageSize,
+      sort,
+      order,
     });
     return {
       data: transactions[0],
