@@ -19,8 +19,12 @@ import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
 import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
 import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
-import { TransactionIn } from '../models/transaction-in.entity';
-import { GetAllTransactionInQuery } from '../classes/transaction-in.query';
+import {
+  GetAllTransactionInQuery,
+  TransactionInSort,
+} from '../classes/transaction-in.query';
+import { GetTransactionInResponse } from '../classes/transaction-in.response';
+import { SortOrder } from '@app/enums/sort-order';
 
 @ApiTags(ApiTag.TRANSACTION_IN)
 @Controller('api/v1/transaction-in')
@@ -47,15 +51,27 @@ export class TransactionInController {
   @UseGuards(AuthenticateGuard)
   @Get()
   async getAllTransactionIn(
-    @Query() { page_no, page_size, sort, order }: GetAllTransactionInQuery,
-  ): Promise<OffsetPagination<TransactionIn>> {
+    @Query()
+    {
+      page_no,
+      page_size,
+      sort,
+      order,
+      start_date,
+      end_date,
+    }: GetAllTransactionInQuery,
+  ): Promise<OffsetPagination<GetTransactionInResponse>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
+    sort = !sort ? TransactionInSort.ID : sort;
+    order = !order ? SortOrder.ASC : order;
     const transactions = await this.transactionInService.getAllTransactionIn({
       pageNo,
       pageSize,
       sort,
       order,
+      startDate: start_date,
+      endDate: end_date,
     });
     return {
       data: transactions[0],

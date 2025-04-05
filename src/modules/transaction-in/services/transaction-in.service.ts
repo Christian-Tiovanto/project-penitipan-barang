@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ITransactionIn, TransactionIn } from '../models/transaction-in.entity';
-import { EntityManager, MoreThan, Repository } from 'typeorm';
+import { EntityManager, LessThanOrEqual, MoreThan, Repository } from 'typeorm';
 import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
 import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
 import { ProductService } from '@app/modules/product/services/product.service';
@@ -11,6 +11,7 @@ import { CustomerService } from '@app/modules/customer/services/customer.service
 import { InsufficientStockException } from '@app/exceptions/validation.exception';
 import { TransactionInSort } from '../classes/transaction-in.query';
 import { SortOrder } from '@app/enums/sort-order';
+import { GetTransactionInResponse } from '../classes/transaction-in.response';
 
 interface GetAllTransactionInQuery {
   pageNo: number;
@@ -75,7 +76,9 @@ export class TransactionInService {
     pageSize,
     sort,
     order,
-  }: GetAllTransactionInQuery) {
+    startDate,
+    endDate,
+  }: GetAllTransactionInQuery): Promise<[GetTransactionInResponse[], number]> {
     const skip = (pageNo - 1) * pageSize;
     let sortBy: string = `transaction.${sort}`;
     if (
@@ -84,28 +87,41 @@ export class TransactionInService {
     ) {
       sortBy = `${sort}.name`;
     }
-    console.log(
-      this.transactionInRepository
-        .createQueryBuilder('transaction')
-        .skip(skip)
-        .take(pageSize)
-        .leftJoinAndSelect('transaction.customer', 'customer')
-        .leftJoinAndSelect('transaction.product', 'product')
-        .select(['transaction.id', 'customer.name', 'product.name'])
-        .orderBy(sortBy, order)
-        .getQuery(),
-    );
-    const transactions = await this.transactionInRepository
+    const [transactionsIns, count] = await this.transactionInRepository
       .createQueryBuilder('transaction')
       .skip(skip)
       .take(pageSize)
       .leftJoinAndSelect('transaction.customer', 'customer')
       .leftJoinAndSelect('transaction.product', 'product')
-      .select(['transaction', 'customer.name', 'product.name'])
+      .where({ created_at: MoreThan(startDate) })
+      .andWhere({ created_at: LessThanOrEqual(endDate) })
+      .select([
+        'transaction',
+        'customer.name',
+        'product.name',
+        'customer.id',
+        'product.id',
+      ])
       .orderBy(sortBy, order)
       .getManyAndCount();
-
-    return transactions;
+    const transactionInResponse: GetTransactionInResponse[] =
+      transactionsIns.map((transaction: GetTransactionInResponse) => {
+        return {
+          id: transaction.id,
+          product: {
+            id: transaction.product.id,
+            name: transaction.product.name,
+          },
+          customer: {
+            id: transaction.customer.id,
+            name: transaction.customer.name,
+          },
+          qty: transaction.qty,
+          converted_qty: transaction.qty,
+          unit: transaction.unit,
+        };
+      });
+    return [transactionInResponse, count];
   }
 
   async findTransactionInById(id: number) {
