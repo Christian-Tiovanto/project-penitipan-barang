@@ -34,4 +34,12 @@ export class GetAllTransactionInQuery extends OptionalDateRangeQueryWithPaginati
       .optional(),
   )
   order?: SortOrder;
+
+  @ApiProperty({
+    example: '',
+    description: 'Search transaction-in based on Customer name',
+    required: false,
+  })
+  @JoiSchema(Joi.string().optional())
+  search?: string;
 }

@@ -20,6 +20,7 @@ interface GetAllTransactionInQuery {
   order?: SortOrder;
   startDate?: Date;
   endDate?: Date;
+  search?: string;
 }
 
 @Injectable()
@@ -78,6 +79,7 @@ export class TransactionInService {
     order,
     startDate,
     endDate,
+    search,
   }: GetAllTransactionInQuery): Promise<[GetTransactionInResponse[], number]> {
     const skip = (pageNo - 1) * pageSize;
     let sortBy: string = `transaction.${sort}`;
@@ -87,23 +89,37 @@ export class TransactionInService {
     ) {
       sortBy = `${sort}.name`;
     }
-    const [transactionsIns, count] = await this.transactionInRepository
+    const queryBuilder = this.transactionInRepository
       .createQueryBuilder('transaction')
-      .skip(skip)
-      .take(pageSize)
       .leftJoinAndSelect('transaction.customer', 'customer')
       .leftJoinAndSelect('transaction.product', 'product')
-      .where({ created_at: MoreThan(startDate) })
-      .andWhere({ created_at: LessThanOrEqual(endDate) })
+      .skip(skip)
+      .take(pageSize)
       .select([
         'transaction',
         'customer.name',
-        'product.name',
         'customer.id',
+        'product.name',
         'product.id',
       ])
-      .orderBy(sortBy, order)
-      .getManyAndCount();
+      .orderBy(sortBy, order);
+
+    // Conditionally add filters
+    if (startDate) {
+      queryBuilder.andWhere({ created_at: MoreThan(startDate) });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere({ created_at: LessThanOrEqual(endDate) });
+    }
+
+    if (search) {
+      queryBuilder.andWhere('customer.name LIKE :search', {
+        search: `%${search}%`, // Add wildcards for partial matching
+      });
+    }
+    console.log(queryBuilder.getQuery());
+    const [transactionsIns, count] = await queryBuilder.getManyAndCount();
     const transactionInResponse: GetTransactionInResponse[] =
       transactionsIns.map((transaction: GetTransactionInResponse) => {
         return {

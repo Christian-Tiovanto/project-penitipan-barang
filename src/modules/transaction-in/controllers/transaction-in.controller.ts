@@ -59,6 +59,7 @@ export class TransactionInController {
       order,
       start_date,
       end_date,
+      search,
     }: GetAllTransactionInQuery,
   ): Promise<OffsetPagination<GetTransactionInResponse>> {
     const pageSize = parseInt(page_size) || 10;
@@ -72,6 +73,7 @@ export class TransactionInController {
       order,
       startDate: start_date,
       endDate: end_date,
+      search,
     });
     return {
       data: transactions[0],
