@@ -17,6 +17,8 @@ interface GetAllTransactionInQuery {
   pageSize: number;
   sort?: TransactionInSort;
   order?: SortOrder;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 @Injectable()

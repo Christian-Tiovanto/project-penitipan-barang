@@ -6,10 +6,10 @@ import { ApiProperty } from '@nestjs/swagger';
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateTransactionInDto
   implements
-  Omit<
-    ITransactionIn,
-    'id' | 'created_at' | 'updated_at' | 'customer' | 'product'
-  >
+    Omit<
+      ITransactionIn,
+      'id' | 'created_at' | 'updated_at' | 'customer' | 'product'
+    >
 {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
