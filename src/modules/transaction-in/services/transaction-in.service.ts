@@ -1,7 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ITransactionIn, TransactionIn } from '../models/transaction-in.entity';
-import { EntityManager, LessThanOrEqual, MoreThan, Repository } from 'typeorm';
+import {
+  EntityManager,
+  LessThan,
+  MoreThan,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
 import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
 import { ProductService } from '@app/modules/product/services/product.service';
@@ -106,11 +112,11 @@ export class TransactionInService {
 
     // Conditionally add filters
     if (startDate) {
-      queryBuilder.andWhere({ created_at: MoreThan(startDate) });
+      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
     }
 
     if (endDate) {
-      queryBuilder.andWhere({ created_at: LessThanOrEqual(endDate) });
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
     }
 
     if (search) {
