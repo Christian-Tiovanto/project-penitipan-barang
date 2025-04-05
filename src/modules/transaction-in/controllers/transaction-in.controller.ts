@@ -12,7 +12,12 @@ import {
 } from '@nestjs/common';
 import { TransactionInService } from '../services/transaction-in.service';
 import { ApiTag } from '@app/enums/api-tags';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
@@ -47,6 +52,7 @@ export class TransactionInController {
   @ApiOperation({
     summary: 'Get All Transaction In',
   })
+  @ApiOkResponse({ type: GetTransactionInResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
   @UseGuards(AuthenticateGuard)
   @Get()
