@@ -1,4 +1,4 @@
 export enum InvoiceStatus {
-    PENDING = 'pending',
-    COMPLETED = 'completed',
+  PENDING = 'pending',
+  COMPLETED = 'completed',
 }

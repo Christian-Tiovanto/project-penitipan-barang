@@ -23,6 +23,7 @@ import {
 } from '@app/interfaces/pagination.interface';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
 import { TransactionIn } from '../models/transaction-in.entity';
+import { ProductUnitModule } from '@app/modules/product-unit/product-unit.module';
 
 @ApiTags(ApiTag.TRANSACTION_IN)
 @Controller('api/v1/transaction-in')
@@ -88,6 +89,34 @@ export class TransactionInController {
       supplierId,
       updateSupplierDto,
     );
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All Transaction In By Product Id',
+  })
+  @UseInterceptors(OffsetPaginationInterceptor)
+  @UseGuards(AuthenticateGuard)
+  @Get('by-product/:id')
+  async getAllTransactionInByProductId(
+    @Param('id', ParseIntPipe) productId: number,
+    @Query() { page_no, page_size }: BasePaginationQuery,
+  ): Promise<OffsetPagination<TransactionIn>> {
+    const pageSize = parseInt(page_size) || 10;
+    const pageNo = parseInt(page_no) || 1;
+    const transactions =
+      await this.transactionInService.getAllTransactionInByProductId(
+        {
+          pageNo,
+          pageSize,
+        },
+        productId,
+      );
+    return {
+      data: transactions[0],
+      totalCount: transactions[1],
+      filteredCount: transactions[1],
+    };
   }
 
   // @ApiBearerAuth()

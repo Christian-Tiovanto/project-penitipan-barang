@@ -23,7 +23,7 @@ export class TransactionInService {
     private productService: ProductService,
     private productUnitService: ProductUnitService,
     private customerService: CustomerService,
-  ) { }
+  ) {}
 
   async createTransactionIn(
     createTransactionInDto: CreateTransactionInDto,
@@ -39,7 +39,8 @@ export class TransactionInService {
     await this.customerService.findCustomerById(
       createTransactionInDto.customerId,
     );
-    createTransactionInDto.remaining_qty = createTransactionInDto.qty * productUnit.conversion_to_kg;
+    createTransactionInDto.remaining_qty =
+      createTransactionInDto.qty * productUnit.conversion_to_kg;
     createTransactionInDto.converted_qty =
       createTransactionInDto.qty * productUnit.conversion_to_kg;
     createTransactionInDto.conversion_to_kg = productUnit.conversion_to_kg;
@@ -68,6 +69,7 @@ export class TransactionInService {
     const transactions = await this.transactionInRepository.findAndCount({
       skip,
       take: pageSize,
+      relations: ['customer', 'product'],
     });
     return transactions;
   }
@@ -75,38 +77,54 @@ export class TransactionInService {
   async findTransactionInById(id: number) {
     const transactionIn = await this.transactionInRepository.findOne({
       where: { id },
+      relations: ['customer', 'product'],
     });
     if (!transactionIn)
       throw new NotFoundException('No Transaction In with that id');
     return transactionIn;
   }
 
-  async lockingTransactionInById(entityManager: EntityManager, id: number): Promise<TransactionIn> {
+  async lockingTransactionInById(
+    entityManager: EntityManager,
+    id: number,
+  ): Promise<TransactionIn> {
     const transactionIn = await this.findTransactionInById(id);
 
     await entityManager.findOne(TransactionIn, {
       where: { id },
-      lock: { mode: "pessimistic_write" },
+      lock: { mode: 'pessimistic_write' },
     });
 
     return transactionIn;
   }
 
-  async getTransactionInsWithRemainingQty(productId: number, customerId: number, requiredQty: number) {
+  async getTransactionInsWithRemainingQty(
+    productId: number,
+    customerId: number,
+    requiredQty: number,
+  ) {
     const transactionIns = await this.transactionInRepository.find({
       where: { productId, customerId, remaining_qty: MoreThan(0) },
       order: { created_at: 'ASC' },
     });
 
-    const totalRemainingQty = transactionIns.reduce((sum, tx) => sum + tx.remaining_qty, 0);
-    if (totalRemainingQty < requiredQty) {
-      throw new InsufficientStockException(`Insufficient stock: required ${requiredQty}, but only ${totalRemainingQty} available in Transaction In`);
+    if (!transactionIns.length) {
+      throw new NotFoundException(
+        `No transactions In found for productId ${productId} and customerId ${customerId}`,
+      );
     }
 
-    if (!transactionIns.length) {
-      throw new NotFoundException(`No transactions In found for productId ${productId} and customerId ${customerId}`);
+    const totalRemainingQty = transactionIns.reduce(
+      (sum, tx) => sum + tx.remaining_qty,
+      0,
+    );
+    if (totalRemainingQty < requiredQty) {
+      throw new InsufficientStockException(
+        `Insufficient stock: required ${requiredQty}, but only ${totalRemainingQty} available in Transaction In`,
+      );
     }
-    return transactionIns
+
+    return transactionIns;
   }
 
   async updateTransactionInByIdWithEM(
@@ -214,5 +232,24 @@ export class TransactionInService {
         updateTransactionInDto.converted_qty,
       );
     }
+  }
+
+  async getAllTransactionInByProductId(
+    { pageNo, pageSize }: GetAllSupplier,
+    productId: number,
+  ) {
+    const skip = (pageNo - 1) * pageSize;
+    const transactions = await this.transactionInRepository.findAndCount({
+      skip,
+      take: pageSize,
+      where: {
+        productId,
+      },
+      order: {
+        created_at: 'DESC',
+      },
+      relations: ['customer', 'product'],
+    });
+    return transactions;
   }
 }
