@@ -16,7 +16,7 @@ import { IProductUnit } from '@app/modules/product-unit/models/product-unit.enti
 import { CustomerService } from '@app/modules/customer/services/customer.service';
 import { InsufficientStockException } from '@app/exceptions/validation.exception';
 import { TransactionInSort } from '../classes/transaction-in.query';
-import { SortOrder } from '@app/enums/sort-order';
+import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
 import { GetTransactionInResponse } from '../classes/transaction-in.response';
 
 interface GetAllTransactionInQuery {
@@ -108,7 +108,7 @@ export class TransactionInService {
         'product.name',
         'product.id',
       ])
-      .orderBy(sortBy, order);
+      .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
 
     // Conditionally add filters
     if (startDate) {
