@@ -124,7 +124,6 @@ export class TransactionInService {
         search: `%${search}%`, // Add wildcards for partial matching
       });
     }
-    console.log(queryBuilder.getQuery());
     const [transactionsIns, count] = await queryBuilder.getManyAndCount();
     const transactionInResponse: GetTransactionInResponse[] =
       transactionsIns.map((transaction: GetTransactionInResponse) => {
@@ -178,7 +177,11 @@ export class TransactionInService {
       where: { productId, customerId, remaining_qty: MoreThan(0) },
       order: { created_at: 'ASC' },
     });
-
+    if (!transactionIns.length) {
+      throw new NotFoundException(
+        `No transactions In found for productId ${productId} and customerId ${customerId}`,
+      );
+    }
     const totalRemainingQty = transactionIns.reduce(
       (sum, tx) => sum + tx.remaining_qty,
       0,
@@ -189,11 +192,6 @@ export class TransactionInService {
       );
     }
 
-    if (!transactionIns.length) {
-      throw new NotFoundException(
-        `No transactions In found for productId ${productId} and customerId ${customerId}`,
-      );
-    }
     return transactionIns;
   }
 

@@ -1,17 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, IsNull, Repository } from 'typeorm';
-import { TransactionOut } from '../models/transaction-out.entity';
 import {
-  CreateTransactionOutDto,
-  CreateTransactionOutWithSpbDto,
-} from '../dtos/create-transaction-out.dto';
+  EntityManager,
+  IsNull,
+  LessThan,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
+import { TransactionOut } from '../models/transaction-out.entity';
+import { CreateTransactionOutWithSpbDto } from '../dtos/create-transaction-out.dto';
 import { UpdateTransactionOutDto } from '../dtos/update-transaction-out.dto';
-import { BasePaginationQuery } from '@app/interfaces/pagination.interface';
 import { ProductService } from '@app/modules/product/services/product.service';
-import { ProductUnitService } from '@app/modules/product-unit/services/product-unit.service';
 import { CustomerService } from '@app/modules/customer/services/customer.service';
-import { TransactionIn } from '@app/modules/transaction-in/models/transaction-in.entity';
 import { TransactionInService } from '@app/modules/transaction-in/services/transaction-in.service';
 import {
   convertToWIB,
@@ -21,7 +21,6 @@ import {
 } from '@app/utils/date';
 import { Invoice } from '@app/modules/invoice/models/invoice.entity';
 import { CreateInvoiceDto } from '@app/modules/invoice/dtos/create-invoice.dto';
-import { create } from 'domain';
 import { CreateSpbDto } from '@app/modules/spb/dtos/create-spb.dto';
 import { CreateArDto } from '@app/modules/ar/dtos/create-ar.dto';
 import { InvoiceService } from '@app/modules/invoice/services/invoice.service';
@@ -31,10 +30,18 @@ import { ChargeService } from '@app/modules/charge/services/charge.service';
 import { InvoiceStatus } from '@app/enums/invoice-status';
 import { ArStatus } from '@app/enums/ar-status';
 import { ChargeType } from '@app/enums/charge-type';
+import { TransactionOutSort } from '../classes/transaction-out.query';
+import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
+import { GetTransactionOutResponse } from '../classes/transaction-in.response';
 
 interface GetAllQuery {
   pageNo: number;
   pageSize: number;
+  sort?: TransactionOutSort;
+  order?: SortOrder;
+  startDate?: Date;
+  endDate?: Date;
+  search?: string;
 }
 
 @Injectable()
@@ -54,13 +61,61 @@ export class TransactionOutService {
   async getAllTransactionOuts({
     pageNo,
     pageSize,
-  }: GetAllQuery): Promise<[TransactionOut[], number]> {
+    sort,
+    order,
+    startDate,
+    endDate,
+  }: GetAllQuery): Promise<[GetTransactionOutResponse[], number]> {
     const skip = (pageNo - 1) * pageSize;
-    const transactionOuts = await this.transactionOutRepository.findAndCount({
-      skip,
-      take: pageSize,
-    });
-    return transactionOuts;
+    let sortBy: string = `transaction.${sort}`;
+    if (
+      sort === TransactionOutSort.CUSTOMER ||
+      sort === TransactionOutSort.PRODUCT
+    ) {
+      sortBy = `${sort}.name`;
+    }
+    const queryBuilder = this.transactionOutRepository
+      .createQueryBuilder('transaction')
+      .leftJoinAndSelect('transaction.customer', 'customer')
+      .leftJoinAndSelect('transaction.product', 'product')
+      .skip(skip)
+      .take(pageSize)
+      .select([
+        'transaction',
+        'customer.name',
+        'customer.id',
+        'product.name',
+        'product.id',
+      ])
+      .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
+
+    // Conditionally add filters
+    if (startDate) {
+      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    }
+
+    const [transactionsOuts, count] = await queryBuilder.getManyAndCount();
+    const transactionOutResponse: GetTransactionOutResponse[] =
+      transactionsOuts.map((transaction: GetTransactionOutResponse) => {
+        return {
+          id: transaction.id,
+          product: {
+            id: transaction.product.id,
+            name: transaction.product.name,
+          },
+          customer: {
+            id: transaction.customer.id,
+            name: transaction.customer.name,
+          },
+          converted_qty: transaction.converted_qty,
+          total_days: transaction.total_days,
+        };
+      });
+    return [transactionOutResponse, count];
   }
 
   async getTransactionOutById(
@@ -130,7 +185,8 @@ export class TransactionOutService {
 
           let productQty: number = transactionOut.converted_qty;
 
-          let totalPrice: number = transactionOut.converted_qty * product.price;
+          const totalPrice: number =
+            transactionOut.converted_qty * product.price;
           amount += totalPrice;
 
           const productTransactionIns =
@@ -144,7 +200,6 @@ export class TransactionOutService {
               break;
             }
             let qtyOut: number;
-            let totalDays: number;
 
             await this.transactionInService.lockingTransactionInById(
               entityManager,
@@ -162,7 +217,7 @@ export class TransactionOutService {
               fine = totalPrice;
             }
 
-            totalDays = pastDaysCount(transactionIn.created_at);
+            const totalDays = pastDaysCount(transactionIn.created_at);
             totalFine += fine;
 
             if (transactionIn.remaining_qty > productQty) {
@@ -309,7 +364,7 @@ export class TransactionOutService {
           invoice.charge +
           invoice.tax -
           invoice.discount;
-        const ar = await this.arService.createAr(createAr, entityManager);
+        await this.arService.createAr(createAr, entityManager);
 
         await this.updateTransactionOutNull(entityManager, invoice.id, spb.id);
         return invoice;
