@@ -11,7 +11,7 @@ export class CreateCashflowDto
       ICashflow,
       'id' | 'created_at' | 'updated_at' | 'created_by' | 'total_amount'
     >,
-    Partial<Pick<ICashflow, 'created_byId' | 'total_amount'>>
+    Partial<Pick<ICashflow, 'created_byId' | 'total_amount' | 'descriptions'>>
 {
   @ApiProperty({ example: CashflowType.IN })
   @JoiSchema(
@@ -24,6 +24,10 @@ export class CreateCashflowDto
   @ApiProperty({ example: 10000 })
   @JoiSchema(Joi.number().min(1).required())
   amount: number;
+
+  @ApiProperty({ example: 'Cashflow Description' })
+  @JoiSchema(Joi.string().trim().optional())
+  descriptions?: string;
 
   created_byId?: number;
   total_amount?: number;

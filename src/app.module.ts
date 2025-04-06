@@ -63,6 +63,7 @@ import { Invoice } from './modules/invoice/models/invoice.entity';
       ],
       synchronize: true,
       logger: 'advanced-console',
+      timezone: 'Z',
     }),
     UserModule,
     AuthModule,

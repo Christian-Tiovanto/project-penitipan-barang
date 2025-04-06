@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
 import { Cashflow } from '../models/cashflow.entity';
 import { CreateCashflowDto } from '../dtos/create-cashflow.dto';
 import { UserService } from '@app/modules/user/services/user.service';
@@ -13,6 +13,8 @@ import { CashflowType } from '@app/enums/cashflow-type';
 interface GetAllQuery {
   pageNo: number;
   pageSize: number;
+  startDate?: Date;
+  endDate?: Date;
 }
 @Injectable()
 export class CashflowService {
@@ -25,13 +27,27 @@ export class CashflowService {
   async getAllCashflows({
     pageNo,
     pageSize,
+    startDate,
+    endDate,
   }: GetAllQuery): Promise<[Cashflow[], number]> {
     const skip = (pageNo - 1) * pageSize;
-    const customers = await this.cashflowRepository.findAndCount({
-      skip,
-      take: pageSize,
-    });
-    return customers;
+    const queryBuilder = this.cashflowRepository
+      .createQueryBuilder('cashflow')
+      .skip(skip)
+      .take(pageSize)
+      .orderBy('created_at', 'DESC');
+
+    // Conditionally add filters
+    if (startDate) {
+      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    }
+    const [cashflows, count] = await queryBuilder.getManyAndCount();
+
+    return [cashflows, count];
   }
 
   async getCashflowById(customerId: number): Promise<Cashflow> {
