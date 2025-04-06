@@ -15,7 +15,7 @@ export class ProductService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
-  ) { }
+  ) {}
 
   async getAllProducts(): Promise<Product[]> {
     return await this.productRepository.find(); // Assuming using TypeORM
@@ -51,22 +51,29 @@ export class ProductService {
     return product;
   }
 
-  async lockingProductById(entityManager: EntityManager, productId: number, requiredQty: number): Promise<Product> {
-    const product = await this.findProductById(productId)
+  async lockingProductById(
+    entityManager: EntityManager,
+    productId: number,
+    requiredQty: number,
+  ): Promise<Product> {
+    const product = await this.findProductById(productId);
 
     await entityManager.findOne(Product, {
       where: { id: productId },
-      lock: { mode: "pessimistic_write" },
+      lock: { mode: 'pessimistic_write' },
     });
 
     if (product.qty < requiredQty) {
-      throw new InsufficientStockException(`Insufficient stock: required ${requiredQty}, but only ${product.qty} available in Stock`);
+      throw new InsufficientStockException(
+        `Insufficient stock: required ${requiredQty}, but only ${product.qty} available in Stock`,
+      );
     }
 
     return product;
   }
 
   async createProduct(createProductDto: CreateProductDto): Promise<Product> {
+    createProductDto.initial_qty = createProductDto.qty;
     const newProduct = this.productRepository.create(createProductDto);
     return await this.productRepository.save(newProduct);
   }
