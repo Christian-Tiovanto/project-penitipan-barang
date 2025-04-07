@@ -3,9 +3,10 @@ import { ReportService } from '../services/report.service';
 import { DateRangeQuery } from '@app/commons/queries/date-range.query';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
+import { StockReportQuery } from '../classes/report.query';
 
 @ApiTags(ApiTag.REPORT)
-@Controller(ApiTag.REPORT)
+@Controller(`api/v1/${ApiTag.REPORT}`)
 export class ReportController {
   constructor(private readonly reportService: ReportService) {}
 
@@ -19,5 +20,10 @@ export class ReportController {
       startDate: start_date,
       endDate: end_date,
     });
+  }
+
+  @Get('stock-report')
+  async stockReport(@Query() { end_date, customer }: StockReportQuery) {
+    return await this.reportService.stockReport(end_date, parseInt(customer));
   }
 }

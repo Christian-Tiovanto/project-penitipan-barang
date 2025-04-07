@@ -19,6 +19,8 @@ import { InsufficientStockException } from '@app/exceptions/validation.exception
 import { TransactionInSort } from '../classes/transaction-in.query';
 import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
 import { GetTransactionInResponse } from '../classes/transaction-in.response';
+import { Customer } from '@app/modules/customer/models/customer.entity';
+import { Product } from '@app/modules/product/models/product.entity';
 
 interface GetAllTransactionInQuery {
   pageNo: number;
@@ -28,6 +30,11 @@ interface GetAllTransactionInQuery {
   startDate?: Date;
   endDate?: Date;
   search?: string;
+}
+
+interface getTransactionForStockReportQuery {
+  endDate: Date;
+  customerId?: number;
 }
 
 @Injectable()
@@ -144,6 +151,52 @@ export class TransactionInService {
         };
       });
     return [transactionInResponse, count];
+  }
+  async getTransactionForStockReport({
+    endDate,
+    customerId,
+  }: getTransactionForStockReportQuery): Promise<
+    {
+      product_name: string;
+      customer_name: string;
+      customerId: number;
+      productId: number;
+      total_qty: number;
+    }[]
+  > {
+    // 1. First create the grouped subquery
+    const groupedQuery = this.transactionInRepository
+      .createQueryBuilder('transaction')
+      .select([
+        'transaction.customerId AS customerId',
+        'transaction.productId AS productId',
+        'SUM(transaction.converted_qty) AS total_qty',
+      ])
+      .groupBy('customerId, productId');
+    if (customerId) {
+      groupedQuery.andWhere('customerId = :customerId', { customerId });
+    }
+    if (endDate) {
+      groupedQuery.andWhere({ created_at: LessThan(endDate) });
+    }
+    // // 2. Main query with joins
+    const result = await this.transactionInRepository
+      .createQueryBuilder()
+      .select([
+        'grouped.customerId',
+        'customer.name',
+        'grouped.productId',
+        'product.name',
+        'grouped.total_qty',
+      ])
+      .from(`(${groupedQuery.getQuery()})`, 'grouped')
+      .setParameters(groupedQuery.getParameters()) // Important: Pass the parameters!
+      .leftJoin(Customer, 'customer', 'customer.id = grouped.customerId')
+      .leftJoin(Product, 'product', 'product.id = grouped.productId')
+      .groupBy('grouped.customerId, grouped.productId')
+      .getRawMany();
+
+    return result;
   }
 
   async findTransactionInById(id: number) {

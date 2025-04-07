@@ -16,6 +16,6 @@ import { CustomerModule } from '../customer/customer.module';
   ],
   providers: [TransactionInService],
   controllers: [TransactionInController],
-  exports: [TransactionInService],
+  exports: [TransactionInService, TypeOrmModule],
 })
 export class TransactionInModule {}

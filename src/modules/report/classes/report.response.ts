@@ -10,3 +10,16 @@ export class StockBookReportResponse {
   }[];
   final_qty: number;
 }
+
+export interface IStockReportData {
+  product_name: string;
+  customer_name: string;
+  customerId: number;
+  productId: number;
+  product_in: number;
+  product_out: number;
+}
+
+export class StockReportResponse {
+  data: IStockReportData[];
+}

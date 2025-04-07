@@ -81,3 +81,16 @@ export class DateRangeQuery {
   )
   end_date: Date;
 }
+export class EndDateQuery {
+  @ApiProperty({
+    example: (() => {
+      const today = new Date();
+      return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    })(),
+    required: false,
+    description:
+      'This parameter is exclusive which means the value is not included in the filter. Be',
+  })
+  @JoiSchema(Joi.date().iso().options({ convert: true }).required())
+  end_date: Date;
+}
