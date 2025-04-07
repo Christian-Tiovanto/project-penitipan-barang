@@ -30,6 +30,7 @@ import { TransactionOutModule } from './modules/transaction-out/transaction-out.
 import { Ar } from './modules/ar/models/ar.entity';
 import { Spb } from './modules/spb/models/spb.entity';
 import { Invoice } from './modules/invoice/models/invoice.entity';
+import { ReportModule } from './modules/report/report.module';
 
 @Module({
   providers: [
@@ -77,6 +78,7 @@ import { Invoice } from './modules/invoice/models/invoice.entity';
     CashflowModule,
     ChargeModule,
     TransactionOutModule,
+    ReportModule,
   ],
 })
 export class AppModule {}

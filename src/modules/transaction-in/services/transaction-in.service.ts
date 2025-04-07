@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ITransactionIn, TransactionIn } from '../models/transaction-in.entity';
 import {
+  Between,
   EntityManager,
   LessThan,
   MoreThan,
@@ -152,6 +153,57 @@ export class TransactionInService {
     if (!transactionIn)
       throw new NotFoundException('No Transaction In with that id');
     return transactionIn;
+  }
+  async sumCustProductQty(
+    productId: number,
+    customerId: number,
+    startDate: Date,
+  ) {
+    const result: { sum?: string } = await this.transactionInRepository
+      .createQueryBuilder('transaction')
+      .select('SUM(transaction.converted_qty)', 'sum')
+      .where('transaction.created_at < :startDate', { startDate })
+      .andWhere('transaction.productId = :productId', { productId })
+      .andWhere('transaction.customerId = :customerId', { customerId })
+      .getRawOne();
+
+    return parseFloat(result?.sum || '0');
+  }
+  async getTransactionInForStockBookReport(
+    productId: number,
+    customerId: number,
+    startDate: Date,
+    endDate: Date,
+  ) {
+    const [transactionsIns, sumResult] = (await Promise.all([
+      // First promise - returns TransactionIn[]
+      this.transactionInRepository.find({
+        where: {
+          created_at: Between(startDate, endDate),
+          productId,
+          customerId,
+        },
+        order: {
+          created_at: 'ASC',
+        },
+      }),
+
+      // Second promise - explicitly typed
+      this.transactionInRepository
+        .createQueryBuilder()
+        .select('SUM(converted_qty)', 'sum')
+        .where({
+          created_at: Between(startDate, endDate),
+          productId,
+          customerId,
+        })
+        .getRawOne(),
+    ])) as [TransactionIn[], { sum: string } | undefined];
+
+    return {
+      transactionsIns,
+      totalSum: parseFloat(sumResult?.sum || '0'),
+    };
   }
 
   async lockingTransactionInById(

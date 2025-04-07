@@ -58,7 +58,14 @@ export class Product implements IProduct {
   desc: string;
 
   @ApiProperty({ example: 10 })
-  @Column({ type: 'decimal', default: 0 })
+  @Column({
+    type: 'decimal',
+    default: 0,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
   initial_qty: number;
 
   @ApiProperty({ example: false })
