@@ -59,6 +59,7 @@ export class ArPaymentService {
     );
     const ar = await this.arService.findArById(createArPaymentDto.arId);
     ar.to_paid -= createArPaymentDto.total_paid;
+    ar.total_paid += createArPaymentDto.total_paid;
     if (ar.to_paid < 0) {
       throw new BadRequestException(
         `To paid only ${ar.to_paid + createArPaymentDto.total_paid}`,

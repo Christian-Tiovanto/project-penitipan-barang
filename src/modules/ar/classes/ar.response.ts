@@ -35,6 +35,11 @@ export class GetAllArResponse {
   @ApiProperty({
     example: 1000,
   })
+  total_paid: number;
+
+  @ApiProperty({
+    example: 1000,
+  })
   to_paid: number;
 
   @ApiProperty({ example: ArStatus.COMPLETED, enum: ArStatus })

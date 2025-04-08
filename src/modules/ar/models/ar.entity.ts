@@ -21,6 +21,7 @@ export interface IAr {
   invoiceId: number;
   ar_no: string;
   total_bill: number;
+  total_paid: number;
   to_paid: number;
   status: string;
   paid_date: Date;
@@ -62,6 +63,17 @@ export class Ar implements IAr {
     },
   })
   total_bill: number;
+
+  @ApiProperty({ example: 1000 })
+  @Column({
+    type: 'decimal',
+    default: 0,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
+  total_paid: number;
 
   @ApiProperty({ example: 1000 })
   @Column({

@@ -8,6 +8,7 @@ export enum ArSort {
   CUSTOMER = 'customer',
   INVOICE = 'invoice',
   TOTAL_BILL = 'total_bill',
+  TOTAL_PAID = 'total_paid',
   TO_PAID = 'to_paid',
 }
 export type SortOrderQueryBuilder = 'ASC' | 'DESC';
