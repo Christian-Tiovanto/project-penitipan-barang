@@ -5,6 +5,7 @@ import { TransactionInModule } from '../transaction-in/transaction-in.module';
 import { TransactionOutModule } from '../transaction-out/transaction-out.module';
 import { ProductModule } from '../product/product.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CashflowModule } from '../cashflow/cashflow.module';
 
 @Module({
   providers: [ReportService],
@@ -13,6 +14,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     TransactionInModule,
     TransactionOutModule,
     ProductModule,
+    CashflowModule,
     TypeOrmModule,
   ],
 })

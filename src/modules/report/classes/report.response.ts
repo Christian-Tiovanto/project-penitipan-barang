@@ -1,4 +1,5 @@
 import { Product } from '@app/modules/product/models/product.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class StockBookReportResponse {
   initial_qty: number;
@@ -22,4 +23,22 @@ export interface IStockReportData {
 
 export class StockReportResponse {
   data: IStockReportData[];
+}
+
+export class NettIncomeReportResponse {
+  @ApiProperty({ example: 20000 })
+  earning: number;
+
+  @ApiProperty({
+    example: [
+      {
+        description: 'Cashflow Description',
+        amount: 10000,
+      },
+    ],
+  })
+  spending: {
+    description: string;
+    amount: number;
+  }[];
 }

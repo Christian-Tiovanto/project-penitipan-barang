@@ -20,7 +20,7 @@ import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { CurrentUser } from '@app/decorators/current-user.decorator';
 import { JwtPayload } from '@app/interfaces/jwt-payload.interface';
-import { OptionalDateRangeQueryWithPagination } from '@app/commons/queries/date-range.query';
+import { GetAllCashflowQuery } from '../classes/cashflow.query';
 
 @ApiTags(ApiTag.CASHFLOW)
 @Controller('api/v1/cashflow')
@@ -36,12 +36,7 @@ export class CashflowController {
   @Get()
   async getAllCashflows(
     @Query()
-    {
-      page_no,
-      page_size,
-      start_date,
-      end_date,
-    }: OptionalDateRangeQueryWithPagination,
+    { page_no, page_size, start_date, end_date, type }: GetAllCashflowQuery,
   ): Promise<OffsetPagination<Cashflow>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
@@ -51,6 +46,7 @@ export class CashflowController {
       pageSize,
       startDate: start_date,
       endDate: end_date,
+      type,
     });
     return {
       data: cashflows[0],

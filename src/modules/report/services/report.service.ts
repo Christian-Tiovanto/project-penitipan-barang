@@ -3,6 +3,7 @@ import { TransactionInService } from '@app/modules/transaction-in/services/trans
 import { TransactionOutService } from '@app/modules/transaction-out/services/transaction-out.service';
 import {
   IStockReportData,
+  NettIncomeReportResponse,
   StockBookReportResponse,
 } from '../classes/report.response';
 import { Injectable } from '@nestjs/common';
@@ -10,7 +11,13 @@ import { TransactionIn } from '@app/modules/transaction-in/models/transaction-in
 import { Repository } from 'typeorm';
 import { TransactionOut } from '@app/modules/transaction-out/models/transaction-out.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CashflowService } from '@app/modules/cashflow/services/cashflow.service';
+import { CashflowType } from '@app/enums/cashflow-type';
 interface StockBookReportQuery {
+  startDate: Date;
+  endDate: Date;
+}
+interface NettIncomeReportQuery {
   startDate: Date;
   endDate: Date;
 }
@@ -21,6 +28,7 @@ export class ReportService {
     private readonly transactionInService: TransactionInService,
     private readonly transactionOutService: TransactionOutService,
     private readonly productService: ProductService,
+    private readonly cashflowService: CashflowService,
     @InjectRepository(TransactionIn)
     private readonly transactionInRepository: Repository<TransactionIn>,
     @InjectRepository(TransactionOut)
@@ -93,8 +101,7 @@ export class ReportService {
         customerId,
       }),
     ]);
-    console.log('outResults');
-    console.log(outResults);
+
     const combinedMap = new Map<string, IStockReportData>();
 
     // Create unique key for grouping
@@ -131,8 +138,28 @@ export class ReportService {
       }
     });
     return Array.from(combinedMap.values());
-    // return {
-    //   data:
-    // }
+  }
+
+  async nettIncomeReport({
+    startDate,
+    endDate,
+  }: NettIncomeReportQuery): Promise<NettIncomeReportResponse> {
+    const earning = await this.cashflowService.getTotalCashflow({
+      startDate,
+      endDate,
+      type: CashflowType.IN,
+    });
+    const spending = await this.cashflowService.getAllCashflows({
+      startDate,
+      endDate,
+      type: CashflowType.OUT,
+    });
+    return {
+      earning: parseFloat(earning.total),
+      spending: spending[0].map((cashflow) => ({
+        description: cashflow.descriptions,
+        amount: cashflow.amount,
+      })),
+    };
   }
 }

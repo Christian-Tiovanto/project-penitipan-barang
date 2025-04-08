@@ -10,12 +10,14 @@ import { CreateCashflowDto } from '../dtos/create-cashflow.dto';
 import { UserService } from '@app/modules/user/services/user.service';
 import { CashflowType } from '@app/enums/cashflow-type';
 
-interface GetAllQuery {
-  pageNo: number;
-  pageSize: number;
+interface GetAllCashflowQuery {
+  pageNo?: number;
+  pageSize?: number;
   startDate?: Date;
   endDate?: Date;
+  type?: CashflowType;
 }
+
 @Injectable()
 export class CashflowService {
   constructor(
@@ -29,22 +31,26 @@ export class CashflowService {
     pageSize,
     startDate,
     endDate,
-  }: GetAllQuery): Promise<[Cashflow[], number]> {
+    type,
+  }: GetAllCashflowQuery): Promise<[Cashflow[], number]> {
     const skip = (pageNo - 1) * pageSize;
     const queryBuilder = this.cashflowRepository
       .createQueryBuilder('cashflow')
-      .skip(skip)
-      .take(pageSize)
       .orderBy('created_at', 'DESC');
 
+    if (pageNo) {
+      queryBuilder.skip(skip).take(pageSize);
+    }
+
+    if (type) {
+      queryBuilder.andWhere({ type });
+    }
     // Conditionally add filters
     if (startDate) {
       queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
-    }
-
-    if (endDate) {
       queryBuilder.andWhere({ created_at: LessThan(endDate) });
     }
+
     const [cashflows, count] = await queryBuilder.getManyAndCount();
 
     return [cashflows, count];
@@ -127,5 +133,20 @@ export class CashflowService {
     return type === CashflowType.IN
       ? latestTotalAmount + amount
       : latestTotalAmount - amount;
+  }
+
+  async getTotalCashflow({ startDate, endDate, type }: GetAllCashflowQuery) {
+    const queryBuilder = this.cashflowRepository
+      .createQueryBuilder('cashflow')
+      .select('SUM(cashflow.amount)', 'total')
+      .where({ type });
+
+    if (startDate) {
+      queryBuilder
+        .andWhere({ created_at: MoreThanOrEqual(startDate) })
+        .andWhere({ created_at: LessThan(endDate) });
+    }
+    const cashflow: { total: string } = await queryBuilder.getRawOne();
+    return cashflow;
   }
 }
