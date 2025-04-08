@@ -1,12 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, EntityManager } from 'typeorm';
+import { Repository, EntityManager, MoreThanOrEqual, LessThan } from 'typeorm';
 import { Ar } from '../models/ar.entity';
 import { CreateArDto } from '../dtos/create-ar.dto';
+import {
+  ArSort,
+  SortOrder,
+  SortOrderQueryBuilder,
+} from '@app/enums/sort-order';
+import { GetAllArResponse } from '../classes/ar.response';
 
 interface GetAllQuery {
-  pageNo: number;
-  pageSize: number;
+  pageNo?: number;
+  pageSize?: number;
+  sort?: ArSort;
+  order?: SortOrder;
+  startDate?: Date;
+  endDate?: Date;
+  search?: string;
+  compact?: boolean;
 }
 
 @Injectable()
@@ -16,12 +28,47 @@ export class ArService {
     private readonly arRepository: Repository<Ar>,
   ) {}
 
-  async getAllArs({ pageNo, pageSize }: GetAllQuery): Promise<[Ar[], number]> {
+  async getAllArs({
+    pageNo,
+    pageSize,
+    sort,
+    order,
+    startDate,
+    endDate,
+    compact,
+  }: GetAllQuery): Promise<[GetAllArResponse[], number]> {
     const skip = (pageNo - 1) * pageSize;
-    const ars = await this.arRepository.findAndCount({
-      skip,
-      take: pageSize,
-    });
+    let sortBy: string = `ar.${sort}`;
+    if (sort === ArSort.CUSTOMER) {
+      sortBy = `${sort}.name`;
+    }
+    if (sort === ArSort.INVOICE) {
+      sortBy = `${sort}.invoice_no`;
+    }
+
+    const queryBuilder = this.arRepository
+      .createQueryBuilder('ar')
+      .skip(skip)
+      .take(pageSize)
+      .leftJoinAndSelect('ar.customer', 'customer')
+      .select(['ar', 'customer.name', 'customer.id'])
+      .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
+    if (!compact) {
+      queryBuilder.leftJoinAndSelect('ar.invoice', 'invoice');
+    }
+
+    // Conditionally add filters
+    if (startDate) {
+      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    }
+    const ars = (await queryBuilder.getManyAndCount()) as unknown as [
+      GetAllArResponse[],
+      number,
+    ];
     return ars;
   }
 

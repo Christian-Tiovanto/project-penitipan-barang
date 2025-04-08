@@ -1,11 +1,22 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Query,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ReportService } from '../services/report.service';
 import { DateRangeQuery } from '@app/commons/queries/date-range.query';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
-import { StockReportQuery } from '../classes/report.query';
+import { ArPaidReportQuery, StockReportQuery } from '../classes/report.query';
 import { NettIncomeReportResponse } from '../classes/report.response';
-
+import { ArSort, SortOrder } from '@app/enums/sort-order';
+import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
+import { OffsetPagination } from '@app/interfaces/pagination.interface';
+import { GetAllArResponse } from '@app/modules/ar/classes/ar.response';
+import { parseBoolean } from '@app/utils/parse-boolean';
 @ApiTags(ApiTag.REPORT)
 @Controller(`api/v1/${ApiTag.REPORT}`)
 export class ReportController {
@@ -35,5 +46,41 @@ export class ReportController {
       startDate: start_date,
       endDate: end_date,
     });
+  }
+
+  @ApiOkResponse({ type: GetAllArResponse })
+  @UseInterceptors(OffsetPaginationInterceptor)
+  @Get('ar-paid-report')
+  async arPaidReport(
+    @Query()
+    {
+      start_date,
+      end_date,
+      page_no,
+      page_size,
+      sort,
+      order,
+      compact,
+    }: ArPaidReportQuery,
+  ): Promise<OffsetPagination<GetAllArResponse>> {
+    const pageSize = parseInt(page_size) || 10;
+    const pageNo = parseInt(page_no) || 1;
+    sort = !sort ? ArSort.ID : sort;
+    order = !order ? SortOrder.ASC : order;
+
+    const report = await this.reportService.arPaidReport({
+      sort,
+      order,
+      startDate: start_date,
+      endDate: end_date,
+      pageNo,
+      pageSize,
+      compact: parseBoolean(compact),
+    });
+    return {
+      data: report[0],
+      totalCount: report[1],
+      filteredCount: report[1],
+    };
   }
 }

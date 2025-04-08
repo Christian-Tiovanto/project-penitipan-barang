@@ -10,6 +10,7 @@ import {
   UpdateDateColumn,
   OneToOne,
   ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 
 export interface IAr {
@@ -41,6 +42,7 @@ export class Ar implements IAr {
   customerId: number;
 
   @OneToOne(() => Invoice, (invoice) => invoice.ar)
+  @JoinColumn()
   invoice: number;
 
   @ApiProperty({ example: 1 })

@@ -13,6 +13,8 @@ import { TransactionOut } from '@app/modules/transaction-out/models/transaction-
 import { InjectRepository } from '@nestjs/typeorm';
 import { CashflowService } from '@app/modules/cashflow/services/cashflow.service';
 import { CashflowType } from '@app/enums/cashflow-type';
+import { ArService } from '@app/modules/ar/services/ar.service';
+import { ArSort, SortOrder } from '@app/enums/sort-order';
 interface StockBookReportQuery {
   startDate: Date;
   endDate: Date;
@@ -22,9 +24,19 @@ interface NettIncomeReportQuery {
   endDate: Date;
 }
 
+interface ArPaidReportQuery {
+  pageNo: number;
+  pageSize: number;
+  sort?: ArSort;
+  order?: SortOrder;
+  startDate?: Date;
+  endDate?: Date;
+  compact?: boolean;
+}
 @Injectable()
 export class ReportService {
   constructor(
+    private readonly arService: ArService,
     private readonly transactionInService: TransactionInService,
     private readonly transactionOutService: TransactionOutService,
     private readonly productService: ProductService,
@@ -161,5 +173,25 @@ export class ReportService {
         amount: cashflow.amount,
       })),
     };
+  }
+
+  async arPaidReport({
+    sort,
+    order,
+    startDate,
+    endDate,
+    pageNo,
+    pageSize,
+    compact,
+  }: ArPaidReportQuery) {
+    return await this.arService.getAllArs({
+      pageNo,
+      pageSize,
+      startDate,
+      endDate,
+      sort,
+      order,
+      compact,
+    });
   }
 }
