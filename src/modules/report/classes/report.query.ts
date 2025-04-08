@@ -43,7 +43,7 @@ export class ArPaidReportQuery extends OptionalDateRangeQueryWithPagination {
     type: 'boolean',
     required: false,
     description:
-      'true: doesn`t populate invoice.\n\nfalse / null: populate invoice',
+      "`true`: doesn't populate `invoice`.\n\n`false` / null: populate `invoice`",
   })
   @JoiSchema(Joi.boolean().options({ convert: true }).optional())
   compact: boolean;
