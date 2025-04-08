@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { ArPayment } from '../models/ar-payment.entity';
@@ -54,13 +58,18 @@ export class ArPaymentService {
       createArPaymentDto.customer_paymentId,
     );
     const ar = await this.arService.findArById(createArPaymentDto.arId);
+    ar.to_paid -= createArPaymentDto.total_paid;
+    if (ar.to_paid < 0) {
+      throw new BadRequestException(
+        `To paid only ${ar.to_paid + createArPaymentDto.total_paid}`,
+      );
+    }
     const arPayment = await this.arPaymentRepository.manager.transaction(
       async (entityManager: EntityManager) => {
         const newArPayment = entityManager.create(
           ArPayment,
           createArPaymentDto,
         );
-        ar.to_paid -= createArPaymentDto.total_paid;
 
         await this.arService.updateArWithEM(ar, entityManager);
 
