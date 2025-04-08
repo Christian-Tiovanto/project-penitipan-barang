@@ -12,8 +12,8 @@ import {
 
 export interface IArPayment {
   id: number;
-  accreceivable: number;
-  accreceivableId: number;
+  ar: number;
+  arId: number;
   customer_payment: number;
   customer_paymentId: number;
   customer: number;
@@ -32,11 +32,11 @@ export class ArPayment implements IArPayment {
   id: number;
 
   // @ManyToOne(() => Product, (product) => product.product_unit)
-  accreceivable: number;
+  ar: number;
 
   // @ApiProperty({ example: 1 })
   @Column({ type: 'int', nullable: true })
-  accreceivableId: number;
+  arId: number;
 
   @ManyToOne(() => CustomerPayment, (customerPayment) => customerPayment)
   customer_payment: number;

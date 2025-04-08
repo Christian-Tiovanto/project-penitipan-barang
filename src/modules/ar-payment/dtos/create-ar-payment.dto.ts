@@ -11,14 +11,14 @@ export class CreateArPaymentDto
       | 'id'
       | 'created_at'
       | 'updated_at'
-      | 'accreceivable'
+      | 'ar'
       | 'customer_payment'
       | 'customer'
     >
 {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
-  accreceivableId: number;
+  arId: number;
 
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())

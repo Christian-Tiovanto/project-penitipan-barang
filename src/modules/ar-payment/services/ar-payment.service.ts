@@ -7,6 +7,7 @@ import { CustomerPaymentService } from '@app/modules/customer-payment/services/c
 import { CashflowService } from '@app/modules/cashflow/services/cashflow.service';
 import { CreateCashflowDto } from '@app/modules/cashflow/dtos/create-cashflow.dto';
 import { CashflowType } from '@app/enums/cashflow-type';
+import { ArService } from '@app/modules/ar/services/ar.service';
 interface GetAllQuery {
   pageNo: number;
   pageSize: number;
@@ -18,6 +19,7 @@ export class ArPaymentService {
     private readonly arPaymentRepository: Repository<ArPayment>,
     private readonly customerPaymentService: CustomerPaymentService,
     private readonly cashflowService: CashflowService,
+    private readonly arService: ArService,
   ) {}
 
   async getAllArPayments({
@@ -51,12 +53,17 @@ export class ArPaymentService {
     await this.customerPaymentService.findCustomerPaymentById(
       createArPaymentDto.customer_paymentId,
     );
+    const ar = await this.arService.findArById(createArPaymentDto.arId);
     const arPayment = await this.arPaymentRepository.manager.transaction(
       async (entityManager: EntityManager) => {
         const newArPayment = entityManager.create(
           ArPayment,
           createArPaymentDto,
         );
+        ar.to_paid -= createArPaymentDto.total_paid;
+
+        await this.arService.updateArWithEM(ar, entityManager);
+
         const createCashflowDto: CreateCashflowDto = {
           type: CashflowType.IN,
           amount: createArPaymentDto.total_paid,
