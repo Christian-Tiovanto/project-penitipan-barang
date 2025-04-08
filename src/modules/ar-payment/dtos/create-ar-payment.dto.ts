@@ -39,4 +39,6 @@ export class CreateArPaymentDto
   @ApiProperty({ example: 'REF-1' })
   @JoiSchema(Joi.number().optional())
   reference_no: string;
+
+  payment_method_name: string;
 }

@@ -54,12 +54,15 @@ export class ArPaymentService {
   async createArPayment(
     createArPaymentDto: CreateArPaymentDto,
   ): Promise<ArPayment> {
-    await this.customerPaymentService.findCustomerPaymentById(
-      createArPaymentDto.customer_paymentId,
-    );
+    const customerPayment =
+      await this.customerPaymentService.findCustomerPaymentById(
+        createArPaymentDto.customer_paymentId,
+      );
     const ar = await this.arService.findArById(createArPaymentDto.arId);
     ar.to_paid -= createArPaymentDto.total_paid;
     ar.total_paid += createArPaymentDto.total_paid;
+    createArPaymentDto.payment_method_name =
+      customerPayment.payment_method.name;
     if (ar.to_paid < 0) {
       throw new BadRequestException(
         `To paid only ${ar.to_paid + createArPaymentDto.total_paid}`,
