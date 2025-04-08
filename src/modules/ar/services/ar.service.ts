@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager, MoreThanOrEqual, LessThan } from 'typeorm';
 import { Ar } from '../models/ar.entity';
@@ -9,6 +13,7 @@ import {
   SortOrderQueryBuilder,
 } from '@app/enums/sort-order';
 import { GetAllArResponse } from '../classes/ar.response';
+import { ArStatus } from '@app/enums/ar-status';
 
 interface GetAllQuery {
   pageNo?: number;
@@ -18,7 +23,10 @@ interface GetAllQuery {
   startDate?: Date;
   endDate?: Date;
   search?: string;
+  customer?: string;
   compact?: boolean;
+  status?: ArStatus;
+  with_payment?: boolean;
 }
 
 @Injectable()
@@ -36,14 +44,23 @@ export class ArService {
     startDate,
     endDate,
     compact,
+    customer,
+    with_payment,
+    status,
   }: GetAllQuery): Promise<[GetAllArResponse[], number]> {
     const skip = (pageNo - 1) * pageSize;
     let sortBy: string = `ar.${sort}`;
     if (sort === ArSort.CUSTOMER) {
       sortBy = `${sort}.name`;
     }
-    if (sort === ArSort.INVOICE) {
-      sortBy = `${sort}.invoice_no`;
+
+    if (sort === ArSort.AR_PAYMENT && !with_payment) {
+      throw new BadRequestException(
+        'sort by Payment can only be used along with `with_payment`',
+      );
+    }
+    if (sort === ArSort.AR_PAYMENT) {
+      sortBy = `${sort}.payment_method_name`;
     }
 
     const queryBuilder = this.arRepository
@@ -57,7 +74,17 @@ export class ArService {
       queryBuilder.leftJoinAndSelect('ar.invoice', 'invoice');
     }
 
-    // Conditionally add filters
+    if (with_payment) {
+      queryBuilder.leftJoinAndSelect('ar.ar_payment', 'ar_payment');
+    }
+    if (customer) {
+      queryBuilder.andWhere({ customerId: customer });
+    }
+
+    if (status) {
+      queryBuilder.andWhere({ status });
+    }
+
     if (startDate) {
       queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
     }
@@ -65,7 +92,7 @@ export class ArService {
     if (endDate) {
       queryBuilder.andWhere({ created_at: LessThan(endDate) });
     }
-
+    console.log(queryBuilder.getQuery());
     const ars = (await queryBuilder.getManyAndCount()) as unknown as [
       GetAllArResponse[],
       number,

@@ -1,4 +1,5 @@
 import { ArStatus } from '@app/enums/ar-status';
+import { ArPayment } from '@app/modules/ar-payment/models/ar-payment.entity';
 import { Customer } from '@app/modules/customer/models/customer.entity';
 import { Invoice } from '@app/modules/invoice/models/invoice.entity';
 import { ApiProperty } from '@nestjs/swagger';
@@ -11,6 +12,7 @@ import {
   OneToOne,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 
 export interface IAr {
@@ -92,6 +94,9 @@ export class Ar implements IAr {
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })
   @Column({ type: 'datetime', nullable: true })
   paid_date: Date;
+
+  @OneToMany(() => ArPayment, (arPayment) => arPayment.ar)
+  ar_payment: ArPayment;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })
   @CreateDateColumn()

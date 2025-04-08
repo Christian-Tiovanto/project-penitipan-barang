@@ -2,6 +2,7 @@ import {
   EndDateQuery,
   OptionalDateRangeQueryWithPagination,
 } from '@app/commons/queries/date-range.query';
+import { ArStatus } from '@app/enums/ar-status';
 import { ArSort, SortOrder } from '@app/enums/sort-order';
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
@@ -39,6 +40,22 @@ export class ArPaidReportQuery extends OptionalDateRangeQueryWithPagination {
   order?: SortOrder;
 
   @ApiProperty({
+    enum: ArStatus,
+    required: false,
+    description: 'default order is `asc`',
+  })
+  @JoiSchema(
+    Joi.string()
+      .valid(...Object.values(ArStatus))
+      .optional(),
+  )
+  status?: ArStatus;
+
+  @ApiProperty({ example: '1', required: false })
+  @JoiSchema(Joi.string().optional())
+  customer: string;
+
+  @ApiProperty({
     example: true,
     type: 'boolean',
     required: false,
@@ -47,4 +64,14 @@ export class ArPaidReportQuery extends OptionalDateRangeQueryWithPagination {
   })
   @JoiSchema(Joi.boolean().options({ convert: true }).optional())
   compact: boolean;
+
+  @ApiProperty({
+    example: true,
+    type: 'boolean',
+    required: false,
+    description:
+      "`true`: populate `ar_payment` .\n\n`false` / null: doesn't populate `ar_payment`",
+  })
+  @JoiSchema(Joi.boolean().options({ convert: true }).optional())
+  with_payment: boolean;
 }

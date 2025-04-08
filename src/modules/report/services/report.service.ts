@@ -15,6 +15,7 @@ import { CashflowService } from '@app/modules/cashflow/services/cashflow.service
 import { CashflowType } from '@app/enums/cashflow-type';
 import { ArService } from '@app/modules/ar/services/ar.service';
 import { ArSort, SortOrder } from '@app/enums/sort-order';
+import { ArStatus } from '@app/enums/ar-status';
 interface StockBookReportQuery {
   startDate: Date;
   endDate: Date;
@@ -32,6 +33,9 @@ interface ArPaidReportQuery {
   startDate?: Date;
   endDate?: Date;
   compact?: boolean;
+  customer?: string;
+  with_payment?: boolean;
+  status?: ArStatus;
 }
 @Injectable()
 export class ReportService {
@@ -183,6 +187,9 @@ export class ReportService {
     pageNo,
     pageSize,
     compact,
+    customer,
+    status,
+    with_payment,
   }: ArPaidReportQuery) {
     return await this.arService.getAllArs({
       pageNo,
@@ -192,6 +199,9 @@ export class ReportService {
       sort,
       order,
       compact,
+      customer,
+      with_payment,
+      status,
     });
   }
 }

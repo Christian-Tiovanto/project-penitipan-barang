@@ -60,7 +60,10 @@ export class ReportController {
       page_size,
       sort,
       order,
+      customer,
       compact,
+      with_payment,
+      status,
     }: ArPaidReportQuery,
   ): Promise<OffsetPagination<GetAllArResponse>> {
     const pageSize = parseInt(page_size) || 10;
@@ -75,7 +78,10 @@ export class ReportController {
       endDate: end_date,
       pageNo,
       pageSize,
+      customer,
+      status,
       compact: parseBoolean(compact),
+      with_payment: parseBoolean(with_payment),
     });
     return {
       data: report[0],
