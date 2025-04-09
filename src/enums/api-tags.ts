@@ -15,4 +15,5 @@ export enum ApiTag {
   CHARGE = 'charge',
   TRANSACTION_OUT = 'transaction-out',
   REPORT = 'report',
+  SPB = 'spb',
 }

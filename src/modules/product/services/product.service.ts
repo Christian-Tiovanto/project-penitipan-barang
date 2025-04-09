@@ -18,7 +18,7 @@ export class ProductService {
   ) {}
 
   async getAllProducts(): Promise<Product[]> {
-    return await this.productRepository.find(); // Assuming using TypeORM
+    return await this.productRepository.find({ where: { is_deleted: false } }); // Assuming using TypeORM
   }
 
   async getAllProductsPagination({

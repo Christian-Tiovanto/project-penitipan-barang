@@ -101,6 +101,35 @@ export class TransactionOutController {
     return await this.transactionOutService.createTransactionOut(
       createTransactionOutWithSpbDto,
     );
+
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Preview Transaction Out',
+  })
+  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @Post('/preview')
+  async previewTransactionOut(
+    @Body() createTransactionOutWithSpbDto: CreateTransactionOutWithSpbDto,
+  ) {
+    return await this.transactionOutService.previewTransactionOut(
+      createTransactionOutWithSpbDto,
+    );
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All Transaction Out By Invoice Id',
+  })
+  @UseGuards(AuthenticateGuard)
+  @Get('/by-invoice/:id')
+  async getAllProductUnits(
+    @Param('id', ParseIntPipe) invoiceId: number,
+  ): Promise<TransactionOut[]> {
+    return await this.transactionOutService.getTransactionOutsByInvoiceId(
+      invoiceId,
+    );
   }
 
   //   @ApiBearerAuth()

@@ -32,9 +32,15 @@ export class User implements IUser {
 
   @Column({
     type: 'varchar',
-    // select: false 
+    // select: false
   })
   password: string;
+
+  @Column({
+    type: 'varchar',
+    // select: false
+  })
+  pin: string;
 
   // @Column({ type: 'varchar' })
   // address: string;

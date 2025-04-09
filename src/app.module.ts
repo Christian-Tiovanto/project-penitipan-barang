@@ -31,6 +31,8 @@ import { Ar } from './modules/ar/models/ar.entity';
 import { Spb } from './modules/spb/models/spb.entity';
 import { Invoice } from './modules/invoice/models/invoice.entity';
 import { ReportModule } from './modules/report/report.module';
+import { SpbModule } from './modules/spb/spb.module';
+
 
 @Module({
   providers: [
@@ -79,6 +81,7 @@ import { ReportModule } from './modules/report/report.module';
     ChargeModule,
     TransactionOutModule,
     ReportModule,
+    SpbModule,
   ],
 })
 export class AppModule {}

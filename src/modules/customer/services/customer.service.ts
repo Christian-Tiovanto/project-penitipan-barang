@@ -14,10 +14,10 @@ export class CustomerService {
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
-  ) { }
+  ) {}
 
   async getAllCustomers(): Promise<Customer[]> {
-    return await this.customerRepository.find();
+    return await this.customerRepository.find({ where: { is_deleted: false } });
   }
 
   async getAllCustomersPagination({

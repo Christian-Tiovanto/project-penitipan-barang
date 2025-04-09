@@ -141,5 +141,5 @@ export class Invoice implements IInvoice {
   ar: Ar[];
 
   @OneToOne(() => Spb, (spb) => spb.invoiceId)
-  spb: Spb[];
+  spb: Spb;
 }

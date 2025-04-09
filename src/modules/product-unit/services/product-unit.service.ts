@@ -13,7 +13,7 @@ export class ProductUnitService {
   constructor(
     @InjectRepository(ProductUnit)
     private readonly productUnitRepository: Repository<ProductUnit>,
-  ) { }
+  ) {}
 
   async getAllProductUnits(): Promise<ProductUnit[]> {
     return await this.productUnitRepository.find();
@@ -87,5 +87,11 @@ export class ProductUnitService {
     await this.findProductUnitById(productUnitId);
 
     await this.productUnitRepository.delete(productUnitId);
+  }
+
+  async getProductUnitsByProductId(productId: number) {
+    return this.productUnitRepository.find({
+      where: { productId },
+    });
   }
 }
