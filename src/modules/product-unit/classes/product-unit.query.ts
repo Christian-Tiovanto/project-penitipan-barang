@@ -1,29 +1,27 @@
 import { OptionalDateRangeQueryWithPagination } from '@app/commons/queries/date-range.query';
 import { SortOrder } from '@app/enums/sort-order';
-import { BasePaginationQuery } from '@app/interfaces/pagination.interface';
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 import { JoiSchema } from 'joi-class-decorators';
-import { Customer } from '../models/customer.entity';
-export enum CustomerSort {
+export enum ProductUnitSort {
   ID = 'id',
-  NAME = 'name',
-  CODE = 'code',
-  ADDRESS = 'address',
+  name = 'name',
+  PRODUCT = 'product',
+  CONVERSION_TO_KG = 'conversion_to_kg',
 }
 
-export class GetAllCustomerQuery extends OptionalDateRangeQueryWithPagination {
+export class GetAllProductUnitQuery extends OptionalDateRangeQueryWithPagination {
   @ApiProperty({
-    enum: CustomerSort,
+    enum: ProductUnitSort,
     required: false,
     description: 'default sort by `id`',
   })
   @JoiSchema(
     Joi.string()
-      .valid(...Object.values(CustomerSort))
+      .valid(...Object.values(ProductUnitSort))
       .optional(),
   )
-  sort: CustomerSort;
+  sort: ProductUnitSort;
 
   @ApiProperty({
     enum: SortOrder,
@@ -39,7 +37,8 @@ export class GetAllCustomerQuery extends OptionalDateRangeQueryWithPagination {
 
   @ApiProperty({
     example: '',
-    description: 'Search Custmomer based on name , code , address',
+    description:
+      'Search product unit based on name , product , conversion to kg',
     required: false,
   })
   @JoiSchema(Joi.string().optional())

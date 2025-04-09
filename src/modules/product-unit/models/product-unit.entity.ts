@@ -11,7 +11,7 @@ import {
 
 export interface IProductUnit {
   id: number;
-  product: number;
+  product: Product;
   productId: number;
   name: string;
   conversion_to_kg: number;
@@ -25,9 +25,8 @@ export class ProductUnit implements IProductUnit {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ApiProperty({ example: 1 })
   @ManyToOne(() => Product, (product) => product.product_unit)
-  product: number;
+  product: Product;
 
   @ApiProperty({ example: 1 })
   @Column()

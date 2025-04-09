@@ -15,7 +15,12 @@ import { PaymentMethodService } from '../services/payment-method.service';
 import { PaymentMethod } from '../models/payment-method.entity';
 import { CreatePaymentMethodDto } from '../dtos/create-payment-method.dto';
 import { UpdatePaymentMethodDto } from '../dtos/update-payment-method.dto';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
 import {
@@ -24,41 +29,88 @@ import {
 } from '@app/interfaces/pagination.interface';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
+import { GetPaymentMethodResponse } from '../classes/payment-method.response';
+import { GetAllUserQuery } from '@app/modules/user/classes/user.query';
+import { GetUserResponse } from '@app/modules/user/classes/user.response';
+import {
+  GetAllPaymentMethodQuery,
+  PaymentMethodSort,
+} from '../classes/payment-method.query';
+import { SortOrder } from '@app/enums/sort-order';
 
 @ApiTags(ApiTag.PAYMENT_METHOD)
 @Controller('api/v1/payment-method')
 export class PaymentMethodController {
-  constructor(private readonly paymentMethodService: PaymentMethodService) { }
+  constructor(private readonly paymentMethodService: PaymentMethodService) {}
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get All Payment Method',
   })
   @UseGuards(AuthenticateGuard)
   @Get('/all')
-
   async getAllPaymentMethods(): Promise<PaymentMethod[]> {
     return await this.paymentMethodService.getAllPaymentMethods();
   }
+
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get All Payment Method Pagination',
+  // })
+  // @UseInterceptors(OffsetPaginationInterceptor<PaymentMethod>)
+  // @UseGuards(AuthenticateGuard)
+  // @Get()
+  // async getAllPaymentMethodsPagination(
+  //   @Query() { page_no, page_size }: BasePaginationQuery,
+  // ): Promise<OffsetPagination<PaymentMethod>> {
+  //   const pageSize = parseInt(page_size) || 10;
+  //   const pageNo = parseInt(page_no) || 1;
+
+  //   const paymentMethods =
+  //     await this.paymentMethodService.getAllPaymentMethodsPagination({
+  //       pageNo,
+  //       pageSize,
+  //     });
+  //   return {
+  //     data: paymentMethods[0],
+  //     totalCount: paymentMethods[1],
+  //     filteredCount: paymentMethods[1],
+  //   };
+  // }
 
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get All Payment Method Pagination',
   })
-  @UseInterceptors(OffsetPaginationInterceptor<PaymentMethod>)
+  @ApiOkResponse({ type: GetPaymentMethodResponse })
+  @UseInterceptors(OffsetPaginationInterceptor)
   @UseGuards(AuthenticateGuard)
   @Get()
   async getAllPaymentMethodsPagination(
-    @Query() { page_no, page_size }: BasePaginationQuery,
-  ): Promise<OffsetPagination<PaymentMethod>> {
+    @Query()
+    {
+      page_no,
+      page_size,
+      start_date,
+      end_date,
+      sort,
+      order,
+      search,
+    }: GetAllPaymentMethodQuery,
+  ): Promise<OffsetPagination<GetPaymentMethodResponse>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
-
-    const paymentMethods = await this.paymentMethodService.getAllPaymentMethodsPagination(
-      {
+    sort = !sort ? PaymentMethodSort.ID : sort;
+    order = !order ? SortOrder.ASC : order;
+    const paymentMethods =
+      await this.paymentMethodService.getAllPaymentMethodsPagination({
         pageNo,
         pageSize,
-      },
-    );
+        sort,
+        order,
+        startDate: start_date,
+        endDate: end_date,
+        search,
+      });
     return {
       data: paymentMethods[0],
       totalCount: paymentMethods[1],
