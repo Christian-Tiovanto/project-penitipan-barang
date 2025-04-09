@@ -124,6 +124,26 @@ export class CashflowService {
     const newCashflow = entityManager.create(Cashflow, createCashflowDto);
     return await entityManager.save(newCashflow);
   }
+  async createBulkCashflowFromArPaymentWithEM(
+    entityManager: EntityManager,
+    createBulkCashflowDto: CreateCashflowDto[],
+  ): Promise<Cashflow[]> {
+    const latestCashflow = await this.findLatestCashFlow();
+    let latestTotalAmount = latestCashflow?.total_amount || 0;
+    for (const cashflowDto of createBulkCashflowDto) {
+      if (cashflowDto.amount < 1) {
+        throw new BadRequestException("Amount can't be less than 0");
+      }
+      cashflowDto.total_amount = this.calculateTotalAmount(
+        latestTotalAmount,
+        cashflowDto.amount,
+        cashflowDto.type,
+      );
+      latestTotalAmount += cashflowDto.total_amount;
+    }
+    const newCashflow = entityManager.create(Cashflow, createBulkCashflowDto);
+    return await entityManager.save(newCashflow);
+  }
 
   private calculateTotalAmount(
     latestTotalAmount: number,

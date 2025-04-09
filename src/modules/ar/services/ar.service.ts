@@ -139,4 +139,7 @@ export class ArService {
   async updateArWithEM(ar: Ar, entityManager: EntityManager) {
     await entityManager.save(Ar, ar);
   }
+  async updateBulkArWithEM(entityManager: EntityManager, ar: Ar[]) {
+    await entityManager.save(Ar, ar);
+  }
 }

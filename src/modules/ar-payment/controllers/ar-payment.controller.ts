@@ -21,6 +21,7 @@ import {
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
+import { CreateBulkArPaymentDto } from '../dtos/create-bulk-ar-payment.dto';
 
 @ApiTags(ApiTag.AR_PAYMENT)
 @Controller('api/v1/ar-payment')
@@ -70,5 +71,19 @@ export class ArPaymentController {
   @Post()
   async createArPayment(@Body() createArPaymentDto: CreateArPaymentDto) {
     return await this.arPaymentService.createArPayment(createArPaymentDto);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create Bulk Acc Receivable Payment',
+  })
+  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @Post('bulk')
+  async createBulkArPayment(
+    @Body() createBulkArPaymentDto: CreateBulkArPaymentDto,
+  ) {
+    return await this.arPaymentService.createBulkArPayment(
+      createBulkArPaymentDto,
+    );
   }
 }
