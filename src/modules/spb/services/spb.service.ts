@@ -7,58 +7,75 @@ import { BasePaginationQuery } from '@app/interfaces/pagination.interface';
 import { CreateSpbDto } from '../dtos/create-spb.dto';
 
 interface GetAllQuery {
-    pageNo: number;
-    pageSize: number;
+  pageNo: number;
+  pageSize: number;
 }
 
 @Injectable()
 export class SpbService {
-    constructor(
-        @InjectRepository(Spb)
-        private readonly spbRepository: Repository<Spb>,
-    ) { }
+  constructor(
+    @InjectRepository(Spb)
+    private readonly spbRepository: Repository<Spb>,
+  ) {}
 
-    async getAllSpbs({
-        pageNo,
-        pageSize,
-    }: GetAllQuery): Promise<[Spb[], number]> {
-        const skip = (pageNo - 1) * pageSize;
-        const spbs = await this.spbRepository.findAndCount({
-            skip,
-            take: pageSize,
-        });
-        return spbs;
+  async getAllSpbs({
+    pageNo,
+    pageSize,
+  }: GetAllQuery): Promise<[Spb[], number]> {
+    const skip = (pageNo - 1) * pageSize;
+    const spbs = await this.spbRepository.findAndCount({
+      skip,
+      take: pageSize,
+    });
+    return spbs;
+  }
+
+  async getSpbById(spbId: number): Promise<Spb> {
+    return await this.spbRepository.findOne({ where: { id: spbId } });
+  }
+
+  async getSpbByInvoiceId(invoiceId: number): Promise<Spb> {
+    const spb = await this.spbRepository.findOne({
+      where: { invoiceId },
+      relations: ['invoice', 'customer'],
+    });
+
+    if (!spb) {
+      throw new NotFoundException(`Spb with Invoice id ${invoiceId} not found`);
     }
+    return spb;
+  }
 
-    async getSpbById(spbId: number): Promise<Spb> {
-        return await this.spbRepository.findOne({ where: { id: spbId } });
+  async findSpbById(spbId: number): Promise<Spb> {
+    const spb = await this.spbRepository.findOne({
+      where: { id: spbId },
+    });
+
+    if (!spb) {
+      throw new NotFoundException(`Spb with id ${spbId} not found`);
     }
+    return spb;
+  }
 
-    async findSpbById(spbId: number): Promise<Spb> {
-        const spb = await this.spbRepository.findOne({
-            where: { id: spbId },
-        });
+  async createSpb(
+    createSpbDto: CreateSpbDto,
+    entityManager?: EntityManager,
+  ): Promise<Spb> {
+    const repo = entityManager
+      ? entityManager.getRepository(Spb)
+      : this.spbRepository;
+    const newSpb = repo.create(createSpbDto);
+    return repo.save(newSpb);
+  }
 
-        if (!spb) {
-            throw new NotFoundException(`Spb with id ${spbId} not found`);
-        }
-        return spb;
-    }
+  //     async updateSpb(
+  //         spbId: number,
+  //         updateSpbDto: UpdateSpbDto,
+  //     ): Promise<Spb> {
+  //         const spb = await this.findSpbById(spbId);
 
-    async createSpb(createSpbDto: CreateSpbDto, entityManager?: EntityManager): Promise<Spb> {
-        const repo = entityManager ? entityManager.getRepository(Spb) : this.spbRepository;
-        const newSpb = repo.create(createSpbDto);
-        return repo.save(newSpb);
-    }
+  //         Object.assign(spb, updateSpbDto);
 
-    //     async updateSpb(
-    //         spbId: number,
-    //         updateSpbDto: UpdateSpbDto,
-    //     ): Promise<Spb> {
-    //         const spb = await this.findSpbById(spbId);
-
-    //         Object.assign(spb, updateSpbDto);
-
-    //         return this.spbRepository.save(spb);
-    //     }
+  //         return this.spbRepository.save(spb);
+  //     }
 }

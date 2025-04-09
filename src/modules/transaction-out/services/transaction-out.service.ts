@@ -530,4 +530,20 @@ export class TransactionOutService {
     );
     return transaction;
   }
+
+  async getTransactionOutsByInvoiceId(
+    invoiceId: number,
+  ): Promise<TransactionOut[]> {
+    const transactionOuts = await this.transactionOutRepository.find({
+      where: { invoiceId },
+      relations: ['product', 'customer'],
+    });
+
+    if (transactionOuts.length === 0) {
+      throw new NotFoundException(
+        `Transaction Out with Invoice Id ${invoiceId} not found`,
+      );
+    }
+    return transactionOuts;
+  }
 }

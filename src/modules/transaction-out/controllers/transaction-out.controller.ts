@@ -100,6 +100,20 @@ export class TransactionOutController {
     );
   }
 
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All Transaction Out By Invoice Id',
+  })
+  @UseGuards(AuthenticateGuard)
+  @Get('/by-invoice/:id')
+  async getAllProductUnits(
+    @Param('id', ParseIntPipe) invoiceId: number,
+  ): Promise<TransactionOut[]> {
+    return await this.transactionOutService.getTransactionOutsByInvoiceId(
+      invoiceId,
+    );
+  }
+
   //   @ApiBearerAuth()
   //   @ApiOperation({
   //     summary: 'Update Transaction Out by Id',

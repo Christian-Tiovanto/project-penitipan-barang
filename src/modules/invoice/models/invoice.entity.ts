@@ -131,12 +131,15 @@ export class Invoice implements IInvoice {
   @UpdateDateColumn()
   updated_at: Date;
 
-  @OneToMany(() => TransactionOut, (transaction_out) => transaction_out.invoiceId)
+  @OneToMany(
+    () => TransactionOut,
+    (transaction_out) => transaction_out.invoiceId,
+  )
   transaction_out: TransactionOut[];
 
   @OneToOne(() => Ar, (ar) => ar.invoiceId)
   ar: Ar[];
 
   @OneToOne(() => Spb, (spb) => spb.invoiceId)
-  spb: Spb[];
+  spb: Spb;
 }

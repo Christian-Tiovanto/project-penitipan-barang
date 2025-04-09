@@ -11,6 +11,7 @@ import {
   OneToMany,
   ManyToOne,
   OneToOne,
+  JoinColumn,
 } from 'typeorm';
 
 export interface ISpb {
@@ -39,6 +40,7 @@ export class Spb implements ISpb {
   customerId: number;
 
   @OneToOne(() => Invoice, (invoice) => invoice.spb)
+  @JoinColumn({ name: 'invoiceId' })
   invoice: number;
 
   @ApiProperty({ example: 1 })
