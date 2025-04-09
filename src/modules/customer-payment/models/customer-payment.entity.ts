@@ -15,7 +15,7 @@ export interface ICustomerPayment {
   id: number;
   customer: number;
   customerId: number;
-  payment_method: number;
+  payment_method: PaymentMethod;
   payment_methodId: number;
   charge: number;
   min_pay: number;
@@ -38,9 +38,12 @@ export class CustomerPayment implements ICustomerPayment {
   @Column({ type: 'int', nullable: true })
   customerId: number;
 
-  @ManyToOne(() => PaymentMethod, (paymentMethod) => paymentMethod.customer_payment)
-  @JoinColumn({ name: "payment_methodId" })
-  payment_method: number;
+  @ManyToOne(
+    () => PaymentMethod,
+    (paymentMethod) => paymentMethod.customer_payment,
+  )
+  @JoinColumn({ name: 'payment_methodId' })
+  payment_method: PaymentMethod;
 
   @ApiProperty({ example: 1 })
   @Column({ type: 'int', nullable: true })

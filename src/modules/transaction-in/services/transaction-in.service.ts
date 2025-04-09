@@ -1,7 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ITransactionIn, TransactionIn } from '../models/transaction-in.entity';
-import { EntityManager, MoreThan, Repository } from 'typeorm';
+import {
+  Between,
+  EntityManager,
+  LessThan,
+  MoreThan,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
 import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
 import { ProductService } from '@app/modules/product/services/product.service';
@@ -9,10 +16,25 @@ import { ProductUnitService } from '@app/modules/product-unit/services/product-u
 import { IProductUnit } from '@app/modules/product-unit/models/product-unit.entity';
 import { CustomerService } from '@app/modules/customer/services/customer.service';
 import { InsufficientStockException } from '@app/exceptions/validation.exception';
+import { TransactionInSort } from '../classes/transaction-in.query';
+import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
+import { GetTransactionInResponse } from '../classes/transaction-in.response';
+import { Customer } from '@app/modules/customer/models/customer.entity';
+import { Product } from '@app/modules/product/models/product.entity';
 
-interface GetAllSupplier {
+interface GetAllTransactionInQuery {
   pageNo: number;
   pageSize: number;
+  sort?: TransactionInSort;
+  order?: SortOrder;
+  startDate?: Date;
+  endDate?: Date;
+  search?: string;
+}
+
+interface getTransactionForStockReportQuery {
+  endDate: Date;
+  customerId?: number;
 }
 
 @Injectable()
@@ -64,14 +86,118 @@ export class TransactionInService {
     return transaction;
   }
 
-  async getAllTransactionIn({ pageNo, pageSize }: GetAllSupplier) {
+  async getAllTransactionIn({
+    pageNo,
+    pageSize,
+    sort,
+    order,
+    startDate,
+    endDate,
+    search,
+  }: GetAllTransactionInQuery): Promise<[GetTransactionInResponse[], number]> {
     const skip = (pageNo - 1) * pageSize;
-    const transactions = await this.transactionInRepository.findAndCount({
-      skip,
-      take: pageSize,
-      relations: ['customer', 'product'],
-    });
-    return transactions;
+
+    let sortBy: string = `transaction.${sort}`;
+    if (
+      sort === TransactionInSort.CUSTOMER ||
+      sort === TransactionInSort.PRODUCT
+    ) {
+      sortBy = `${sort}.name`;
+    }
+    const queryBuilder = this.transactionInRepository
+      .createQueryBuilder('transaction')
+      .leftJoinAndSelect('transaction.customer', 'customer')
+      .leftJoinAndSelect('transaction.product', 'product')
+      .skip(skip)
+      .take(pageSize)
+      .select([
+        'transaction',
+        'customer.name',
+        'customer.id',
+        'product.name',
+        'product.id',
+      ])
+      .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
+
+    // Conditionally add filters
+    if (startDate) {
+      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    }
+
+    if (search) {
+      queryBuilder.andWhere('customer.name LIKE :search', {
+        search: `%${search}%`, // Add wildcards for partial matching
+      });
+    }
+    const [transactionsIns, count] = await queryBuilder.getManyAndCount();
+    const transactionInResponse: GetTransactionInResponse[] =
+      transactionsIns.map((transaction: GetTransactionInResponse) => {
+        return {
+          id: transaction.id,
+          product: {
+            id: transaction.product.id,
+            name: transaction.product.name,
+          },
+          customer: {
+            id: transaction.customer.id,
+            name: transaction.customer.name,
+          },
+          qty: transaction.qty,
+          converted_qty: transaction.qty,
+          unit: transaction.unit,
+        };
+      });
+    return [transactionInResponse, count];
+  }
+  async getTransactionForStockReport({
+    endDate,
+    customerId,
+  }: getTransactionForStockReportQuery): Promise<
+    {
+      product_name: string;
+      customer_name: string;
+      customerId: number;
+      productId: number;
+      total_qty: number;
+    }[]
+  > {
+    // 1. First create the grouped subquery
+    const groupedQuery = this.transactionInRepository
+      .createQueryBuilder('transaction')
+      .select([
+        'transaction.customerId AS customerId',
+        'transaction.productId AS productId',
+        'SUM(transaction.converted_qty) AS total_qty',
+      ])
+      .groupBy('customerId, productId');
+    if (customerId) {
+      groupedQuery.andWhere('customerId = :customerId', { customerId });
+    }
+    if (endDate) {
+      groupedQuery.andWhere({ created_at: LessThan(endDate) });
+    }
+    // // 2. Main query with joins
+    const result = await this.transactionInRepository
+      .createQueryBuilder()
+      .select([
+        'grouped.customerId',
+        'customer.name',
+        'grouped.productId',
+        'product.name',
+        'grouped.total_qty',
+      ])
+      .from(`(${groupedQuery.getQuery()})`, 'grouped')
+      .setParameters(groupedQuery.getParameters()) // Important: Pass the parameters!
+      .leftJoin(Customer, 'customer', 'customer.id = grouped.customerId')
+      .leftJoin(Product, 'product', 'product.id = grouped.productId')
+      .groupBy('grouped.customerId, grouped.productId')
+      .getRawMany();
+
+    return result;
   }
 
   async findTransactionInById(id: number) {
@@ -83,6 +209,58 @@ export class TransactionInService {
       throw new NotFoundException('No Transaction In with that id');
     return transactionIn;
   }
+  async sumCustProductQty(
+    productId: number,
+    customerId: number,
+    startDate: Date,
+  ) {
+    const result: { sum?: string } = await this.transactionInRepository
+      .createQueryBuilder('transaction')
+      .select('SUM(transaction.converted_qty)', 'sum')
+      .where('transaction.created_at < :startDate', { startDate })
+      .andWhere('transaction.productId = :productId', { productId })
+      .andWhere('transaction.customerId = :customerId', { customerId })
+      .getRawOne();
+
+    return parseFloat(result?.sum || '0');
+  }
+  async getTransactionInForStockBookReport(
+    productId: number,
+    customerId: number,
+    startDate: Date,
+    endDate: Date,
+  ) {
+    const [transactionsIns, sumResult] = (await Promise.all([
+      // First promise - returns TransactionIn[]
+      this.transactionInRepository.find({
+        where: {
+          created_at: Between(startDate, endDate),
+          productId,
+          customerId,
+        },
+        order: {
+          created_at: 'ASC',
+        },
+      }),
+
+      // Second promise - explicitly typed
+      this.transactionInRepository
+        .createQueryBuilder()
+        .select('SUM(converted_qty)', 'sum')
+        .where({
+          created_at: Between(startDate, endDate),
+          productId,
+          customerId,
+        })
+        .getRawOne(),
+    ])) as [TransactionIn[], { sum: string } | undefined];
+
+    return {
+      transactionsIns,
+      totalSum: parseFloat(sumResult?.sum || '0'),
+    };
+  }
+
 
   async lockingTransactionInById(
     entityManager: EntityManager,
@@ -113,7 +291,6 @@ export class TransactionInService {
         `No transactions In found for productId ${productId} and customerId ${customerId}`,
       );
     }
-
     const totalRemainingQty = transactionIns.reduce(
       (sum, tx) => sum + tx.remaining_qty,
       0,
@@ -123,7 +300,7 @@ export class TransactionInService {
         `Insufficient stock: required ${requiredQty}, but only ${totalRemainingQty} available in Transaction In`,
       );
     }
-
+      
     return transactionIns;
   }
 

@@ -1,12 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
-import * as Joi from 'joi';
-import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
+import { JoiSchemaOptions } from 'joi-class-decorators';
 import { IAr } from '../models/ar.entity';
 import { ArStatus } from '@app/enums/ar-status';
 
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateArDto
-  implements Omit<IAr, 'id' | 'created_at' | 'updated_at' | 'customer' | 'invoice'>
+  implements
+    Omit<
+      IAr,
+      'id' | 'created_at' | 'updated_at' | 'customer' | 'invoice' | 'total_paid'
+    >
 {
   customerId: number;
   invoiceId: number;

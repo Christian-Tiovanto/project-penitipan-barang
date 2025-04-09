@@ -16,6 +16,7 @@ export interface ICashflow {
   type: string;
   amount: number;
   total_amount: number;
+  descriptions?: string;
   created_by: number;
   created_byId?: number;
   created_at: Date;
@@ -45,6 +46,13 @@ export class Cashflow implements ICashflow {
     },
   })
   amount: number;
+
+  @ApiProperty({ example: 'Description Cashflow' })
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  descriptions: string;
 
   @ApiProperty({ example: 50000 })
   @Column({

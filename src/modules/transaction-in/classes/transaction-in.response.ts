@@ -1,0 +1,43 @@
+import { ApiProperty } from '@nestjs/swagger';
+
+export class GetTransactionInResponse {
+  @ApiProperty({ example: 1 })
+  id: number;
+
+  @ApiProperty({
+    example: {
+      product: {
+        id: 1,
+        name: 'Product Name',
+      },
+    },
+  })
+  product: {
+    id: number;
+    name: string;
+  };
+
+  @ApiProperty({
+    example: {
+      id: 1,
+      name: 'Customer Name',
+    },
+  })
+  customer: {
+    id: number;
+    name: string;
+  };
+
+  @ApiProperty({
+    example: 100,
+  })
+  qty: number;
+
+  @ApiProperty({
+    example: 1000,
+  })
+  converted_qty: number;
+
+  @ApiProperty({ example: 'Kg' })
+  unit: string;
+}

@@ -1,14 +1,32 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, EntityManager } from 'typeorm';
+import { Repository, EntityManager, MoreThanOrEqual, LessThan } from 'typeorm';
 import { Ar } from '../models/ar.entity';
-// import { UpdateTransactionOutDto } from '../dtos/update-transaction-out.dto';
-import { BasePaginationQuery } from '@app/interfaces/pagination.interface';
 import { CreateArDto } from '../dtos/create-ar.dto';
+import {
+  ArSort,
+  SortOrder,
+  SortOrderQueryBuilder,
+} from '@app/enums/sort-order';
+import { GetAllArResponse } from '../classes/ar.response';
+import { ArStatus } from '@app/enums/ar-status';
 
 interface GetAllQuery {
-  pageNo: number;
-  pageSize: number;
+  pageNo?: number;
+  pageSize?: number;
+  sort?: ArSort;
+  order?: SortOrder;
+  startDate?: Date;
+  endDate?: Date;
+  search?: string;
+  customer?: string;
+  compact?: boolean;
+  status?: ArStatus;
+  with_payment?: boolean;
 }
 
 @Injectable()
@@ -18,12 +36,67 @@ export class ArService {
     private readonly arRepository: Repository<Ar>,
   ) {}
 
-  async getAllArs({ pageNo, pageSize }: GetAllQuery): Promise<[Ar[], number]> {
+  async getAllArs({
+    pageNo,
+    pageSize,
+    sort,
+    order,
+    startDate,
+    endDate,
+    compact,
+    customer,
+    with_payment,
+    status,
+  }: GetAllQuery): Promise<[GetAllArResponse[], number]> {
     const skip = (pageNo - 1) * pageSize;
-    const ars = await this.arRepository.findAndCount({
-      skip,
-      take: pageSize,
-    });
+    let sortBy: string = `ar.${sort}`;
+    if (sort === ArSort.CUSTOMER) {
+      sortBy = `${sort}.name`;
+    }
+
+    if (sort === ArSort.AR_PAYMENT && !with_payment) {
+      throw new BadRequestException(
+        'sort by Payment can only be used along with `with_payment`',
+      );
+    }
+    if (sort === ArSort.AR_PAYMENT) {
+      sortBy = `${sort}.payment_method_name`;
+    }
+
+    const queryBuilder = this.arRepository
+      .createQueryBuilder('ar')
+      .skip(skip)
+      .take(pageSize)
+      .leftJoinAndSelect('ar.customer', 'customer')
+      .select(['ar', 'customer.name', 'customer.id'])
+      .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
+    if (!compact) {
+      queryBuilder.leftJoinAndSelect('ar.invoice', 'invoice');
+    }
+
+    if (with_payment) {
+      queryBuilder.leftJoinAndSelect('ar.ar_payment', 'ar_payment');
+    }
+    if (customer) {
+      queryBuilder.andWhere({ customerId: customer });
+    }
+
+    if (status) {
+      queryBuilder.andWhere({ status });
+
+    }
+    if (startDate) {
+      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    }
+    console.log(queryBuilder.getQuery());
+    const ars = (await queryBuilder.getManyAndCount()) as unknown as [
+      GetAllArResponse[],
+      number,
+    ];
     return ars;
   }
 
@@ -63,14 +136,12 @@ export class ArService {
     return repo.save(newAr);
   }
 
-  //     async updateAr(
-  //         arId: number,
-  //         updateArDto: UpdateArDto,
-  //     ): Promise<Ar> {
-  //         const ar = await this.findArById(arId);
+  async updateArWithEM(ar: Ar, entityManager: EntityManager) {
+    await entityManager.save(Ar, ar);
+  }
+  
+  async updateBulkArWithEM(entityManager: EntityManager, ar: Ar[]) {
+    await entityManager.save(Ar, ar);
+  }
 
-  //         Object.assign(ar, updateArDto);
-
-  //         return this.arRepository.save(ar);
-  //     }
 }

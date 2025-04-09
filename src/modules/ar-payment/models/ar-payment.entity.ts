@@ -1,3 +1,4 @@
+import { Ar } from '@app/modules/ar/models/ar.entity';
 import { CustomerPayment } from '@app/modules/customer-payment/models/customer-payment.entity';
 import { Customer } from '@app/modules/customer/models/customer.entity';
 import { ApiProperty } from '@nestjs/swagger';
@@ -8,14 +9,16 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 
 export interface IArPayment {
   id: number;
-  accreceivable: number;
-  accreceivableId: number;
+  ar: number;
+  arId: number;
   customer_payment: number;
   customer_paymentId: number;
+  payment_method_name: string;
   customer: number;
   customerId: number;
   total_paid: number;
@@ -31,15 +34,20 @@ export class ArPayment implements IArPayment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  // @ManyToOne(() => Product, (product) => product.product_unit)
-  accreceivable: number;
+  @ManyToOne(() => Ar, (ar) => ar.ar_payment)
+  ar: number;
 
   // @ApiProperty({ example: 1 })
   @Column({ type: 'int', nullable: true })
-  accreceivableId: number;
+  arId: number;
 
+  @JoinColumn({ name: 'customer_paymentId' })
   @ManyToOne(() => CustomerPayment, (customerPayment) => customerPayment)
   customer_payment: number;
+
+  @ApiProperty({ example: 'Cash' })
+  @Column({ type: 'varchar' })
+  payment_method_name: string;
 
   @ApiProperty({ example: 1 })
   @Column({ type: 'int', nullable: true })

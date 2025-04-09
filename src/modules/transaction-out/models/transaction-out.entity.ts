@@ -11,14 +11,13 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
-  Transaction,
 } from 'typeorm';
 
 export interface ITransactionOut {
   id: number;
-  product: number;
+  product: Product;
   productId: number;
-  customer: number;
+  customer: Customer;
   customerId: number;
   transaction_in: number;
   transaction_inId: number;
@@ -46,20 +45,23 @@ export class TransactionOut implements ITransactionOut {
   id: number;
 
   @ManyToOne(() => Product, (product) => product.transaction_out)
-  product: number;
+  product: Product;
 
   @ApiProperty({ example: 1 })
   @Column({ type: 'int', nullable: true })
   productId: number;
 
   @ManyToOne(() => Customer, (customer) => customer.transaction_out)
-  customer: number;
+  customer: Customer;
 
   @ApiProperty({ example: 1 })
   @Column({ type: 'int', nullable: true })
   customerId: number;
 
-  @ManyToOne(() => TransactionIn, (transactionIn) => transactionIn.transaction_out)
+  @ManyToOne(
+    () => TransactionIn,
+    (transactionIn) => transactionIn.transaction_out,
+  )
   transaction_in: number;
 
   @ApiProperty({ example: 1 })
@@ -110,7 +112,7 @@ export class TransactionOut implements ITransactionOut {
   })
   conversion_to_kg: number;
 
-  @ApiProperty({ example: "Ball" })
+  @ApiProperty({ example: 'Ball' })
   @Column({ type: 'varchar' })
   unit: string;
 

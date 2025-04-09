@@ -4,16 +4,20 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
 import { Cashflow } from '../models/cashflow.entity';
 import { CreateCashflowDto } from '../dtos/create-cashflow.dto';
 import { UserService } from '@app/modules/user/services/user.service';
 import { CashflowType } from '@app/enums/cashflow-type';
 
-interface GetAllQuery {
-  pageNo: number;
-  pageSize: number;
+interface GetAllCashflowQuery {
+  pageNo?: number;
+  pageSize?: number;
+  startDate?: Date;
+  endDate?: Date;
+  type?: CashflowType;
 }
+
 @Injectable()
 export class CashflowService {
   constructor(
@@ -25,13 +29,31 @@ export class CashflowService {
   async getAllCashflows({
     pageNo,
     pageSize,
-  }: GetAllQuery): Promise<[Cashflow[], number]> {
+    startDate,
+    endDate,
+    type,
+  }: GetAllCashflowQuery): Promise<[Cashflow[], number]> {
     const skip = (pageNo - 1) * pageSize;
-    const customers = await this.cashflowRepository.findAndCount({
-      skip,
-      take: pageSize,
-    });
-    return customers;
+    const queryBuilder = this.cashflowRepository
+      .createQueryBuilder('cashflow')
+      .orderBy('created_at', 'DESC');
+
+    if (pageNo) {
+      queryBuilder.skip(skip).take(pageSize);
+    }
+
+    if (type) {
+      queryBuilder.andWhere({ type });
+    }
+    // Conditionally add filters
+    if (startDate) {
+      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    }
+
+    const [cashflows, count] = await queryBuilder.getManyAndCount();
+
+    return [cashflows, count];
   }
 
   async getCashflowById(customerId: number): Promise<Cashflow> {
@@ -102,6 +124,26 @@ export class CashflowService {
     const newCashflow = entityManager.create(Cashflow, createCashflowDto);
     return await entityManager.save(newCashflow);
   }
+  async createBulkCashflowFromArPaymentWithEM(
+    entityManager: EntityManager,
+    createBulkCashflowDto: CreateCashflowDto[],
+  ): Promise<Cashflow[]> {
+    const latestCashflow = await this.findLatestCashFlow();
+    let latestTotalAmount = latestCashflow?.total_amount || 0;
+    for (const cashflowDto of createBulkCashflowDto) {
+      if (cashflowDto.amount < 1) {
+        throw new BadRequestException("Amount can't be less than 0");
+      }
+      cashflowDto.total_amount = this.calculateTotalAmount(
+        latestTotalAmount,
+        cashflowDto.amount,
+        cashflowDto.type,
+      );
+      latestTotalAmount += cashflowDto.total_amount;
+    }
+    const newCashflow = entityManager.create(Cashflow, createBulkCashflowDto);
+    return await entityManager.save(newCashflow);
+  }
 
   private calculateTotalAmount(
     latestTotalAmount: number,
@@ -111,5 +153,20 @@ export class CashflowService {
     return type === CashflowType.IN
       ? latestTotalAmount + amount
       : latestTotalAmount - amount;
+  }
+
+  async getTotalCashflow({ startDate, endDate, type }: GetAllCashflowQuery) {
+    const queryBuilder = this.cashflowRepository
+      .createQueryBuilder('cashflow')
+      .select('SUM(cashflow.amount)', 'total')
+      .where({ type });
+
+    if (startDate) {
+      queryBuilder
+        .andWhere({ created_at: MoreThanOrEqual(startDate) })
+        .andWhere({ created_at: LessThan(endDate) });
+    }
+    const cashflow: { total: string } = await queryBuilder.getRawOne();
+    return cashflow;
   }
 }

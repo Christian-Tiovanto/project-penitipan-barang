@@ -3,8 +3,20 @@ import * as Joi from 'joi';
 import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
 import { IArPayment } from '../models/ar-payment.entity';
 
+export class BulkArPaymentDetailDto
+  implements Pick<IArPayment, 'arId' | 'total_paid'>
+{
+  @ApiProperty({ example: 1 })
+  @JoiSchema(Joi.number().required())
+  arId: number;
+
+  @ApiProperty({ example: 10000 })
+  @JoiSchema(Joi.number().required())
+  total_paid: number;
+}
+
 @JoiSchemaOptions({ allowUnknown: false })
-export class CreateArPaymentDto
+export class CreateBulkArPaymentDto
   implements
     Omit<
       IArPayment,
@@ -14,30 +26,30 @@ export class CreateArPaymentDto
       | 'ar'
       | 'customer_payment'
       | 'customer'
+      | 'arId'
+      | 'customerId'
+      | 'total_paid'
+      | 'customer_paymentId'
     >
 {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
-  arId: number;
-
-  @ApiProperty({ example: 1 })
-  @JoiSchema(Joi.number().required())
-  customer_paymentId: number;
-
-  @ApiProperty({ example: 1 })
-  @JoiSchema(Joi.number().required())
-  customerId: number;
-
-  @ApiProperty({ example: 20000 })
-  @JoiSchema(Joi.number().min(1).required())
-  total_paid: number;
+  payment_methodId: number;
 
   @ApiProperty({ example: new Date() })
   @JoiSchema(Joi.date().required())
   transfer_date: Date;
 
+  @ApiProperty({
+    type: [BulkArPaymentDetailDto],
+  })
+  @JoiSchema(BulkArPaymentDetailDto, (schema) =>
+    Joi.array().items(schema).min(1).required(),
+  )
+  data: BulkArPaymentDetailDto[];
+
   @ApiProperty({ example: 'REF-1' })
-  @JoiSchema(Joi.number().optional())
+  @JoiSchema(Joi.string().optional())
   reference_no: string;
 
   payment_method_name: string;

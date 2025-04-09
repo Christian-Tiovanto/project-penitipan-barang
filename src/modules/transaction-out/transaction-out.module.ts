@@ -12,7 +12,8 @@ import { ChargeModule } from '../charge/charge.module';
 import { CustomerModule } from '../customer/customer.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TransactionOut]),
+  imports: [
+    TypeOrmModule.forFeature([TransactionOut]),
     ProductModule,
     TransactionInModule,
     InvoiceModule,
@@ -23,6 +24,6 @@ import { CustomerModule } from '../customer/customer.module';
   ],
   controllers: [TransactionOutController],
   providers: [TransactionOutService],
-  exports: [TransactionOutService],
+  exports: [TransactionOutService, TypeOrmModule],
 })
-export class TransactionOutModule { }
+export class TransactionOutModule {}

@@ -19,7 +19,7 @@ export class CustomerPaymentService {
     private readonly customerPaymentRepository: Repository<CustomerPayment>,
     private readonly customerService: CustomerService,
     private readonly paymentMethodService: PaymentMethodService,
-  ) { }
+  ) {}
 
   async getAllCustomerPayments(): Promise<CustomerPayment[]> {
     return await this.customerPaymentRepository.find();
@@ -57,6 +57,23 @@ export class CustomerPaymentService {
     if (!customerPayment) {
       throw new NotFoundException(
         `Customer Payment with id ${customerPaymentId} not found`,
+      );
+    }
+    return customerPayment;
+  }
+
+  async findCustomerPaymentByCustIdNPaymentId(
+    customerId: number,
+    paymentMethodId: number,
+  ): Promise<CustomerPayment> {
+    const customerPayment = await this.customerPaymentRepository.findOne({
+      where: { customerId: customerId, payment_methodId: paymentMethodId },
+      relations: ['customer', 'payment_method'],
+    });
+
+    if (!customerPayment) {
+      throw new NotFoundException(
+        `Customer Payment with customerId ${customerId} And paymentMethodId ${paymentMethodId} not found`,
       );
     }
     return customerPayment;

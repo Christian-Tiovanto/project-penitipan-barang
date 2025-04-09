@@ -1,4 +1,5 @@
 import { ArStatus } from '@app/enums/ar-status';
+import { ArPayment } from '@app/modules/ar-payment/models/ar-payment.entity';
 import { Customer } from '@app/modules/customer/models/customer.entity';
 import { Invoice } from '@app/modules/invoice/models/invoice.entity';
 import { ApiProperty } from '@nestjs/swagger';
@@ -10,6 +11,8 @@ import {
   UpdateDateColumn,
   OneToOne,
   ManyToOne,
+  JoinColumn,
+  OneToMany,
 } from 'typeorm';
 
 export interface IAr {
@@ -20,6 +23,7 @@ export interface IAr {
   invoiceId: number;
   ar_no: string;
   total_bill: number;
+  total_paid: number;
   to_paid: number;
   status: string;
   paid_date: Date;
@@ -41,6 +45,7 @@ export class Ar implements IAr {
   customerId: number;
 
   @OneToOne(() => Invoice, (invoice) => invoice.ar)
+  @JoinColumn()
   invoice: number;
 
   @ApiProperty({ example: 1 })
@@ -64,6 +69,17 @@ export class Ar implements IAr {
   @ApiProperty({ example: 1000 })
   @Column({
     type: 'decimal',
+    default: 0,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
+  total_paid: number;
+
+  @ApiProperty({ example: 1000 })
+  @Column({
+    type: 'decimal',
     transformer: {
       to: (value: number) => value,
       from: (value: string) => parseFloat(value),
@@ -78,6 +94,9 @@ export class Ar implements IAr {
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })
   @Column({ type: 'datetime', nullable: true })
   paid_date: Date;
+
+  @OneToMany(() => ArPayment, (arPayment) => arPayment.ar)
+  ar_payment: ArPayment;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })
   @CreateDateColumn()

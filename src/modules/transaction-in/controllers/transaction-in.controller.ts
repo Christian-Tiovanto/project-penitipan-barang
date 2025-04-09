@@ -12,18 +12,26 @@ import {
 } from '@nestjs/common';
 import { TransactionInService } from '../services/transaction-in.service';
 import { ApiTag } from '@app/enums/api-tags';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
 import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
-import {
-  BasePaginationQuery,
-  OffsetPagination,
-} from '@app/interfaces/pagination.interface';
+import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
+import {
+  GetAllTransactionInQuery,
+  TransactionInSort,
+} from '../classes/transaction-in.query';
+import { GetTransactionInResponse } from '../classes/transaction-in.response';
+import { SortOrder } from '@app/enums/sort-order';
 import { TransactionIn } from '../models/transaction-in.entity';
-import { ProductUnitModule } from '@app/modules/product-unit/product-unit.module';
+
 
 @ApiTags(ApiTag.TRANSACTION_IN)
 @Controller('api/v1/transaction-in')
@@ -46,17 +54,34 @@ export class TransactionInController {
   @ApiOperation({
     summary: 'Get All Transaction In',
   })
+  @ApiOkResponse({ type: GetTransactionInResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
   @UseGuards(AuthenticateGuard)
   @Get()
   async getAllTransactionIn(
-    @Query() { page_no, page_size }: BasePaginationQuery,
-  ): Promise<OffsetPagination<TransactionIn>> {
+    @Query()
+    {
+      page_no,
+      page_size,
+      sort,
+      order,
+      start_date,
+      end_date,
+      search,
+    }: GetAllTransactionInQuery,
+  ): Promise<OffsetPagination<GetTransactionInResponse>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
+    sort = !sort ? TransactionInSort.ID : sort;
+    order = !order ? SortOrder.ASC : order;
     const transactions = await this.transactionInService.getAllTransactionIn({
       pageNo,
       pageSize,
+      sort,
+      order,
+      startDate: start_date,
+      endDate: end_date,
+      search,
     });
     return {
       data: transactions[0],

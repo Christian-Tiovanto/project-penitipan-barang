@@ -73,6 +73,7 @@ export class ProductService {
   }
 
   async createProduct(createProductDto: CreateProductDto): Promise<Product> {
+    createProductDto.initial_qty = createProductDto.qty;
     const newProduct = this.productRepository.create(createProductDto);
     return await this.productRepository.save(newProduct);
   }

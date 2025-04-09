@@ -15,8 +15,7 @@ export interface IProduct {
   id: number;
   name: string;
   price: number;
-  // image_url: string;
-  // file_name: string;
+  initial_qty: number;
   qty: number;
   desc: string;
   is_deleted: boolean;
@@ -44,14 +43,6 @@ export class Product implements IProduct {
   })
   price: number;
 
-  // @ApiProperty({ example: 'http://example.com/image.jpg' })
-  // @Column({ type: 'varchar' })
-  // image_url: string;
-
-  // @ApiProperty({ example: 'filename.jpg' })
-  // @Column({ type: 'varchar' })
-  // file_name: string;
-
   @ApiProperty({ example: 10 })
   @Column({
     type: 'decimal',
@@ -63,8 +54,19 @@ export class Product implements IProduct {
   qty: number;
 
   @ApiProperty({ example: 'Product description' })
-  @Column({ type: 'text' })
+  @Column({ type: 'varchar' })
   desc: string;
+
+  @ApiProperty({ example: 10 })
+  @Column({
+    type: 'decimal',
+    default: 0,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
+  initial_qty: number;
 
   @ApiProperty({ example: false })
   @Column({ type: 'boolean', default: false })
@@ -81,7 +83,10 @@ export class Product implements IProduct {
   @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.productId)
   transaction_in: TransactionIn[];
 
-  @OneToMany(() => TransactionOut, (transaction_out) => transaction_out.productId)
+  @OneToMany(
+    () => TransactionOut,
+    (transaction_out) => transaction_out.productId,
+  )
   transaction_out: TransactionOut[];
 
   @OneToMany(() => ProductUnit, (productUnit) => productUnit.product)

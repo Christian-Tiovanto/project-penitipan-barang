@@ -5,7 +5,7 @@ import { IProduct } from '../models/product.entity';
 
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateProductDto
-  implements Omit<IProduct, 'id' | 'created_at' | 'updated_at'>
+  implements Omit<IProduct, 'id' | 'created_at' | 'updated_at' | 'initial_qty'>
 {
   @ApiProperty({ example: 'Product Name' })
   @JoiSchema(Joi.string().required())
@@ -34,4 +34,6 @@ export class CreateProductDto
   @ApiProperty({ example: false })
   @JoiSchema(Joi.boolean().optional())
   is_deleted: boolean;
+
+  initial_qty: number;
 }

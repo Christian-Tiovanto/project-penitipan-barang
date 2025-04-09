@@ -13,9 +13,9 @@ import {
 
 export interface ITransactionIn {
   id: number;
-  product: number;
+  product: Product;
   productId: number;
-  customer: number;
+  customer: Customer;
   customerId: number;
   qty: number;
   converted_qty: number;
@@ -32,13 +32,13 @@ export class TransactionIn implements ITransactionIn {
   id: number;
 
   @ManyToOne(() => Customer, (customer) => customer.transaction_in)
-  customer: number;
+  customer: Customer;
 
   @Column()
   customerId: number;
 
   @ManyToOne(() => Product, (product) => product.transaction_in)
-  product: number;
+  product: Product;
 
   @Column()
   productId: number;
@@ -101,6 +101,9 @@ export class TransactionIn implements ITransactionIn {
   @UpdateDateColumn()
   updated_at: Date;
 
-  @OneToMany(() => TransactionOut, (transaction_out) => transaction_out.transaction_inId)
+  @OneToMany(
+    () => TransactionOut,
+    (transaction_out) => transaction_out.transaction_inId,
+  )
   transaction_out: TransactionOut[];
 }

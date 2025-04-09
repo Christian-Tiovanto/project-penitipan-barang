@@ -23,7 +23,8 @@ export class Charge implements ICharge {
   id: number;
 
   @Column({ enum: ChargeType, type: 'enum' })
-  type: string;
+  type: ChargeType;
+
   @ApiProperty({ example: 'Payment Method Name' })
   @Column({
     type: 'decimal',
