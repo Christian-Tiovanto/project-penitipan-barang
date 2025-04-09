@@ -261,7 +261,6 @@ export class TransactionInService {
     };
   }
 
-
   async lockingTransactionInById(
     entityManager: EntityManager,
     id: number,
@@ -300,7 +299,7 @@ export class TransactionInService {
         `Insufficient stock: required ${requiredQty}, but only ${totalRemainingQty} available in Transaction In`,
       );
     }
-      
+
     return transactionIns;
   }
 
@@ -412,7 +411,7 @@ export class TransactionInService {
   }
 
   async getAllTransactionInByProductId(
-    { pageNo, pageSize }: GetAllSupplier,
+    { pageNo, pageSize }: GetAllTransactionInQuery,
     productId: number,
   ) {
     const skip = (pageNo - 1) * pageSize;
