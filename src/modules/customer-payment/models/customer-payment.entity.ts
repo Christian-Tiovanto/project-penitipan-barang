@@ -13,7 +13,7 @@ import {
 
 export interface ICustomerPayment {
   id: number;
-  customer: number;
+  customer: Customer;
   customerId: number;
   payment_method: PaymentMethod;
   payment_methodId: number;
@@ -32,7 +32,7 @@ export class CustomerPayment implements ICustomerPayment {
   id: number;
 
   @ManyToOne(() => Customer, (customer) => customer.customer_payment)
-  customer: number;
+  customer: Customer;
 
   @ApiProperty({ example: 1 })
   @Column({ type: 'int', nullable: true })

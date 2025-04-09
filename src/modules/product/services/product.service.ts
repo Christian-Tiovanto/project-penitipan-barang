@@ -1,11 +1,29 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import {
+  Brackets,
+  EntityManager,
+  LessThan,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { Product } from '../models/product.entity';
 import { CreateProductDto } from '../dtos/create-product.dto';
 import { UpdateProductDto } from '../dtos/update-product.dto';
 import { InsufficientStockException } from '@app/exceptions/validation.exception';
+import { ProductSort } from '../classes/product.query';
+import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
+import { GetProductResponse } from '../classes/product.response';
 
+interface GetAllProductQuery {
+  pageNo: number;
+  pageSize: number;
+  sort?: ProductSort;
+  order?: SortOrder;
+  startDate?: Date;
+  endDate?: Date;
+  search?: string;
+}
 interface GetAllQuery {
   pageNo: number;
   pageSize: number;
@@ -21,17 +39,81 @@ export class ProductService {
     return await this.productRepository.find({ where: { is_deleted: false } }); // Assuming using TypeORM
   }
 
+  // async getAllProductsPagination({
+  //   pageNo,
+  //   pageSize,
+  // }: GetAllQuery): Promise<[Product[], number]> {
+  //   const skip = (pageNo - 1) * pageSize;
+  //   const products = await this.productRepository.findAndCount({
+  //     skip,
+  //     take: pageSize,
+  //     where: { is_deleted: false },
+  //   });
+  //   return products;
+  // }
+
   async getAllProductsPagination({
     pageNo,
     pageSize,
-  }: GetAllQuery): Promise<[Product[], number]> {
+    sort,
+    order,
+    startDate,
+    endDate,
+    search,
+  }: GetAllProductQuery): Promise<[GetProductResponse[], number]> {
     const skip = (pageNo - 1) * pageSize;
-    const products = await this.productRepository.findAndCount({
-      skip,
-      take: pageSize,
-      where: { is_deleted: false },
-    });
-    return products;
+
+    let sortBy: string = `product.${sort}`;
+    // if (
+    //   sort === UserSort.EMAIL ||
+    //   sort === UserSort.FULLNAME ||
+    //   sort === UserSort.PIN ||
+    //   sort === UserSort.ROLE
+    // ) {
+    //   sortBy = `${sort}.name`;
+    // }
+    const queryBuilder = this.productRepository
+      .createQueryBuilder('product')
+      // .leftJoinAndSelect('user.customer', 'customer')
+      // .leftJoinAndSelect('user.product', 'product')
+      .skip(skip)
+      .take(pageSize)
+      .select(['product'])
+      .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
+
+    //Conditionally add filters
+    if (startDate) {
+      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    }
+
+    if (search) {
+      queryBuilder.andWhere(
+        new Brackets((qb) => {
+          qb.where('name LIKE :search', { search: `%${search}%` })
+            .orWhere('price LIKE :search', { search: `%${search}%` })
+            .orWhere('qty LIKE :search', { search: `%${search}%` })
+            .orWhere('product.desc LIKE :search', { search: `%${search}%` });
+        }),
+      );
+    }
+
+    const [products, count] = await queryBuilder.getManyAndCount();
+    const productResponse: GetProductResponse[] = products.map(
+      (product: GetProductResponse) => {
+        return {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          qty: product.qty,
+          desc: product.desc,
+        };
+      },
+    );
+    return [productResponse, count];
   }
 
   async getProductById(productId: number): Promise<Product> {

@@ -15,7 +15,12 @@ import { ProductUnitService } from '../services/product-unit.service';
 import { ProductUnit } from '../models/product-unit.entity';
 import { CreateProductUnitDto } from '../dtos/create-product-unit.dto';
 import { UpdateProductUnitDto } from '../dtos/update-product-unit.dto';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
 import {
   BasePaginationQuery,
@@ -24,6 +29,13 @@ import {
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
+import { GetProductResponse } from '@app/modules/product/classes/product.response';
+import { GetProductUnitResponse } from '../classes/product-unit.response';
+import {
+  GetAllProductUnitQuery,
+  ProductUnitSort,
+} from '../classes/product-unit.query';
+import { SortOrder } from '@app/enums/sort-order';
 
 @ApiTags(ApiTag.PRODUCT_UNIT)
 @Controller('api/v1/product-unit')
@@ -40,22 +52,63 @@ export class ProductUnitController {
     return await this.productUnitService.getAllProductUnits();
   }
 
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get All Product Unit Pagination',
+  // })
+  // @UseInterceptors(OffsetPaginationInterceptor<ProductUnit>)
+  // @UseGuards(AuthenticateGuard)
+  // @Get()
+  // async getAllProductUnitsPagination(
+  //   @Query() { page_no, page_size }: BasePaginationQuery,
+  // ): Promise<OffsetPagination<ProductUnit>> {
+  //   const pageSize = parseInt(page_size) || 10;
+  //   const pageNo = parseInt(page_no) || 1;
+  //   const productUnits =
+  //     await this.productUnitService.getAllProductUnitsPagination({
+  //       pageNo,
+  //       pageSize,
+  //     });
+  //   return {
+  //     data: productUnits[0],
+  //     totalCount: productUnits[1],
+  //     filteredCount: productUnits[1],
+  //   };
+  // }
+
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Get All Product Unit Pagination',
+    summary: 'Get All Transaction In Pagination',
   })
-  @UseInterceptors(OffsetPaginationInterceptor<ProductUnit>)
+  @ApiOkResponse({ type: GetProductUnitResponse })
+  @UseInterceptors(OffsetPaginationInterceptor)
   @UseGuards(AuthenticateGuard)
   @Get()
   async getAllProductUnitsPagination(
-    @Query() { page_no, page_size }: BasePaginationQuery,
-  ): Promise<OffsetPagination<ProductUnit>> {
+    @Query()
+    {
+      page_no,
+      page_size,
+      sort,
+      order,
+      start_date,
+      end_date,
+      search,
+    }: GetAllProductUnitQuery,
+  ): Promise<OffsetPagination<GetProductUnitResponse>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
+    sort = !sort ? ProductUnitSort.ID : sort;
+    order = !order ? SortOrder.ASC : order;
     const productUnits =
       await this.productUnitService.getAllProductUnitsPagination({
         pageNo,
         pageSize,
+        sort,
+        order,
+        startDate: start_date,
+        endDate: end_date,
+        search,
       });
     return {
       data: productUnits[0],

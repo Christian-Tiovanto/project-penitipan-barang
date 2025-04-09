@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ITransactionIn, TransactionIn } from '../models/transaction-in.entity';
 import {
   Between,
+  Brackets,
   EntityManager,
   LessThan,
   MoreThan,
@@ -129,10 +130,16 @@ export class TransactionInService {
     }
 
     if (search) {
-      queryBuilder.andWhere('customer.name LIKE :search', {
-        search: `%${search}%`, // Add wildcards for partial matching
-      });
+      queryBuilder.andWhere(
+        new Brackets((qb) => {
+          qb.where('customer.name LIKE :search', { search: `%${search}%` })
+            .orWhere('product.name LIKE :search', { search: `%${search}%` })
+            .orWhere('transaction.qty LIKE :search', { search: `%${search}%` })
+            .orWhere('unit LIKE :search', { search: `%${search}%` });
+        }),
+      );
     }
+
     const [transactionsIns, count] = await queryBuilder.getManyAndCount();
     const transactionInResponse: GetTransactionInResponse[] =
       transactionsIns.map((transaction: GetTransactionInResponse) => {
@@ -153,6 +160,7 @@ export class TransactionInService {
       });
     return [transactionInResponse, count];
   }
+
   async getTransactionForStockReport({
     endDate,
     customerId,
@@ -209,6 +217,7 @@ export class TransactionInService {
       throw new NotFoundException('No Transaction In with that id');
     return transactionIn;
   }
+
   async sumCustProductQty(
     productId: number,
     customerId: number,
@@ -224,6 +233,7 @@ export class TransactionInService {
 
     return parseFloat(result?.sum || '0');
   }
+
   async getTransactionInForStockBookReport(
     productId: number,
     customerId: number,

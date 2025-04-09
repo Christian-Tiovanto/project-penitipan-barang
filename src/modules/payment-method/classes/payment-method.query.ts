@@ -4,26 +4,24 @@ import { BasePaginationQuery } from '@app/interfaces/pagination.interface';
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 import { JoiSchema } from 'joi-class-decorators';
-import { Customer } from '../models/customer.entity';
-export enum CustomerSort {
+
+export enum PaymentMethodSort {
   ID = 'id',
   NAME = 'name',
-  CODE = 'code',
-  ADDRESS = 'address',
 }
 
-export class GetAllCustomerQuery extends OptionalDateRangeQueryWithPagination {
+export class GetAllPaymentMethodQuery extends OptionalDateRangeQueryWithPagination {
   @ApiProperty({
-    enum: CustomerSort,
+    enum: PaymentMethodSort,
     required: false,
     description: 'default sort by `id`',
   })
   @JoiSchema(
     Joi.string()
-      .valid(...Object.values(CustomerSort))
+      .valid(...Object.values(PaymentMethodSort))
       .optional(),
   )
-  sort: CustomerSort;
+  sort: PaymentMethodSort;
 
   @ApiProperty({
     enum: SortOrder,
@@ -39,7 +37,7 @@ export class GetAllCustomerQuery extends OptionalDateRangeQueryWithPagination {
 
   @ApiProperty({
     example: '',
-    description: 'Search Custmomer based on name , code , address',
+    description: 'Search Payment Method based on namee',
     required: false,
   })
   @JoiSchema(Joi.string().optional())

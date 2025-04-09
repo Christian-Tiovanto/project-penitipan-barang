@@ -15,7 +15,12 @@ import { CustomerPaymentService } from '../services/customer-payment.service';
 import { CustomerPayment } from '../models/customer-payment.entity';
 import { CreateCustomerPaymentDto } from '../dtos/create-customer-payment.dto';
 import { UpdateCustomerPaymentDto } from '../dtos/update-customer-payment.dto';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
 import {
@@ -24,46 +29,92 @@ import {
 } from '@app/interfaces/pagination.interface';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
+import { GetCustomerPaymentResponse } from '../classes/customer-payment.response';
+import {
+  CustomerPaymentSort,
+  GetAllCustomerPaymentQuery,
+} from '../classes/customer-payment.query';
+import { SortOrder } from '@app/enums/sort-order';
 
 @ApiTags(ApiTag.CUSTOMER_PAYMENT)
 @Controller('api/v1/customer-payment')
 export class CustomerPaymentController {
   constructor(
     private readonly customerPaymentService: CustomerPaymentService,
-  ) { }
+  ) {}
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get All Customer Payment',
   })
   @UseGuards(AuthenticateGuard)
   @Get('/all')
-
   async getAllCustomerPayments(): Promise<CustomerPayment[]> {
     return await this.customerPaymentService.getAllCustomerPayments();
   }
 
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get All Customer Payment Pagination',
+  // })
+  // @UseInterceptors(OffsetPaginationInterceptor<CustomerPayment>)
+  // @UseGuards(AuthenticateGuard)
+  // @Get()
+  // async getAllCustomerPaymentsPagination(
+  //   @Query() { page_no, page_size }: BasePaginationQuery,
+  // ): Promise<OffsetPagination<CustomerPayment>> {
+  //   const pageSize = parseInt(page_size) || 10;
+  //   const pageNo = parseInt(page_no) || 1;
+
+  //   const merchantPayments =
+  //     await this.customerPaymentService.getAllCustomerPaymentsPagination({
+  //       pageNo,
+  //       pageSize,
+  //     });
+  //   return {
+  //     data: merchantPayments[0],
+  //     totalCount: merchantPayments[1],
+  //     filteredCount: merchantPayments[1],
+  //   };
+  // }
+
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Get All Customer Payment Pagination',
+    summary: 'Get All Customer Payment In Pagination',
   })
-  @UseInterceptors(OffsetPaginationInterceptor<CustomerPayment>)
+  @ApiOkResponse({ type: GetCustomerPaymentResponse })
+  @UseInterceptors(OffsetPaginationInterceptor)
   @UseGuards(AuthenticateGuard)
   @Get()
   async getAllCustomerPaymentsPagination(
-    @Query() { page_no, page_size }: BasePaginationQuery,
-  ): Promise<OffsetPagination<CustomerPayment>> {
+    @Query()
+    {
+      page_no,
+      page_size,
+      sort,
+      order,
+      start_date,
+      end_date,
+      search,
+    }: GetAllCustomerPaymentQuery,
+  ): Promise<OffsetPagination<GetCustomerPaymentResponse>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
-
-    const merchantPayments =
+    sort = !sort ? CustomerPaymentSort.ID : sort;
+    order = !order ? SortOrder.ASC : order;
+    const customerPayments =
       await this.customerPaymentService.getAllCustomerPaymentsPagination({
         pageNo,
         pageSize,
+        sort,
+        order,
+        startDate: start_date,
+        endDate: end_date,
+        search,
       });
     return {
-      data: merchantPayments[0],
-      totalCount: merchantPayments[1],
-      filteredCount: merchantPayments[1],
+      data: customerPayments[0],
+      totalCount: customerPayments[1],
+      filteredCount: customerPayments[1],
     };
   }
 

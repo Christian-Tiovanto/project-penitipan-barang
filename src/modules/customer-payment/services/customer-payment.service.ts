@@ -1,15 +1,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
 import { CustomerPayment } from '../models/customer-payment.entity';
 import { CreateCustomerPaymentDto } from '../dtos/create-customer-payment.dto';
 import { UpdateCustomerPaymentDto } from '../dtos/update-customer-payment.dto';
 import { CustomerService } from '@app/modules/customer/services/customer.service';
 import { PaymentMethodService } from '@app/modules/payment-method/services/payment-method.service';
+import { CustomerPaymentSort } from '../classes/customer-payment.query';
+import { GetCustomerPaymentResponse } from '../classes/customer-payment.response';
+import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
 
-interface GetAllQuery {
+interface GetAllCustomerPaymentQuery {
   pageNo: number;
   pageSize: number;
+  sort?: CustomerPaymentSort;
+  order?: SortOrder;
+  startDate?: Date;
+  endDate?: Date;
+  search?: string;
 }
 
 @Injectable()
@@ -25,17 +33,98 @@ export class CustomerPaymentService {
     return await this.customerPaymentRepository.find();
   }
 
+  // async getAllCustomerPaymentsPagination({
+  //   pageNo,
+  //   pageSize,
+  // }: GetAllQuery): Promise<[CustomerPayment[], number]> {
+  //   const skip = (pageNo - 1) * pageSize;
+  //   const merchantPayments = await this.customerPaymentRepository.findAndCount({
+  //     skip,
+  //     take: pageSize,
+  //     relations: ['customer', 'payment_method'],
+  //   });
+  //   return merchantPayments;
+  // }
+
   async getAllCustomerPaymentsPagination({
     pageNo,
     pageSize,
-  }: GetAllQuery): Promise<[CustomerPayment[], number]> {
+    sort,
+    order,
+    startDate,
+    endDate,
+    search,
+  }: GetAllCustomerPaymentQuery): Promise<
+    [GetCustomerPaymentResponse[], number]
+  > {
     const skip = (pageNo - 1) * pageSize;
-    const merchantPayments = await this.customerPaymentRepository.findAndCount({
-      skip,
-      take: pageSize,
-      relations: ['customer', 'payment_method'],
-    });
-    return merchantPayments;
+
+    let sortBy: string = `customer_payments.${sort}`;
+    if (
+      sort === CustomerPaymentSort.CUSTOMER ||
+      sort === CustomerPaymentSort.PAYMENT_METHOD
+    ) {
+      sortBy = `${sort}.name`;
+    }
+    const queryBuilder = this.customerPaymentRepository
+      .createQueryBuilder('customer_payments')
+      .leftJoinAndSelect('customer_payments.customer', 'customer')
+      .leftJoinAndSelect('customer_payments.payment_method', 'payment_method')
+      .skip(skip)
+      .take(pageSize)
+      .select([
+        'customer_payments',
+        'customer.name',
+        'customer.id',
+        'payment_method.name',
+        'payment_method.id',
+      ])
+      .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
+
+    // Conditionally add filters
+    if (startDate) {
+      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    }
+
+    if (search) {
+      queryBuilder.andWhere(
+        new Brackets((qb) => {
+          qb.where('customer.name LIKE :search', { search: `%${search}%` })
+            .orWhere('payment_method.name LIKE :search', {
+              search: `%${search}%`,
+            })
+            .orWhere('charge LIKE :search', { search: `%${search}%` })
+            .orWhere('status LIKE :search', { search: `%${search}%` })
+            .orWhere('min_pay LIKE :search', {
+              search: `%${search}%`,
+            });
+        }),
+      );
+    }
+
+    const [customerPayments, count] = await queryBuilder.getManyAndCount();
+    const customerPaymentResponse: GetCustomerPaymentResponse[] =
+      customerPayments.map((customerPayment: GetCustomerPaymentResponse) => {
+        return {
+          id: customerPayment.id,
+          customer: {
+            id: customerPayment.customer.id,
+            name: customerPayment.customer.name,
+          },
+          payment_method: {
+            id: customerPayment.payment_method.id,
+            name: customerPayment.payment_method.name,
+          },
+          charge: customerPayment.charge,
+          status: customerPayment.status,
+          min_pay: customerPayment.min_pay,
+        };
+      });
+    return [customerPaymentResponse, count];
   }
 
   async getCustomerrPaymentById(
