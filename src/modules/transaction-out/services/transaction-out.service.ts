@@ -37,7 +37,6 @@ import { GetTransactionOutResponse } from '../classes/transaction-in.response';
 import { Customer } from '@app/modules/customer/models/customer.entity';
 import { Product } from '@app/modules/product/models/product.entity';
 
-
 interface GetAllQuery {
   pageNo: number;
   pageSize: number;
@@ -185,13 +184,6 @@ export class TransactionOutService {
       transactionOuts,
       totalSum: parseFloat(sumResult?.sum || '0'),
     };
-    
-  async getTransactionOutById(
-    transactionOutId: number,
-  ): Promise<TransactionOut> {
-    return await this.transactionOutRepository.findOne({
-      where: { id: transactionOutId },
-    });
   }
 
   async findTransactionOutById(
@@ -269,7 +261,6 @@ export class TransactionOutService {
     return result;
   }
 
-
   async createTransactionOut(
     createTransactionOutWithSpbDto: CreateTransactionOutWithSpbDto,
   ): Promise<Invoice> {
@@ -316,7 +307,6 @@ export class TransactionOutService {
               break;
             }
             let qtyOut: number;
-            let totalDays: number;
 
             await this.transactionInService.lockingTransactionInById(
               entityManager,
@@ -532,7 +522,8 @@ export class TransactionOutService {
 
           let productQty: number = transactionOut.converted_qty;
 
-          let totalPrice: number = transactionOut.converted_qty * product.price;
+          const totalPrice: number =
+            transactionOut.converted_qty * product.price;
           amount += totalPrice;
 
           const productTransactionIns =
@@ -546,7 +537,6 @@ export class TransactionOutService {
               break;
             }
             let qtyOut: number;
-            let totalDays: number;
 
             await this.transactionInService.lockingTransactionInById(
               entityManager,
@@ -564,7 +554,7 @@ export class TransactionOutService {
               fine = totalPrice;
             }
 
-            totalDays = pastDaysCount(transactionIn.created_at);
+            const totalDays = pastDaysCount(transactionIn.created_at);
             totalFine += fine;
 
             if (transactionIn.remaining_qty > productQty) {
