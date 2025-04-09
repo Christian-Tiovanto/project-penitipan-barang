@@ -23,9 +23,9 @@ export class UpdateTransactionInDto
   @JoiSchema(Joi.number().optional())
   qty: number;
 
-  @ApiProperty({ example: 500 })
-  @JoiSchema(Joi.number().optional())
-  price: number;
+  // @ApiProperty({ example: 500 })
+  // @JoiSchema(Joi.number().optional())
+  // price: number;
 
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().optional())

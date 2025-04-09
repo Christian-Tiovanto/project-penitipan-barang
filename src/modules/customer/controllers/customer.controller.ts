@@ -28,22 +28,33 @@ import { AuthorizeGuard } from '@app/guards/authorize.guard';
 @ApiTags(ApiTag.CUSTOMER)
 @Controller('api/v1/customer')
 export class CustomerController {
-  constructor(private readonly customerService: CustomerService) {}
+  constructor(private readonly customerService: CustomerService) { }
 
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get All Customer',
   })
+  @UseGuards(AuthenticateGuard)
+  @Get('/all')
+
+  async getAllCustomers(): Promise<Customer[]> {
+    return await this.customerService.getAllCustomers();
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All Customer Pagination',
+  })
   @UseInterceptors(OffsetPaginationInterceptor<Customer>)
   @UseGuards(AuthenticateGuard)
   @Get()
-  async getAllCustomers(
+  async getAllCustomersPagination(
     @Query() { page_no, page_size }: BasePaginationQuery,
   ): Promise<OffsetPagination<Customer>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
 
-    const customers = await this.customerService.getAllCustomers({
+    const customers = await this.customerService.getAllCustomersPagination({
       pageNo,
       pageSize,
     });

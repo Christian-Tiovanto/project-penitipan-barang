@@ -30,23 +30,33 @@ import { AuthorizeGuard } from '@app/guards/authorize.guard';
 export class CustomerPaymentController {
   constructor(
     private readonly customerPaymentService: CustomerPaymentService,
-  ) {}
-
+  ) { }
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get All Customer Payment',
   })
+  @UseGuards(AuthenticateGuard)
+  @Get('/all')
+
+  async getAllCustomerPayments(): Promise<CustomerPayment[]> {
+    return await this.customerPaymentService.getAllCustomerPayments();
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All Customer Payment Pagination',
+  })
   @UseInterceptors(OffsetPaginationInterceptor<CustomerPayment>)
   @UseGuards(AuthenticateGuard)
   @Get()
-  async getAllCustomerPayments(
+  async getAllCustomerPaymentsPagination(
     @Query() { page_no, page_size }: BasePaginationQuery,
   ): Promise<OffsetPagination<CustomerPayment>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
 
     const merchantPayments =
-      await this.customerPaymentService.getAllCustomerPayments({
+      await this.customerPaymentService.getAllCustomerPaymentsPagination({
         pageNo,
         pageSize,
       });

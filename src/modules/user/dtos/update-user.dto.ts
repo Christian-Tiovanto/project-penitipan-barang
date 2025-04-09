@@ -31,4 +31,22 @@ export class UpdateUserDto
   @ApiProperty({ example: '081312345678' })
   @JoiSchema(Joi.string().optional())
   phone: string;
+
+  @ApiProperty({
+    example: '12345',
+    description: 'Password minimal 5 character and max 5 characters',
+  })
+  @JoiSchema(
+    Joi.string()
+      .pattern(/^\d{5}$/)
+      .min(5)
+      .max(5)
+      .optional()
+      .messages({
+        'string.pattern.base': 'PIN must be exactly 5 digits',
+        'string.min': 'PIN must be 5 characters long',
+        'string.max': 'PIN must be 5 characters long',
+      }),
+  )
+  pin: string;
 }

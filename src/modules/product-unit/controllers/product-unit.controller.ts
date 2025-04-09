@@ -34,18 +34,29 @@ export class ProductUnitController {
   @ApiOperation({
     summary: 'Get All Product Unit',
   })
+  @UseGuards(AuthenticateGuard)
+  @Get('/all')
+  async getAllProductUnits(): Promise<ProductUnit[]> {
+    return await this.productUnitService.getAllProductUnits();
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All Product Unit Pagination',
+  })
   @UseInterceptors(OffsetPaginationInterceptor<ProductUnit>)
   @UseGuards(AuthenticateGuard)
   @Get()
-  async getAllProductUnits(
+  async getAllProductUnitsPagination(
     @Query() { page_no, page_size }: BasePaginationQuery,
   ): Promise<OffsetPagination<ProductUnit>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
-    const productUnits = await this.productUnitService.getAllProductUnits({
-      pageNo,
-      pageSize,
-    });
+    const productUnits =
+      await this.productUnitService.getAllProductUnitsPagination({
+        pageNo,
+        pageSize,
+      });
     return {
       data: productUnits[0],
       totalCount: productUnits[1],
@@ -99,5 +110,17 @@ export class ProductUnitController {
   @Delete(':id')
   async deleteProductUnit(@Param('id', ParseIntPipe) productUnitId: number) {
     return await this.productUnitService.deleteProductUnit(productUnitId);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get Product Unit by Product Id',
+  })
+  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @Get('/by-product/:id')
+  async getProductUnitByProductId(
+    @Param('id', ParseIntPipe) productId: number,
+  ) {
+    return await this.productUnitService.getProductUnitsByProductId(productId);
   }
 }

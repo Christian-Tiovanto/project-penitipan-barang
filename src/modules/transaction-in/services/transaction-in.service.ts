@@ -1,13 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ITransactionIn, TransactionIn } from '../models/transaction-in.entity';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, MoreThan, Repository } from 'typeorm';
 import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
 import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
 import { ProductService } from '@app/modules/product/services/product.service';
 import { ProductUnitService } from '@app/modules/product-unit/services/product-unit.service';
 import { IProductUnit } from '@app/modules/product-unit/models/product-unit.entity';
 import { CustomerService } from '@app/modules/customer/services/customer.service';
+import { InsufficientStockException } from '@app/exceptions/validation.exception';
 
 interface GetAllSupplier {
   pageNo: number;
@@ -38,7 +39,8 @@ export class TransactionInService {
     await this.customerService.findCustomerById(
       createTransactionInDto.customerId,
     );
-    createTransactionInDto.remaining_qty = createTransactionInDto.qty;
+    createTransactionInDto.remaining_qty =
+      createTransactionInDto.qty * productUnit.conversion_to_kg;
     createTransactionInDto.converted_qty =
       createTransactionInDto.qty * productUnit.conversion_to_kg;
     createTransactionInDto.conversion_to_kg = productUnit.conversion_to_kg;
@@ -67,6 +69,7 @@ export class TransactionInService {
     const transactions = await this.transactionInRepository.findAndCount({
       skip,
       take: pageSize,
+      relations: ['customer', 'product'],
     });
     return transactions;
   }
@@ -74,10 +77,54 @@ export class TransactionInService {
   async findTransactionInById(id: number) {
     const transactionIn = await this.transactionInRepository.findOne({
       where: { id },
+      relations: ['customer', 'product'],
     });
     if (!transactionIn)
       throw new NotFoundException('No Transaction In with that id');
     return transactionIn;
+  }
+
+  async lockingTransactionInById(
+    entityManager: EntityManager,
+    id: number,
+  ): Promise<TransactionIn> {
+    const transactionIn = await this.findTransactionInById(id);
+
+    await entityManager.findOne(TransactionIn, {
+      where: { id },
+      lock: { mode: 'pessimistic_write' },
+    });
+
+    return transactionIn;
+  }
+
+  async getTransactionInsWithRemainingQty(
+    productId: number,
+    customerId: number,
+    requiredQty: number,
+  ) {
+    const transactionIns = await this.transactionInRepository.find({
+      where: { productId, customerId, remaining_qty: MoreThan(0) },
+      order: { created_at: 'ASC' },
+    });
+
+    if (!transactionIns.length) {
+      throw new NotFoundException(
+        `No transactions In found for productId ${productId} and customerId ${customerId}`,
+      );
+    }
+
+    const totalRemainingQty = transactionIns.reduce(
+      (sum, tx) => sum + tx.remaining_qty,
+      0,
+    );
+    if (totalRemainingQty < requiredQty) {
+      throw new InsufficientStockException(
+        `Insufficient stock: required ${requiredQty}, but only ${totalRemainingQty} available in Transaction In`,
+      );
+    }
+
+    return transactionIns;
   }
 
   async updateTransactionInByIdWithEM(
@@ -147,6 +194,15 @@ export class TransactionInService {
     );
   }
 
+  async withdrawRemainingQtyWithEntityManager(
+    entityManager: EntityManager,
+    transactionIn: TransactionIn,
+    qtyWithdraw: number,
+  ): Promise<TransactionIn> {
+    transactionIn.remaining_qty -= qtyWithdraw;
+    return entityManager.save(transactionIn);
+  }
+
   private async updateTransactionInProduct(
     transactionIn: TransactionIn,
     updateTransactionInDto: UpdateTransactionInDto,
@@ -176,5 +232,24 @@ export class TransactionInService {
         updateTransactionInDto.converted_qty,
       );
     }
+  }
+
+  async getAllTransactionInByProductId(
+    { pageNo, pageSize }: GetAllSupplier,
+    productId: number,
+  ) {
+    const skip = (pageNo - 1) * pageSize;
+    const transactions = await this.transactionInRepository.findAndCount({
+      skip,
+      take: pageSize,
+      where: {
+        productId,
+      },
+      order: {
+        created_at: 'DESC',
+      },
+      relations: ['customer', 'product'],
+    });
+    return transactions;
   }
 }

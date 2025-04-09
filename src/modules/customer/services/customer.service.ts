@@ -16,7 +16,11 @@ export class CustomerService {
     private readonly customerRepository: Repository<Customer>,
   ) {}
 
-  async getAllCustomers({
+  async getAllCustomers(): Promise<Customer[]> {
+    return await this.customerRepository.find({ where: { is_deleted: false } });
+  }
+
+  async getAllCustomersPagination({
     pageNo,
     pageSize,
   }: GetAllQuery): Promise<[Customer[], number]> {

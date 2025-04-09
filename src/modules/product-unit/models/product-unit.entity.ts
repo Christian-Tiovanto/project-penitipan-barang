@@ -38,7 +38,13 @@ export class ProductUnit implements IProductUnit {
   name: string;
 
   @ApiProperty({ example: 1000 })
-  @Column({ type: 'decimal' })
+  @Column({
+    type: 'decimal',
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value),
+    },
+  })
   conversion_to_kg: number;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })

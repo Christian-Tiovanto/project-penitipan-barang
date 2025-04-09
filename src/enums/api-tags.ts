@@ -13,4 +13,6 @@ export enum ApiTag {
   AR_PAYMENT = 'ar-payment',
   CASHFLOW = 'cashflow',
   CHARGE = 'charge',
+  TRANSACTION_OUT = 'transaction-out',
+  SPB = 'spb',
 }
