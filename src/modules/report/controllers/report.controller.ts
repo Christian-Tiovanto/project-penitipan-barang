@@ -34,6 +34,14 @@ export class ReportController {
     });
   }
 
+  @Get('cashflow-report')
+  async cashflowReport(@Query() { start_date, end_date }: DateRangeQuery) {
+    return await this.reportService.cashflowReport({
+      startDate: start_date,
+      endDate: end_date,
+    });
+  }
+
   @Get('stock-report')
   async stockReport(@Query() { end_date, customer }: StockReportQuery) {
     return await this.reportService.stockReport(end_date, parseInt(customer));
