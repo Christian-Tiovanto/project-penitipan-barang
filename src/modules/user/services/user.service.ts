@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -170,7 +171,14 @@ export class UserService {
     userId: number,
     updatePasswordDto: UpdatePasswordDto,
   ) {
-    const user = await this.getUserById(userId);
+    const user = await this.findUserById(userId);
+    const isMatch = await bcrypt.compare(
+      updatePasswordDto.oldPassword,
+      user.password,
+    );
+    if (!isMatch) {
+      throw new BadRequestException('Old Password is incorrect');
+    }
     user.password = await bcrypt.hash(updatePasswordDto.password, 10);
     await this.userRepository.save(user);
     delete user.password;

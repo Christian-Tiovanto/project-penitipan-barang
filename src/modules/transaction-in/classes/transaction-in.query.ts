@@ -8,6 +8,8 @@ export enum TransactionInSort {
   CUSTOMER = 'customer',
   PRODUCT = 'product',
   QTY = 'qty',
+  CREATED_AT = 'created_at',
+  UNIT = 'unit',
 }
 
 export class GetAllTransactionInQuery extends OptionalDateRangeQueryWithPagination {

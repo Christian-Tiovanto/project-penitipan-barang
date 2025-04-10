@@ -118,26 +118,71 @@ export class TransactionInController {
     );
   }
 
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get All Transaction In By Product Id',
+  // })
+  // @UseInterceptors(OffsetPaginationInterceptor)
+  // @UseGuards(AuthenticateGuard)
+  // @Get('by-product/:id')
+  // async getAllTransactionInByProductId(
+  //   @Param('id', ParseIntPipe) productId: number,
+  //   @Query() { page_no, page_size }: BasePaginationQuery,
+  // ): Promise<OffsetPagination<TransactionIn>> {
+  //   const pageSize = parseInt(page_size) || 10;
+  //   const pageNo = parseInt(page_no) || 1;
+  //   const transactions =
+  //     await this.transactionInService.getAllTransactionInByProductId(
+  //       {
+  //         pageNo,
+  //         pageSize,
+  //       },
+  //       productId,
+  //     );
+  //   return {
+  //     data: transactions[0],
+  //     totalCount: transactions[1],
+  //     filteredCount: transactions[1],
+  //   };
+  // }
+
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get All Transaction In By Product Id',
   })
+  @ApiOkResponse({ type: GetTransactionInResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
   @UseGuards(AuthenticateGuard)
   @Get('by-product/:id')
   async getAllTransactionInByProductId(
     @Param('id', ParseIntPipe) productId: number,
-    @Query() { page_no, page_size }: BasePaginationQuery,
-  ): Promise<OffsetPagination<TransactionIn>> {
+    @Query()
+    {
+      page_no,
+      page_size,
+      sort,
+      order,
+      start_date,
+      end_date,
+      search,
+    }: GetAllTransactionInQuery,
+  ): Promise<OffsetPagination<GetTransactionInResponse>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
+    sort = !sort ? TransactionInSort.ID : sort;
+    order = !order ? SortOrder.ASC : order;
     const transactions =
       await this.transactionInService.getAllTransactionInByProductId(
+        productId,
         {
           pageNo,
           pageSize,
+          sort,
+          order,
+          startDate: start_date,
+          endDate: end_date,
+          search,
         },
-        productId,
       );
     return {
       data: transactions[0],

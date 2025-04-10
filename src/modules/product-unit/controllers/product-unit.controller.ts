@@ -169,11 +169,12 @@ export class ProductUnitController {
   @ApiOperation({
     summary: 'Get Product Unit by Product Id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @UseGuards(AuthenticateGuard)
   @Get('/by-product/:id')
   async getProductUnitByProductId(
     @Param('id', ParseIntPipe) productId: number,
   ) {
+    console.log('here');
     return await this.productUnitService.getProductUnitsByProductId(productId);
   }
 }

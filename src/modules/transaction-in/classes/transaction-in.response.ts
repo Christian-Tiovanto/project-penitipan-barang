@@ -40,4 +40,6 @@ export class GetTransactionInResponse {
 
   @ApiProperty({ example: 'Kg' })
   unit: string;
+
+  created_at: Date;
 }
