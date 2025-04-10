@@ -8,6 +8,7 @@ export enum TransactionInSort {
   CUSTOMER = 'customer',
   PRODUCT = 'product',
   QTY = 'qty',
+  CREATED_AT = 'created_at',
   CONVERTED_QTY = 'converted_qty',
   UNIT = 'unit',
 }

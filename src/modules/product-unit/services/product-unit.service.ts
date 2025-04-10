@@ -166,6 +166,7 @@ export class ProductUnitService {
   }
 
   async getProductUnitsByProductId(productId: number) {
+    console.log('here');
     return this.productUnitRepository.find({
       where: { productId },
     });

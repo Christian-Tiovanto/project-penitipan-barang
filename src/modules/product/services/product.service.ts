@@ -79,7 +79,7 @@ export class ProductService {
       .skip(skip)
       .take(pageSize)
       .select(['product'])
-      .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
+      .andWhere('is_deleted = :isDeleted', { isDeleted: false });
 
     //Conditionally add filters
     if (startDate) {

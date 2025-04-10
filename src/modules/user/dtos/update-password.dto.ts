@@ -11,4 +11,11 @@ export class UpdatePasswordDto implements Pick<IUser, 'password'> {
   })
   @JoiSchema(Joi.string().min(6).max(24).required())
   password: string;
+
+  @ApiProperty({
+    example: '654321',
+    description: 'New Password minimal 6 character and max 24 characters',
+  })
+  @JoiSchema(Joi.string().min(6).max(24).required())
+  oldPassword: string;
 }
