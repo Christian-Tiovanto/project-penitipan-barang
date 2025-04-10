@@ -162,11 +162,42 @@ export class CashflowService {
       .where({ type });
 
     if (startDate) {
-      queryBuilder
-        .andWhere({ created_at: MoreThanOrEqual(startDate) })
-        .andWhere({ created_at: LessThan(endDate) });
+      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+    }
+    if (endDate) {
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
     }
     const cashflow: { total: string } = await queryBuilder.getRawOne();
     return cashflow;
+  }
+  async getInitialBalance({ endDate }: GetAllCashflowQuery) {
+    const queryBuilder = this.cashflowRepository
+      .createQueryBuilder('cashflow')
+      .select(
+        `SUM(CASE WHEN cashflow.type = '${CashflowType.IN}' THEN cashflow.amount ELSE -cashflow.amount END)`,
+        'total',
+      );
+
+    if (endDate) {
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    }
+    const cashflow: { total: string } = await queryBuilder.getRawOne();
+    return parseFloat(cashflow?.total || '0');
+  }
+  async getTotalSumAmount({ startDate, endDate, type }: GetAllCashflowQuery) {
+    const queryBuilder = this.cashflowRepository
+      .createQueryBuilder('cashflow')
+      .select('SUM(cashflow.amount)', 'total')
+      .where({ type });
+
+    if (startDate) {
+      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+    }
+    if (endDate) {
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    }
+    const cashflow: { total: string } = await queryBuilder.getRawOne();
+
+    return parseFloat(cashflow?.total || '0');
   }
 }

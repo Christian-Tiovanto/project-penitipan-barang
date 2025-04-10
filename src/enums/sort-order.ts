@@ -13,4 +13,13 @@ export enum ArSort {
   TO_PAID = 'to_paid',
   CREATED_AT = 'created_at',
 }
+export enum InvoiceSort {
+  ID = 'id',
+  CUSTOMER = 'customer',
+  INVOICE_NO = 'invoice_no',
+  TOTAL_ORDER_CONVERTED = 'total_order_converted',
+  TOTAL_AMOUNT = 'total_amount',
+  STATUS = 'status',
+  CREATED_AT = 'created_at',
+}
 export type SortOrderQueryBuilder = 'ASC' | 'DESC';
