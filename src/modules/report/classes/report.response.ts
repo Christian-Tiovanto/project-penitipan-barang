@@ -11,6 +11,15 @@ export class StockBookReportResponse {
   }[];
   final_qty: number;
 }
+export class CashflowReportResponse {
+  initial_balance: number;
+  cashflows: {
+    date: Date;
+    type: string;
+    amount: number;
+  }[];
+  final_balance: number;
+}
 
 export interface IStockReportData {
   product_name: string;

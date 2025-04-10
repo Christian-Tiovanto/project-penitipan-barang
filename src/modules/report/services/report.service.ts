@@ -2,6 +2,7 @@ import { ProductService } from '@app/modules/product/services/product.service';
 import { TransactionInService } from '@app/modules/transaction-in/services/transaction-in.service';
 import { TransactionOutService } from '@app/modules/transaction-out/services/transaction-out.service';
 import {
+  CashflowReportResponse,
   IStockReportData,
   NettIncomeReportResponse,
   StockBookReportResponse,
@@ -99,6 +100,55 @@ export class ReportService {
             date: value.created_at,
             type: value.type,
             qty: value.converted_qty,
+          };
+        }),
+      ],
+    };
+    return data;
+  }
+
+  async cashflowReport({
+    startDate,
+    endDate,
+  }: StockBookReportQuery): Promise<CashflowReportResponse> {
+    const initialBalance = await this.cashflowService.getInitialBalance({
+      endDate: startDate,
+    });
+    const [cashflowsIn] = await this.cashflowService.getAllCashflows({
+      startDate,
+      endDate,
+      type: CashflowType.IN,
+    });
+    const sumCashflowIn = await this.cashflowService.getTotalSumAmount({
+      startDate,
+      endDate,
+      type: CashflowType.IN,
+    });
+
+    const [cashflowsOut] = await this.cashflowService.getAllCashflows({
+      startDate,
+      endDate,
+      type: CashflowType.OUT,
+    });
+    const sumCashflowOut = await this.cashflowService.getTotalSumAmount({
+      startDate,
+      endDate,
+      type: CashflowType.OUT,
+    });
+
+    const allCashflows = [...cashflowsIn, ...cashflowsOut];
+    allCashflows.sort(
+      (a, b) => a.created_at.getTime() - b.created_at.getTime(),
+    );
+    const data: CashflowReportResponse = {
+      initial_balance: initialBalance,
+      final_balance: initialBalance + sumCashflowIn - sumCashflowOut,
+      cashflows: [
+        ...allCashflows.map((value) => {
+          return {
+            date: value.created_at,
+            type: value.type,
+            amount: value.amount,
           };
         }),
       ],
