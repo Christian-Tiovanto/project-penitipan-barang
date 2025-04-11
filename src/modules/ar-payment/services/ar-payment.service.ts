@@ -14,6 +14,9 @@ import { CashflowType } from '@app/enums/cashflow-type';
 import { ArService } from '@app/modules/ar/services/ar.service';
 import { CreateBulkArPaymentDto } from '../dtos/create-bulk-ar-payment.dto';
 import { Ar } from '@app/modules/ar/models/ar.entity';
+import { ArStatus } from '@app/enums/ar-status';
+import { InvoiceService } from '@app/modules/invoice/services/invoice.service';
+import { InvoiceStatus } from '@app/enums/invoice-status';
 interface GetAllQuery {
   pageNo: number;
   pageSize: number;
@@ -26,6 +29,7 @@ export class ArPaymentService {
     private readonly customerPaymentService: CustomerPaymentService,
     private readonly cashflowService: CashflowService,
     private readonly arService: ArService,
+    private readonly invoiceService: InvoiceService,
   ) {}
 
   async getAllArPayments({
@@ -70,6 +74,7 @@ export class ArPaymentService {
         `To paid only ${ar.to_paid + createArPaymentDto.total_paid}`,
       );
     }
+
     const arPayment = await this.arPaymentRepository.manager.transaction(
       async (entityManager: EntityManager) => {
         const newArPayment = entityManager.create(
@@ -77,6 +82,14 @@ export class ArPaymentService {
           createArPaymentDto,
         );
 
+        if (ar.to_paid === 0) {
+          ar.status = ArStatus.COMPLETED;
+          await this.invoiceService.updateInvoiceStatusById(
+            ar.invoiceId,
+            InvoiceStatus.COMPLETED,
+            entityManager,
+          );
+        }
         await this.arService.updateArWithEM(ar, entityManager);
 
         const createCashflowDto: CreateCashflowDto = {
@@ -100,6 +113,7 @@ export class ArPaymentService {
     const toCreateArPayment: CreateArPaymentDto[] = [];
     const toCreateCashflow: CreateCashflowDto[] = [];
     const toUpdateAr: Ar[] = [];
+    const toUpdateInvoice: number[] = [];
     for (const data of createBulkArPaymentDto.data) {
       const ar = await this.arService.findArById(data.arId);
       const customerPayment =
@@ -113,6 +127,10 @@ export class ArPaymentService {
         throw new BadRequestException(
           `To paid only ${ar.to_paid + data.total_paid}`,
         );
+      }
+      if (ar.to_paid === 0) {
+        ar.status = ArStatus.COMPLETED;
+        toUpdateInvoice.push(ar.invoiceId);
       }
       const createArPaymentDto: CreateArPaymentDto = {
         arId: data.arId,
@@ -139,6 +157,11 @@ export class ArPaymentService {
           toCreateCashflow,
         );
         await this.arService.updateBulkArWithEM(entityManager, toUpdateAr);
+        await this.invoiceService.updateBulkInvoiceStatusById(
+          toUpdateInvoice,
+          InvoiceStatus.COMPLETED,
+          entityManager,
+        );
         return entityManager.save(newArPayment);
       },
     );

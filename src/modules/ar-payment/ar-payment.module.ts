@@ -6,6 +6,7 @@ import { ArPaymentService } from './services/ar-payment.service';
 import { CustomerPaymentModule } from '../customer-payment/customer-payment.module';
 import { CashflowModule } from '../cashflow/cashflow.module';
 import { ArModule } from '../ar/ar.module';
+import { InvoiceModule } from '../invoice/invoice.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ArModule } from '../ar/ar.module';
     CustomerPaymentModule,
     CashflowModule,
     ArModule,
+    InvoiceModule,
   ],
   controllers: [ArPaymentController],
   providers: [ArPaymentService],

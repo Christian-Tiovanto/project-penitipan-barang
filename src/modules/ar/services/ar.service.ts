@@ -83,7 +83,6 @@ export class ArService {
 
     if (status) {
       queryBuilder.andWhere({ status });
-
     }
     if (startDate) {
       queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
@@ -139,9 +138,8 @@ export class ArService {
   async updateArWithEM(ar: Ar, entityManager: EntityManager) {
     await entityManager.save(Ar, ar);
   }
-  
+
   async updateBulkArWithEM(entityManager: EntityManager, ar: Ar[]) {
     await entityManager.save(Ar, ar);
   }
-
 }

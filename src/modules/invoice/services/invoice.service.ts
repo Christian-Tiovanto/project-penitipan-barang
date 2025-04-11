@@ -113,6 +113,29 @@ export class InvoiceService {
     return repo.save(newInvoice);
   }
 
+  async updateInvoiceStatusById(
+    invoiceId: number,
+    status: InvoiceStatus,
+    entityManager: EntityManager,
+  ) {
+    const invoice = await this.findInvoiceById(invoiceId);
+    invoice.status = status;
+    await entityManager.save(invoice);
+  }
+
+  async updateBulkInvoiceStatusById(
+    invoiceIds: number[],
+    status: InvoiceStatus,
+    entityManager: EntityManager,
+  ) {
+    await entityManager
+      .createQueryBuilder()
+      .update(Invoice) // Your Invoice entity
+      .set({ status }) // Field to update
+      .where('id IN (:...invoiceIds)', { invoiceIds }) // WHERE IN clause
+      .execute();
+  }
+
   //     async updateInvoice(
   //         invoiceId: number,
   //         updateInvoiceDto: UpdateInvoiceDto,
