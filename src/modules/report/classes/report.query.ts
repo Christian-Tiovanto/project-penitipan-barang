@@ -14,6 +14,12 @@ export class StockReportQuery extends EndDateQuery {
   customer: string;
 }
 
+export class StockInvoiceReportQuery {
+  @ApiProperty({ example: '1', required: false })
+  @JoiSchema(Joi.string().optional())
+  invoice: string;
+}
+
 export class ArPaidReportQuery extends OptionalDateRangeQueryWithPagination {
   @ApiProperty({
     enum: ArSort,
