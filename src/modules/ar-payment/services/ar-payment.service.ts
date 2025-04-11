@@ -157,11 +157,13 @@ export class ArPaymentService {
           toCreateCashflow,
         );
         await this.arService.updateBulkArWithEM(entityManager, toUpdateAr);
-        await this.invoiceService.updateBulkInvoiceStatusById(
-          toUpdateInvoice,
-          InvoiceStatus.COMPLETED,
-          entityManager,
-        );
+        if (toUpdateInvoice.length > 0) {
+          await this.invoiceService.updateBulkInvoiceStatusById(
+            toUpdateInvoice,
+            InvoiceStatus.COMPLETED,
+            entityManager,
+          );
+        }
         return entityManager.save(newArPayment);
       },
     );
