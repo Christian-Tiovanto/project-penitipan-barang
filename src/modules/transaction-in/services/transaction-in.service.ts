@@ -155,7 +155,7 @@ export class TransactionInService {
             name: transaction.customer.name,
           },
           qty: transaction.qty,
-          converted_qty: transaction.qty,
+          converted_qty: transaction.converted_qty,
           unit: transaction.unit,
           created_at: transaction.created_at,
         };
