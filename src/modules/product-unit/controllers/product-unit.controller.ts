@@ -22,14 +22,10 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
-import {
-  BasePaginationQuery,
-  OffsetPagination,
-} from '@app/interfaces/pagination.interface';
+import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
-import { GetProductResponse } from '@app/modules/product/classes/product.response';
 import { GetProductUnitResponse } from '../classes/product-unit.response';
 import {
   GetAllProductUnitQuery,
@@ -174,7 +170,6 @@ export class ProductUnitController {
   async getProductUnitByProductId(
     @Param('id', ParseIntPipe) productId: number,
   ) {
-    console.log('here');
     return await this.productUnitService.getProductUnitsByProductId(productId);
   }
 }
