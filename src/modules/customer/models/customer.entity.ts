@@ -35,7 +35,7 @@ export class Customer implements ICustomer {
   name: string;
 
   @ApiProperty({ example: 'Customer Code' })
-  @Column({ type: 'varchar' })
+  @Column({ type: 'varchar', unique: true })
   code: string;
 
   @ApiProperty({ example: 'Customer Address' })
@@ -57,7 +57,10 @@ export class Customer implements ICustomer {
   @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.customerId)
   transaction_in: TransactionIn[];
 
-  @OneToMany(() => TransactionOut, (transaction_out) => transaction_out.customerId)
+  @OneToMany(
+    () => TransactionOut,
+    (transaction_out) => transaction_out.customerId,
+  )
   transaction_out: TransactionOut[];
 
   @OneToMany(() => Invoice, (invoice) => invoice.customerId)
