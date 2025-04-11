@@ -91,7 +91,7 @@ export class ArService {
     if (endDate) {
       queryBuilder.andWhere({ created_at: LessThan(endDate) });
     }
-    console.log(queryBuilder.getQuery());
+
     const ars = (await queryBuilder.getManyAndCount()) as unknown as [
       GetAllArResponse[],
       number,
