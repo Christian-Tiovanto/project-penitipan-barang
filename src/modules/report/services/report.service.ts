@@ -107,6 +107,35 @@ export class ReportService {
     return data;
   }
 
+  async stockInvoiceReport(invoiceId?: number) {
+    const query = `
+    SELECT 
+      b.invoiceId, 
+      a.invoice_no,
+      d.name as product_name,
+      e.name as customer_name,
+      SUM(b.converted_qty) AS product_out,
+      c.converted_qty AS product_in,
+      c.remaining_qty AS product_remaining,
+      a.created_at
+    FROM invoices a
+    INNER JOIN transaction_outs b ON a.id = b.invoiceId
+    INNER JOIN transaction_ins c ON b.transaction_inid = c.id AND b.productId = c.productId AND b.customerId = c.customerId
+    INNER JOIN products d ON b.productId = d.id
+    INNER JOIN customers e ON b.customerId = e.id
+    WHERE a.id = ?
+    GROUP BY 
+      d.name, 
+      e.name, 
+      b.invoiceId, 
+      a.invoice_no,
+      c.remaining_qty,
+      c.converted_qty,
+      a.created_at
+  `;
+    return await this.transactionInRepository.query(query, [invoiceId]);
+  }
+
   async cashflowReport({
     startDate,
     endDate,

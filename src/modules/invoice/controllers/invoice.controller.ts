@@ -1,22 +1,45 @@
-import { Controller, Get, Query, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { InvoiceService } from '../services/invoice.service';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
 import { GetAllInvoiceQuery } from '../classes/invoice.query';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
 import { GetAllInvoiceResponse } from '../classes/invoice.response';
 import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { InvoiceSort, SortOrder } from '@app/enums/sort-order';
+import { Invoice } from '../models/invoice.entity';
+import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 
 @ApiTags(ApiTag.INVOICE)
 @Controller('api/v1/invoice')
 export class InvoiceController {
   constructor(private readonly invoiceService: InvoiceService) {}
 
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All Invoices',
+  })
+  @UseGuards(AuthenticateGuard)
+  @Get('/all')
+  async getAllInvoices(): Promise<Invoice[]> {
+    return await this.invoiceService.getAllInvoices();
+  }
+
   @ApiOkResponse({ type: GetAllInvoiceResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
   @Get()
-  async getAllInvoices(
+  async getAllInvoicesPagination(
     @Query()
     {
       start_date,
@@ -34,7 +57,7 @@ export class InvoiceController {
     sort = !sort ? InvoiceSort.ID : sort;
     order = !order ? SortOrder.ASC : order;
 
-    const report = await this.invoiceService.getAllInvoices({
+    const report = await this.invoiceService.getAllInvoicesPagination({
       sort,
       order,
       startDate: start_date,

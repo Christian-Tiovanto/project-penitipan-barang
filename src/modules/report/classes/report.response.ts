@@ -51,3 +51,18 @@ export class NettIncomeReportResponse {
     amount: number;
   }[];
 }
+
+export interface IStockInvoiceReportData {
+  invoiceId: string;
+  product_name: string;
+  customer_name: string;
+  invoice_no: string;
+  product_in: number;
+  product_out: number;
+  product_remaining: number;
+  created_at: Date;
+}
+
+export class StockInvoiceReportResponse {
+  data: IStockInvoiceReportData[];
+}

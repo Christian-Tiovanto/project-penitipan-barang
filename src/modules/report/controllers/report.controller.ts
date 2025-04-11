@@ -10,7 +10,11 @@ import { ReportService } from '../services/report.service';
 import { DateRangeQuery } from '@app/commons/queries/date-range.query';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
-import { ArPaidReportQuery, StockReportQuery } from '../classes/report.query';
+import {
+  ArPaidReportQuery,
+  StockInvoiceReportQuery,
+  StockReportQuery,
+} from '../classes/report.query';
 import { NettIncomeReportResponse } from '../classes/report.response';
 import { ArSort, SortOrder } from '@app/enums/sort-order';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
@@ -45,6 +49,11 @@ export class ReportController {
   @Get('stock-report')
   async stockReport(@Query() { end_date, customer }: StockReportQuery) {
     return await this.reportService.stockReport(end_date, parseInt(customer));
+  }
+
+  @Get('stock-invoice-report')
+  async stockInvoiceReport(@Query() { invoice }: StockInvoiceReportQuery) {
+    return await this.reportService.stockInvoiceReport(parseInt(invoice));
   }
 
   @ApiOkResponse({ type: NettIncomeReportResponse })

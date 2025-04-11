@@ -463,9 +463,6 @@ export class TransactionInService {
       sortBy = `${sort}.name`;
     }
 
-    console.log('asem');
-    console.log(sortBy);
-
     const queryBuilder = this.transactionInRepository
       .createQueryBuilder('transaction')
       .leftJoinAndSelect('transaction.customer', 'customer')

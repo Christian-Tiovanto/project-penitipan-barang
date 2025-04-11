@@ -31,7 +31,11 @@ export class InvoiceService {
     private readonly invoiceRepository: Repository<Invoice>,
   ) {}
 
-  async getAllInvoices({
+  async getAllInvoices(): Promise<Invoice[]> {
+    return await this.invoiceRepository.find(); // Assuming using TypeORM
+  }
+
+  async getAllInvoicesPagination({
     pageNo,
     pageSize,
     sort,
