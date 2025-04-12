@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
-import { ICashflow } from '../models/cashflow.entity';
+import { CashflowFrom, ICashflow } from '../models/cashflow.entity';
 import { CashflowType } from '@app/enums/cashflow-type';
 
 @JoiSchemaOptions({ allowUnknown: false })
@@ -29,6 +29,7 @@ export class CreateCashflowDto
   @JoiSchema(Joi.string().trim().optional())
   descriptions?: string;
 
+  from: CashflowFrom;
   created_byId?: number;
   total_amount?: number;
 }

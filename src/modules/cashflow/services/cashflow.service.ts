@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
-import { Cashflow } from '../models/cashflow.entity';
+import { Cashflow, CashflowFrom } from '../models/cashflow.entity';
 import { CreateCashflowDto } from '../dtos/create-cashflow.dto';
 import { UserService } from '@app/modules/user/services/user.service';
 import { CashflowType } from '@app/enums/cashflow-type';
@@ -95,7 +95,7 @@ export class CashflowService {
     }
     const latestCashflow = await this.findLatestCashFlow();
     const latestTotalAmount = latestCashflow?.total_amount || 0;
-
+    createCashflowDto.from = CashflowFrom.INPUT;
     createCashflowDto.total_amount = this.calculateTotalAmount(
       latestTotalAmount,
       createCashflowDto.amount,
@@ -134,6 +134,7 @@ export class CashflowService {
       if (cashflowDto.amount < 1) {
         throw new BadRequestException("Amount can't be less than 0");
       }
+      cashflowDto.from = CashflowFrom.PAYMENT;
       cashflowDto.total_amount = this.calculateTotalAmount(
         latestTotalAmount,
         cashflowDto.amount,

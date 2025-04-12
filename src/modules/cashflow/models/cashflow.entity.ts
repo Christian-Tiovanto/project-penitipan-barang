@@ -10,11 +10,15 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-
+export enum CashflowFrom {
+  INPUT = 'input',
+  PAYMENT = 'payment',
+}
 export interface ICashflow {
   id: number;
   type: string;
   amount: number;
+  from: CashflowFrom;
   total_amount: number;
   descriptions?: string;
   created_by: number;
@@ -37,13 +41,22 @@ export class Cashflow implements ICashflow {
   @Column({ type: 'enum', enum: CashflowType })
   type: CashflowType;
 
+  @ApiProperty({ example: CashflowFrom.INPUT })
+  @Column({ type: 'enum', enum: CashflowFrom })
+  from: CashflowFrom;
+
+  // @Column({
+  //   type: 'decimal',
+  //   precision: 15,
+  //   scale: 5,
+  //   transformer: {
+  //     to: (value: number) => value,
+  //     from: (value: string) => parseFloat(value),
+  //   },
+  // })
   @ApiProperty({ example: 20000 })
   @Column({
-    type: 'decimal',
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => parseFloat(value),
-    },
+    type: 'int',
   })
   amount: number;
 
@@ -54,13 +67,18 @@ export class Cashflow implements ICashflow {
   })
   descriptions: string;
 
+  // @Column({
+  //   type: 'decimal',
+  //   precision: 15,
+  //   scale: 5,
+  //   transformer: {
+  //     to: (value: number) => value,
+  //     from: (value: string) => parseFloat(value),
+  //   },
+  // })
   @ApiProperty({ example: 50000 })
   @Column({
-    type: 'decimal',
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => parseFloat(value),
-    },
+    type: 'int',
   })
   total_amount: number;
 
