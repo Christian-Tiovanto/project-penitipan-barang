@@ -8,28 +8,29 @@ async function bootstrap() {
   const seeder = app.get(UserSeeder);
   await seeder.run();
 
-  const environment = process.env.NODE_ENV || 'DEVELOPMENT';
-  const domainUrl = process.env.DOMAIN_URL || 'http://localhost:5173';
+  // const environment = process.env.NODE_ENV || 'DEVELOPMENT';
+  // const domainUrl = process.env.DOMAIN_URL || 'http://localhost:5173';
 
-  let corsOptions = {};
+  // let corsOptions = {};
 
-  if (environment === 'PRODUCTION') {
-    corsOptions = {
-      origin: domainUrl, // hanya domain produksi yang diizinkan
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-      allowedHeaders: 'Content-Type, Accept, Authorization',
-      credentials: true, // jika pakai cookie/token
-    };
-  } else {
-    corsOptions = {
-      origin: true, // izinkan semua origin saat development
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-      allowedHeaders: 'Content-Type, Accept, Authorization',
-      credentials: true,
-    };
-  }
+  // if (environment === 'PRODUCTION') {
+  //   corsOptions = {
+  //     origin: domainUrl, // hanya domain produksi yang diizinkan
+  //     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  //     allowedHeaders: 'Content-Type, Accept, Authorization',
+  //     credentials: true, // jika pakai cookie/token
+  //   };
+  // } else {
+  //   corsOptions = {
+  //     origin: true, // izinkan semua origin saat development
+  //     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  //     allowedHeaders: 'Content-Type, Accept, Authorization',
+  //     credentials: true,
+  //   };
+  // }
 
-  app.enableCors(corsOptions);
+  // app.enableCors(corsOptions);
+  app.enableCors();
 
   const config = new DocumentBuilder()
     .setTitle('Endpoint Penitipan Barang')
