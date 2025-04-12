@@ -60,12 +60,18 @@ export class ArPayment implements IArPayment {
   @Column({ type: 'int', nullable: true })
   customerId: number;
 
+  // @Column({
+  //   type: 'decimal',
+  //   precision: 15,
+  //   scale: 5,
+  //   transformer: {
+  //     to: (value: number) => value,
+  //     from: (value: string) => parseFloat(value),
+  //   },
+  // })
+  @ApiProperty({ example: 1000 })
   @Column({
-    type: 'decimal',
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => parseFloat(value),
-    },
+    type: 'int',
   })
   total_paid: number;
 

@@ -56,34 +56,48 @@ export class Ar implements IAr {
   @Column({ type: 'varchar' })
   ar_no: string;
 
+  // @Column({
+  //   type: 'decimal',
+  //   precision: 15,
+  //   scale: 5,
+  //   transformer: {
+  //     to: (value: number) => value,
+  //     from: (value: string) => parseFloat(value),
+  //   },
+  // })
   @ApiProperty({ example: 1000 })
   @Column({
-    type: 'decimal',
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => parseFloat(value),
-    },
+    type: 'int',
   })
   total_bill: number;
 
+  // @Column({
+  //   type: 'decimal',
+  //   default: 0,
+  //   transformer: {
+  //     to: (value: number) => value,
+  //     from: (value: string) => parseFloat(value),
+  //   },
+  // })
   @ApiProperty({ example: 1000 })
   @Column({
-    type: 'decimal',
+    type: 'int',
     default: 0,
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => parseFloat(value),
-    },
   })
   total_paid: number;
 
+  // @Column({
+  //   type: 'decimal',
+  //   precision: 15,
+  //   scale: 5,
+  //   transformer: {
+  //     to: (value: number) => value,
+  //     from: (value: string) => parseFloat(value),
+  //   },
+  // })
   @ApiProperty({ example: 1000 })
   @Column({
-    type: 'decimal',
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => parseFloat(value),
-    },
+    type: 'int',
   })
   to_paid: number;
 

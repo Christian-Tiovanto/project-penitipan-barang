@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -17,6 +18,7 @@ import { Ar } from '@app/modules/ar/models/ar.entity';
 import { ArStatus } from '@app/enums/ar-status';
 import { InvoiceService } from '@app/modules/invoice/services/invoice.service';
 import { InvoiceStatus } from '@app/enums/invoice-status';
+import { CashflowFrom } from '@app/modules/cashflow/models/cashflow.entity';
 interface GetAllQuery {
   pageNo: number;
   pageSize: number;
@@ -71,7 +73,7 @@ export class ArPaymentService {
       customerPayment.payment_method.name;
     if (ar.to_paid < 0) {
       throw new BadRequestException(
-        `To paid only ${ar.to_paid + createArPaymentDto.total_paid}`,
+        `AR ${ar.ar_no} To paid only ${Number(ar.to_paid + createArPaymentDto.total_paid).toLocaleString('id-Id')}`,
       );
     }
 
@@ -95,6 +97,7 @@ export class ArPaymentService {
         const createCashflowDto: CreateCashflowDto = {
           type: CashflowType.IN,
           amount: createArPaymentDto.total_paid,
+          from: CashflowFrom.PAYMENT,
         };
         await this.cashflowService.createCashflowFromArPaymentWithEM(
           entityManager,
@@ -121,11 +124,14 @@ export class ArPaymentService {
           ar.customerId,
           payment_methodId,
         );
+      if (!customerPayment.status)
+        throw new ForbiddenException('Customer Payment Method is not active');
+
       ar.to_paid -= data.total_paid;
       ar.total_paid += data.total_paid;
       if (ar.to_paid < 0) {
         throw new BadRequestException(
-          `To paid only ${ar.to_paid + data.total_paid}`,
+          `AR ${ar.ar_no} To paid only ${Number(ar.to_paid + data.total_paid).toLocaleString('id-Id')}`,
         );
       }
       if (ar.to_paid === 0) {
@@ -144,6 +150,7 @@ export class ArPaymentService {
       const createCashflowDto: CreateCashflowDto = {
         type: CashflowType.IN,
         amount: data.total_paid,
+        from: CashflowFrom.PAYMENT,
       };
       toCreateCashflow.push(createCashflowDto);
       toCreateArPayment.push(createArPaymentDto);

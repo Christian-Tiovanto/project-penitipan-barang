@@ -114,6 +114,18 @@ export class ArService {
     return ar;
   }
 
+  async findArByIdJoinCustomer(arId: number): Promise<Ar> {
+    const ar = await this.arRepository.findOne({
+      where: { id: arId },
+      relations: ['customer'],
+    });
+
+    if (!ar) {
+      throw new NotFoundException(`Ar with id ${arId} not found`);
+    }
+    return ar;
+  }
+
   async getMaxIdAr(): Promise<number> {
     const maxAr = await this.arRepository.find({
       order: { id: 'DESC' },
