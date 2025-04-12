@@ -320,9 +320,15 @@ export class TransactionInService {
     updateTransactionInDto: UpdateTransactionInDto,
   ) {
     const transactionIn = await this.findTransactionInById(transactionInId);
-    await this.customerService.findCustomerById(
-      updateTransactionInDto.customerId,
-    );
+    if (updateTransactionInDto.customerId) {
+      await this.customerService.findCustomerById(
+        updateTransactionInDto.customerId,
+      );
+      updateTransactionInDto.customerId = parseInt(
+        `${updateTransactionInDto.customerId}`,
+      );
+      transactionIn.customer.id = updateTransactionInDto.customerId;
+    }
     let currentProductUnit: Pick<IProductUnit, 'conversion_to_kg' | 'name'> = {
       conversion_to_kg: transactionIn.conversion_to_kg,
       name: transactionIn.unit,
@@ -348,6 +354,7 @@ export class TransactionInService {
     }
     updateTransactionInDto.converted_qty =
       currentQty.qty * currentProductUnit.conversion_to_kg;
+    transactionIn.product.id = updateTransactionInDto.productId;
     await this.transactionInRepository.manager.transaction(
       async (entityManager: EntityManager) => {
         await this.updateTransactionInProduct(
