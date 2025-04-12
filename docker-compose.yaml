@@ -14,8 +14,13 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV}
+      DOMAIN_URL: ${DOMAIN_URL}
       JWT_SECRET: ${JWT_SECRET}
+      USER_EMAIL: ${USER_EMAIL}
+      USER_PIN: ${USER_PIN}
+      USER_PASS: ${USER_PASS}
+      PORT: ${PORT}
     volumes:
       - /app/node_modules # Hanya mount node_modules, jangan proyek lokal
     restart: unless-stopped
