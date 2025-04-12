@@ -9,14 +9,15 @@ services:
     ports:
       - '${PORT}:3000'
     environment:
-      DB_HOST: database
+      DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       DB_USER: root
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET}
     volumes:
-      - .:/app
+      - /app/node_modules # Hanya mount node_modules, jangan proyek lokal
     restart: unless-stopped
 
   database:
