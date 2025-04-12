@@ -15,15 +15,17 @@ async function bootstrap() {
 
   if (environment === 'PRODUCTION') {
     corsOptions = {
-      origin: domainUrl, // CORS hanya untuk domain produksi
+      origin: domainUrl, // hanya domain produksi yang diizinkan
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-      allowedHeaders: 'Content-Type, Accept',
+      allowedHeaders: 'Content-Type, Accept, Authorization',
+      credentials: true, // jika pakai cookie/token
     };
   } else {
     corsOptions = {
-      origin: true, // Mengizinkan semua origin di development
+      origin: true, // izinkan semua origin saat development
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-      allowedHeaders: 'Content-Type, Accept',
+      allowedHeaders: 'Content-Type, Accept, Authorization',
+      credentials: true,
     };
   }
 
