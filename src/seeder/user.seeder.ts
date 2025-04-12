@@ -18,12 +18,11 @@ export class UserSeeder {
     if (existing) {
       return;
     }
-    const hashedPassword = await bcrypt.hash(pass, 10);
 
     const user = this.userService.createUser({
       fullname: 'Admin',
       email: email,
-      password: hashedPassword,
+      password: pass,
       role: UserRole.ADMIN,
       pin: pin,
     });
