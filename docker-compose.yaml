@@ -20,7 +20,6 @@ services:
       USER_EMAIL: ${USER_EMAIL}
       USER_PIN: ${USER_PIN}
       USER_PASS: ${USER_PASS}
-      PORT: ${PORT}
     volumes:
       - /app/node_modules # Hanya mount node_modules, jangan proyek lokal
     restart: unless-stopped
