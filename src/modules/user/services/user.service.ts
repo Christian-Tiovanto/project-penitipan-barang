@@ -17,7 +17,7 @@ import { CreateUserDto } from '../dtos/create-user.dto';
 import { ErrorCode } from '@app/enums/error-code';
 import { RegexPatterns } from '@app/enums/regex-pattern';
 import { UpdatePasswordDto } from '../dtos/update-password.dto';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { UpdateUserDto } from '../dtos/update-user.dto';
 import { UserSort } from '../classes/user.query';
 import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
