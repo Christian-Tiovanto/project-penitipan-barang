@@ -17,8 +17,6 @@ services:
       NODE_ENV: production
     volumes:
       - .:/app
-    depends_on:
-      - database
     restart: unless-stopped
 
   database:
