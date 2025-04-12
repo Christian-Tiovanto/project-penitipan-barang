@@ -16,14 +16,14 @@ async function bootstrap() {
   if (environment === 'PRODUCTION') {
     corsOptions = {
       origin: domainUrl, // hanya domain produksi yang diizinkan
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       allowedHeaders: 'Content-Type, Accept, Authorization',
       credentials: true, // jika pakai cookie/token
     };
   } else {
     corsOptions = {
       origin: true, // izinkan semua origin saat development
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       allowedHeaders: 'Content-Type, Accept, Authorization',
       credentials: true,
     };
