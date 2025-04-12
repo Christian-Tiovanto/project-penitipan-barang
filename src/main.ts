@@ -1,10 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { UserSeeder } from './seeder/user.seeder';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
+  const seeder = app.get(UserSeeder);
+  await seeder.run();
   app.enableCors();
 
   const config = new DocumentBuilder()
