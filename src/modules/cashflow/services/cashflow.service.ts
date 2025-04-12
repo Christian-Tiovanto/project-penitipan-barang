@@ -16,6 +16,7 @@ interface GetAllCashflowQuery {
   startDate?: Date;
   endDate?: Date;
   type?: CashflowType;
+  from?: CashflowFrom;
 }
 
 @Injectable()
@@ -156,7 +157,12 @@ export class CashflowService {
       : latestTotalAmount - amount;
   }
 
-  async getTotalCashflow({ startDate, endDate, type }: GetAllCashflowQuery) {
+  async getTotalCashflow({
+    startDate,
+    endDate,
+    type,
+    from,
+  }: GetAllCashflowQuery) {
     const queryBuilder = this.cashflowRepository
       .createQueryBuilder('cashflow')
       .select('SUM(cashflow.amount)', 'total')
@@ -165,9 +171,15 @@ export class CashflowService {
     if (startDate) {
       queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
     }
+
     if (endDate) {
       queryBuilder.andWhere({ created_at: LessThan(endDate) });
     }
+
+    if (from) {
+      queryBuilder.andWhere({ from });
+    }
+
     const cashflow: { total: string } = await queryBuilder.getRawOne();
     return cashflow;
   }

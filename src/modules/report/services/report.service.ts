@@ -17,6 +17,7 @@ import { CashflowType } from '@app/enums/cashflow-type';
 import { ArService } from '@app/modules/ar/services/ar.service';
 import { ArSort, SortOrder } from '@app/enums/sort-order';
 import { ArStatus } from '@app/enums/ar-status';
+import { CashflowFrom } from '@app/modules/cashflow/models/cashflow.entity';
 interface StockBookReportQuery {
   startDate: Date;
   endDate: Date;
@@ -239,19 +240,30 @@ export class ReportService {
     startDate,
     endDate,
   }: NettIncomeReportQuery): Promise<NettIncomeReportResponse> {
-    const earning = await this.cashflowService.getTotalCashflow({
+    const earningFromInput = await this.cashflowService.getTotalCashflow({
       startDate,
       endDate,
       type: CashflowType.IN,
+      from: CashflowFrom.INPUT,
     });
-    const spending = await this.cashflowService.getAllCashflows({
+    const earningFromPayment = await this.cashflowService.getTotalCashflow({
+      startDate,
+      endDate,
+      type: CashflowType.IN,
+      from: CashflowFrom.PAYMENT,
+    });
+
+    const spendings = await this.cashflowService.getAllCashflows({
       startDate,
       endDate,
       type: CashflowType.OUT,
     });
     return {
-      earning: parseFloat(earning.total),
-      spending: spending[0].map((cashflow) => ({
+      earning: {
+        input: parseFloat(earningFromInput.total),
+        payment: parseFloat(earningFromPayment.total),
+      },
+      spending: spendings[0].map((cashflow) => ({
         description: cashflow.descriptions,
         amount: cashflow.amount,
       })),

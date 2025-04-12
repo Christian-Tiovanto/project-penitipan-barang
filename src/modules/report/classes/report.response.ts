@@ -35,8 +35,16 @@ export class StockReportResponse {
 }
 
 export class NettIncomeReportResponse {
-  @ApiProperty({ example: 20000 })
-  earning: number;
+  @ApiProperty({
+    example: {
+      input: 5000,
+      payment: 5000,
+    },
+  })
+  earning: {
+    input: number;
+    payment: number;
+  };
 
   @ApiProperty({
     example: [
