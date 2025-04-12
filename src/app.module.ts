@@ -33,11 +33,13 @@ import { Invoice } from './modules/invoice/models/invoice.entity';
 import { ReportModule } from './modules/report/report.module';
 import { SpbModule } from './modules/spb/spb.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
+import { UserSeeder } from './seeder/user.seeder';
 
 @Module({
   providers: [
     { provide: APP_PIPE, useClass: DataValidationPipe },
     { provide: APP_FILTER, useClass: ExceptionHandlerFilter },
+    UserSeeder,
   ],
   imports: [
     ConfigModule.forRoot(),
