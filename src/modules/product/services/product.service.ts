@@ -154,6 +154,10 @@ export class ProductService {
     return product;
   }
 
+  async updateBulkProduct(product: Product[], entityManager: EntityManager) {
+    await entityManager.save(product);
+  }
+
   async createProduct(createProductDto: CreateProductDto): Promise<Product> {
     createProductDto.initial_qty = createProductDto.qty;
     const newProduct = this.productRepository.create(createProductDto);

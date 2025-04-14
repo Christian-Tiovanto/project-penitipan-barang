@@ -5,11 +5,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TransactionInHeader } from './transaction-in-header.entity';
 
 export interface ITransactionIn {
   id: number;
@@ -17,6 +19,8 @@ export interface ITransactionIn {
   productId: number;
   customer: Customer;
   customerId: number;
+  transaction_in_header: TransactionInHeader;
+  transaction_in_headerId: number;
   qty: number;
   converted_qty: number;
   remaining_qty: number;
@@ -42,6 +46,16 @@ export class TransactionIn implements ITransactionIn {
 
   @Column()
   productId: number;
+
+  @ManyToOne(
+    () => TransactionInHeader,
+    (transactionInHeader) => transactionInHeader.transaction_in,
+  )
+  @JoinColumn({ name: 'transaction_in_headerId' })
+  transaction_in_header: TransactionInHeader;
+
+  @Column()
+  transaction_in_headerId: number;
 
   @Column({
     type: 'decimal',

@@ -27,27 +27,27 @@ export class ExceptionHandlerFilter implements ExceptionFilter {
     switch (true) {
       case exception instanceof ValidationException:
         res.status(HttpStatus.BAD_REQUEST);
-        this.toJson(exception, res);
+        this.toJson(exception, res, exception.message);
         break;
       case exception instanceof UnauthorizedException:
         res.status(HttpStatus.UNAUTHORIZED);
-        this.toJson(exception, res);
+        this.toJson(exception, res, exception.message);
         break;
       case exception instanceof BadRequestException:
         res.status(HttpStatus.BAD_REQUEST);
-        this.toJson(exception, res);
+        this.toJson(exception, res, 'Bad Request');
         break;
       case exception instanceof ConflictException:
         res.status(HttpStatus.CONFLICT);
-        this.toJson(exception, res);
+        this.toJson(exception, res, 'Conflict');
         break;
       case exception instanceof ForbiddenException:
         res.status(HttpStatus.FORBIDDEN);
-        this.toJson(exception, res);
+        this.toJson(exception, res, 'Forbidden');
         break;
       case exception instanceof NotFoundException:
         res.status(HttpStatus.FORBIDDEN);
-        this.toJson(exception, res);
+        this.toJson(exception, res, 'Not Found');
         break;
       case exception instanceof QueryFailedError: {
         const queryError = exception as QueryFailedError & {

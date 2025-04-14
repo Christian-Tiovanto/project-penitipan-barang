@@ -8,7 +8,13 @@ export class UpdateTransactionInDto
   implements
     Omit<
       ITransactionIn,
-      'id' | 'customer' | 'created_at' | 'updated_at' | 'product'
+      | 'id'
+      | 'customer'
+      | 'created_at'
+      | 'updated_at'
+      | 'product'
+      | 'transaction_in_headerId'
+      | 'transaction_in_header'
     >
 {
   @ApiProperty({ example: 1 })

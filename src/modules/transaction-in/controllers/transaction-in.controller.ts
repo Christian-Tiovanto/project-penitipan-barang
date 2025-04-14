@@ -22,10 +22,7 @@ import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
 import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
-import {
-  BasePaginationQuery,
-  OffsetPagination,
-} from '@app/interfaces/pagination.interface';
+import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
 import {
   GetAllTransactionInQuery,
@@ -33,7 +30,7 @@ import {
 } from '../classes/transaction-in.query';
 import { GetTransactionInResponse } from '../classes/transaction-in.response';
 import { SortOrder } from '@app/enums/sort-order';
-import { TransactionIn } from '../models/transaction-in.entity';
+import { CreateBulkTransactionInDto } from '../dtos/create-bulk-transaction-in.dto';
 
 @ApiTags(ApiTag.TRANSACTION_IN)
 @Controller('api/v1/transaction-in')
@@ -49,6 +46,18 @@ export class TransactionInController {
   ) {
     return await this.transactionInService.createTransactionIn(
       createTransactionInDto,
+    );
+  }
+
+  @ApiOperation({ summary: 'Create bulk Transaction In' })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @Post('bulk')
+  async createBulkTransactionIn(
+    @Body() createBulkTransactionInDto: CreateBulkTransactionInDto,
+  ) {
+    return await this.transactionInService.createBulkTransactionIn(
+      createBulkTransactionInDto,
     );
   }
 

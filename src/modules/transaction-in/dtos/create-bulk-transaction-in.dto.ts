@@ -3,8 +3,7 @@ import { ITransactionIn } from '../models/transaction-in.entity';
 import * as Joi from 'joi';
 import { ApiProperty } from '@nestjs/swagger';
 
-@JoiSchemaOptions({ allowUnknown: false })
-export class CreateTransactionInDto
+export class BulkTransactionInDetailDto
   implements
     Omit<
       ITransactionIn,
@@ -13,14 +12,9 @@ export class CreateTransactionInDto
       | 'updated_at'
       | 'customer'
       | 'product'
-      | 'transaction_in_headerId'
       | 'transaction_in_header'
     >
 {
-  @ApiProperty({ example: 1 })
-  @JoiSchema(Joi.number().required())
-  customerId: number;
-
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
   productId: number;
@@ -37,4 +31,23 @@ export class CreateTransactionInDto
   conversion_to_kg: number;
   remaining_qty: number;
   converted_qty: number;
+  customerId: number;
+  transaction_in_headerId: number;
+}
+
+@JoiSchemaOptions({ allowUnknown: false })
+export class CreateBulkTransactionInDto
+  implements Pick<ITransactionIn, 'customerId'>
+{
+  @ApiProperty({ example: 1 })
+  @JoiSchema(Joi.number().required())
+  customerId: number;
+
+  @ApiProperty({
+    type: [BulkTransactionInDetailDto],
+  })
+  @JoiSchema(BulkTransactionInDetailDto, (schema) =>
+    Joi.array().items(schema).min(1).required(),
+  )
+  data: BulkTransactionInDetailDto[];
 }

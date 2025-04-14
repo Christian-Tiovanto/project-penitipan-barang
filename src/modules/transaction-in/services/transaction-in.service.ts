@@ -22,6 +22,9 @@ import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
 import { GetTransactionInResponse } from '../classes/transaction-in.response';
 import { Customer } from '@app/modules/customer/models/customer.entity';
 import { Product } from '@app/modules/product/models/product.entity';
+import { CreateBulkTransactionInDto } from '../dtos/create-bulk-transaction-in.dto';
+import { TransactionInHeaderService } from './transaction-in-header.service';
+import { TransactionInHeader } from '../models/transaction-in-header.entity';
 
 interface GetAllTransactionInQuery {
   pageNo: number;
@@ -46,6 +49,7 @@ export class TransactionInService {
     private productService: ProductService,
     private productUnitService: ProductUnitService,
     private customerService: CustomerService,
+    private transactionInHeaderService: TransactionInHeaderService,
   ) {}
 
   async createTransactionIn(
@@ -85,6 +89,75 @@ export class TransactionInService {
     );
 
     return transaction;
+  }
+  async createBulkTransactionIn(
+    createBulkTransactionInDto: CreateBulkTransactionInDto,
+  ) {
+    const { customerId } = createBulkTransactionInDto;
+    const customer = await this.customerService.findCustomerById(customerId);
+    const transaction = await this.transactionInRepository.manager.transaction(
+      async (entityManager: EntityManager) => {
+        const transactionInHeader =
+          await this.transactionInHeaderService.createTransactionInHeader(
+            customer,
+            entityManager,
+          );
+        const {
+          transactionsToCreate,
+          productToUpdate,
+        }: { transactionsToCreate: any[]; productToUpdate: Product[] } =
+          await this.prepareTransactionInBulkData(
+            createBulkTransactionInDto,
+            customer,
+            transactionInHeader,
+          );
+        const newTransactionIn = entityManager.create(
+          TransactionIn,
+          transactionsToCreate,
+        );
+        await this.productService.updateBulkProduct(
+          productToUpdate,
+          entityManager,
+        );
+        await entityManager.save(newTransactionIn);
+      },
+    );
+
+    return transaction;
+  }
+
+  private async prepareTransactionInBulkData(
+    createBulkTransactionInDto: CreateBulkTransactionInDto,
+    customer: Customer,
+    transactionInHeader: TransactionInHeader,
+  ) {
+    const transactionsToCreate = [];
+    const productToUpdate: Product[] = [];
+    for (const transactionIn of createBulkTransactionInDto.data) {
+      const product = await this.productService.findProductById(
+        transactionIn.productId,
+      );
+      const productUnit =
+        await this.productUnitService.findProductUnitByIdNProductId(
+          transactionIn.unitId,
+          transactionIn.productId,
+        );
+
+      const convertedQty = transactionIn.qty * productUnit.conversion_to_kg;
+      transactionIn.remaining_qty = convertedQty;
+      transactionIn.converted_qty = convertedQty;
+      transactionIn.conversion_to_kg = productUnit.conversion_to_kg;
+      transactionIn.unit = productUnit.name;
+      transactionIn.transaction_in_headerId = transactionInHeader.id;
+      transactionIn.customerId = customer.id;
+      product.qty += transactionIn.converted_qty;
+      transactionsToCreate.push(transactionIn);
+      productToUpdate.push(product);
+    }
+    return {
+      transactionsToCreate,
+      productToUpdate,
+    };
   }
 
   async getAllTransactionIn({
