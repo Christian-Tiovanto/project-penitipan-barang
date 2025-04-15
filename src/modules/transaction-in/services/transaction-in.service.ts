@@ -95,7 +95,7 @@ export class TransactionInService {
   }
   async createBulkTransactionIn(
     createBulkTransactionInDto: CreateBulkTransactionInDto,
-  ) {
+  ): Promise<TransactionIn[]> {
     const { customerId } = createBulkTransactionInDto;
     const customer = await this.customerService.findCustomerById(customerId);
     const transaction = await this.transactionInRepository.manager.transaction(
@@ -122,7 +122,7 @@ export class TransactionInService {
           productToUpdate,
           entityManager,
         );
-        await entityManager.save(newTransactionIn);
+        return await entityManager.save(newTransactionIn);
       },
     );
 
