@@ -17,8 +17,11 @@ import { ProductUnitService } from '@app/modules/product-unit/services/product-u
 import { IProductUnit } from '@app/modules/product-unit/models/product-unit.entity';
 import { CustomerService } from '@app/modules/customer/services/customer.service';
 import { InsufficientStockException } from '@app/exceptions/validation.exception';
-import { TransactionInSort } from '../classes/transaction-in.query';
-import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
+import {
+  SortOrder,
+  SortOrderQueryBuilder,
+  TransactionInSort,
+} from '@app/enums/sort-order';
 import { GetTransactionInResponse } from '../classes/transaction-in.response';
 import { Customer } from '@app/modules/customer/models/customer.entity';
 import { Product } from '@app/modules/product/models/product.entity';
@@ -150,7 +153,14 @@ export class TransactionInService {
       transactionIn.unit = productUnit.name;
       transactionIn.transaction_in_headerId = transactionInHeader.id;
       transactionIn.customerId = customer.id;
-      product.qty += transactionIn.converted_qty;
+      const productAlreadyIn = productToUpdate.find(
+        (value) => value.id === product.id,
+      );
+      if (productAlreadyIn) {
+        productAlreadyIn.qty += transactionIn.converted_qty;
+      } else {
+        product.qty += transactionIn.converted_qty;
+      }
       transactionsToCreate.push(transactionIn);
       productToUpdate.push(product);
     }
