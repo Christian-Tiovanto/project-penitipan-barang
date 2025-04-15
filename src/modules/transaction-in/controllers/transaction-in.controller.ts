@@ -24,12 +24,9 @@ import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
 import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
 import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
-import {
-  GetAllTransactionInQuery,
-  TransactionInSort,
-} from '../classes/transaction-in.query';
+import { GetAllTransactionInQuery } from '../classes/transaction-in.query';
 import { GetTransactionInResponse } from '../classes/transaction-in.response';
-import { SortOrder } from '@app/enums/sort-order';
+import { SortOrder, TransactionInSort } from '@app/enums/sort-order';
 import { CreateBulkTransactionInDto } from '../dtos/create-bulk-transaction-in.dto';
 
 @ApiTags(ApiTag.TRANSACTION_IN)

@@ -22,4 +22,21 @@ export enum InvoiceSort {
   STATUS = 'status',
   CREATED_AT = 'created_at',
 }
+
+export enum TransactionInSort {
+  ID = 'id',
+  CUSTOMER = 'customer',
+  PRODUCT = 'product',
+  QTY = 'qty',
+  CREATED_AT = 'created_at',
+  CONVERTED_QTY = 'converted_qty',
+  UNIT = 'unit',
+}
+
+export enum TransactionInHeaderSort {
+  ID = 'id',
+  CUSTOMER = 'customer',
+  CODE = 'code',
+}
+
 export type SortOrderQueryBuilder = 'ASC' | 'DESC';

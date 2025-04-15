@@ -8,6 +8,7 @@ export enum ApiTag {
   FINE = 'fine',
   CUSTOMER = 'customer',
   TRANSACTION_IN = 'transaction-in',
+  TRANSACTION_IN_HEADER = 'transaction-in-header',
   PAYMENT_METHOD = 'payment-method',
   CUSTOMER_PAYMENT = 'customer-payment',
   AR_PAYMENT = 'ar-payment',

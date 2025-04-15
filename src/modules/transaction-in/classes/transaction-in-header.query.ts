@@ -1,21 +1,21 @@
 import { OptionalDateRangeQueryWithPagination } from '@app/commons/queries/date-range.query';
-import { SortOrder, TransactionInSort } from '@app/enums/sort-order';
+import { SortOrder, TransactionInHeaderSort } from '@app/enums/sort-order';
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 import { JoiSchema } from 'joi-class-decorators';
 
-export class GetAllTransactionInQuery extends OptionalDateRangeQueryWithPagination {
+export class GetAllTransactionInHeaderQuery extends OptionalDateRangeQueryWithPagination {
   @ApiProperty({
-    enum: TransactionInSort,
+    enum: TransactionInHeaderSort,
     required: false,
     description: 'default sort by `id`',
   })
   @JoiSchema(
     Joi.string()
-      .valid(...Object.values(TransactionInSort))
+      .valid(...Object.values(TransactionInHeaderSort))
       .optional(),
   )
-  sort: TransactionInSort;
+  sort: TransactionInHeaderSort;
 
   @ApiProperty({
     enum: SortOrder,
