@@ -4,11 +4,12 @@ import {
   Param,
   ParseIntPipe,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ReportService } from '../services/report.service';
 import { DateRangeQuery } from '@app/commons/queries/date-range.query';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
 import {
   ArPaidReportQuery,
@@ -21,7 +22,10 @@ import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination
 import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { GetAllArResponse } from '@app/modules/ar/classes/ar.response';
 import { parseBoolean } from '@app/utils/parse-boolean';
+import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 @ApiTags(ApiTag.REPORT)
+@UseGuards(AuthenticateGuard)
+@ApiBearerAuth()
 @Controller(`api/v1/${ApiTag.REPORT}`)
 export class ReportController {
   constructor(private readonly reportService: ReportService) {}
