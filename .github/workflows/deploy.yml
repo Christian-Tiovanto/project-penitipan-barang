@@ -19,20 +19,19 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-        - name: Setup SSH
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-      
 
-          - name: Deploy
-          run: |
-            ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-              cd ~/penitipan-barang/project-penitipan-barang-BE/
-              git pull origin main
-              docker-compose build app
-              docker-compose up -d app              
-            EOF
-        
+      - name: Deploy
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd ~/penitipan-barang/project-penitipan-barang-BE/
+            git fetch
+            git pull origin main
+            docker-compose build app
+            docker-compose up -d app              
+          EOF
