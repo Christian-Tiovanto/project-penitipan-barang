@@ -4,36 +4,33 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { UserSeeder } from './seeder/user.seeder';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule);
   const seeder = app.get(UserSeeder);
   await seeder.run();
 
-  const environment = process.env.NODE_ENV || 'DEVELOPMENT';
-  const domainUrl = process.env.DOMAIN_URL || 'http://localhost:5173';
-  console.log(environment);
-  let corsOptions = {};
+  // const environment = process.env.NODE_ENV || 'DEVELOPMENT';
+  // const domainUrl = process.env.DOMAIN_URL || 'http://localhost:5173';
 
-  if (environment === 'PRODUCTION') {
-    console.log('asem');
-    console.log(domainUrl);
-    corsOptions = {
-      origin: domainUrl, // hanya domain produksi yang diizinkan
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-      allowedHeaders: 'Content-Type, Accept, Authorization',
-      credentials: true, // jika pakai cookie/token
-    };
-  } else {
-    console.log('here');
-    corsOptions = {
-      origin: true, // izinkan semua origin saat development
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-      allowedHeaders: 'Content-Type, Accept, Authorization',
-      credentials: true,
-    };
-  }
+  // let corsOptions = {};
 
-  app.enableCors(corsOptions);
-  // app.enableCors();
+  // if (environment === 'PRODUCTION') {
+  //   corsOptions = {
+  //     origin: domainUrl, // hanya domain produksi yang diizinkan
+  //     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  //     allowedHeaders: 'Content-Type, Accept, Authorization',
+  //     credentials: true, // jika pakai cookie/token
+  //   };
+  // } else {
+  //   corsOptions = {
+  //     origin: true, // izinkan semua origin saat development
+  //     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  //     allowedHeaders: 'Content-Type, Accept, Authorization',
+  //     credentials: true,
+  //   };
+  // }
+
+  // app.enableCors(corsOptions);
+  app.enableCors();
 
   const config = new DocumentBuilder()
     .setTitle('Endpoint Penitipan Barang')
