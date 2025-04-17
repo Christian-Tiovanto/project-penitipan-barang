@@ -1,9 +1,7 @@
 name: Deploy via SSH
 
 on:
-  pull  :
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -34,7 +32,7 @@ jobs:
             ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
               cd ~/penitipan-barang/project-penitipan-barang-BE/
               git pull origin main
-              npm install
-              pm2 restart my-app
+              docker-compose build app
+              docker-compose up -d app              
             EOF
         
