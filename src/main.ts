@@ -30,7 +30,7 @@ async function bootstrap() {
   // }
 
   // app.enableCors(corsOptions);
-  app.enableCors();
+  // app.enableCors();
 
   const config = new DocumentBuilder()
     .setTitle('Endpoint Penitipan Barang')
