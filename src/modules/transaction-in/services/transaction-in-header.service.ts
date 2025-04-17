@@ -103,10 +103,18 @@ export class TransactionInHeaderService {
   async findTransactionInHeaderById(id: number) {
     const transactionIn = await this.transactionInHeaderRepository.findOne({
       where: { id },
-      relations: ['customer', 'transaction_in'],
+      relations: ['customer', 'transaction_in', 'transaction_in.product'],
     });
     if (!transactionIn)
       throw new NotFoundException('No Transaction In Header with that id');
     return transactionIn;
+  }
+
+  async getAllTransactionInHeadersByCustomerId(
+    customerId: number,
+  ): Promise<TransactionInHeader[]> {
+    return await this.transactionInHeaderRepository.find({
+      where: { customerId },
+    });
   }
 }

@@ -38,6 +38,7 @@ export enum TransactionInHeaderSort {
   ID = 'id',
   CUSTOMER = 'customer',
   CODE = 'code',
+  CREATED_AT = 'created_at',
 }
 
 export type SortOrderQueryBuilder = 'ASC' | 'DESC';

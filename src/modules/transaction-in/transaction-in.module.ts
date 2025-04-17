@@ -19,6 +19,6 @@ import { TransactionInHeaderController } from './controllers/transaction-in-head
   ],
   providers: [TransactionInService, TransactionInHeaderService],
   controllers: [TransactionInController, TransactionInHeaderController],
-  exports: [TransactionInService, TypeOrmModule],
+  exports: [TransactionInService, TransactionInHeaderService, TypeOrmModule],
 })
 export class TransactionInModule {}

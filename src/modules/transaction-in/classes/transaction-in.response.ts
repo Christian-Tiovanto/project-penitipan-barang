@@ -29,6 +29,11 @@ export class GetTransactionInResponse {
     name: string;
   };
 
+  transaction_in_header: {
+    id: number;
+    code: string;
+  };
+
   @ApiProperty({
     example: 100,
   })

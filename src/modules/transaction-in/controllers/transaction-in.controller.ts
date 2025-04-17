@@ -159,9 +159,9 @@ export class TransactionInController {
   @ApiOkResponse({ type: GetTransactionInResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
   @UseGuards(AuthenticateGuard)
-  @Get('by-product/:id')
-  async getAllTransactionInByProductId(
-    @Param('id', ParseIntPipe) productId: number,
+  @Get('by-header/:id')
+  async getAllTransactionInByHeaderId(
+    @Param('id', ParseIntPipe) headerId: number,
     @Query()
     {
       page_no,
@@ -178,18 +178,15 @@ export class TransactionInController {
     sort = !sort ? TransactionInSort.ID : sort;
     order = !order ? SortOrder.ASC : order;
     const transactions =
-      await this.transactionInService.getAllTransactionInByProductId(
-        productId,
-        {
-          pageNo,
-          pageSize,
-          sort,
-          order,
-          startDate: start_date,
-          endDate: end_date,
-          search,
-        },
-      );
+      await this.transactionInService.getAllTransactionInByHeaderId(headerId, {
+        pageNo,
+        pageSize,
+        sort,
+        order,
+        startDate: start_date,
+        endDate: end_date,
+        search,
+      });
     return {
       data: transactions[0],
       totalCount: transactions[1],
