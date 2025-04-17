@@ -85,10 +85,14 @@ export class TransactionOutService {
     ) {
       sortBy = `${sort}.name`;
     }
+    if (sort === TransactionOutSort.INVOICE) {
+      sortBy = `${sort}.invoice_no`;
+    }
     const queryBuilder = this.transactionOutRepository
       .createQueryBuilder('transaction')
       .leftJoinAndSelect('transaction.customer', 'customer')
       .leftJoinAndSelect('transaction.product', 'product')
+      .leftJoinAndSelect('transaction.invoice', 'invoice')
       .skip(skip)
       .take(pageSize)
       .select([
@@ -97,6 +101,8 @@ export class TransactionOutService {
         'customer.id',
         'product.name',
         'product.id',
+        'invoice.id',
+        'invoice.invoice_no',
       ])
       .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
 
@@ -121,6 +127,10 @@ export class TransactionOutService {
           customer: {
             id: transaction.customer.id,
             name: transaction.customer.name,
+          },
+          invoice: {
+            id: transaction.invoice.id,
+            invoice_no: transaction.invoice.invoice_no,
           },
           converted_qty: transaction.converted_qty,
           total_days: transaction.total_days,

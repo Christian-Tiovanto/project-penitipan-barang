@@ -23,7 +23,7 @@ export interface ITransactionOut {
   transaction_inId: number;
   spb: number;
   spbId: number;
-  invoice: number;
+  invoice: Invoice;
   invoiceId: number;
   qty: number;
   converted_qty: number;
@@ -69,7 +69,7 @@ export class TransactionOut implements ITransactionOut {
   transaction_inId: number;
 
   @ManyToOne(() => Invoice, (invoice) => invoice.transaction_out)
-  invoice: number;
+  invoice: Invoice;
 
   @ApiProperty({ example: 1 })
   @Column({ type: 'int', nullable: true })

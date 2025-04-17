@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { TransactionOut } from '../models/transaction-out.entity';
 import { Product } from '@app/modules/product/models/product.entity';
 import { Customer } from '@app/modules/customer/models/customer.entity';
+import { Invoice } from '@app/modules/invoice/models/invoice.entity';
 
 export class GetTransactionOutResponse
   implements Pick<TransactionOut, 'id' | 'converted_qty' | 'total_days'>
@@ -26,6 +27,14 @@ export class GetTransactionOutResponse
     },
   })
   customer: Pick<Customer, 'id' | 'name'>;
+
+  @ApiProperty({
+    example: {
+      id: 1,
+      invoice_no: 'Customer Name',
+    },
+  })
+  invoice: Pick<Invoice, 'id' | 'invoice_no'>;
 
   @ApiProperty({
     example: 1000,
