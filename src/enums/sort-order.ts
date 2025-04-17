@@ -31,6 +31,7 @@ export enum TransactionInSort {
   CREATED_AT = 'created_at',
   CONVERTED_QTY = 'converted_qty',
   UNIT = 'unit',
+  TRANSACTION_IN_HEADER = 'transaction_in_header',
 }
 
 export enum TransactionInHeaderSort {

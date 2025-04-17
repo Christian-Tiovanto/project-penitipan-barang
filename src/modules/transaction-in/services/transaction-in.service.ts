@@ -188,15 +188,23 @@ export class TransactionInService {
     ) {
       sortBy = `${sort}.name`;
     }
+    if (sort === TransactionInSort.TRANSACTION_IN_HEADER) {
+      sortBy = `${sort}.code`;
+    }
 
     const queryBuilder = this.transactionInRepository
       .createQueryBuilder('transaction')
       .leftJoinAndSelect('transaction.customer', 'customer')
       .leftJoinAndSelect('transaction.product', 'product')
+      .leftJoinAndSelect(
+        'transaction.transaction_in_header',
+        'transaction_in_header',
+      )
       .skip(skip)
       .take(pageSize)
       .select([
         'transaction',
+        'transaction_in_header',
         'customer.name',
         'customer.id',
         'product.name',
@@ -240,6 +248,9 @@ export class TransactionInService {
           qty: transaction.qty,
           converted_qty: transaction.converted_qty,
           unit: transaction.unit,
+          transaction_in_header: {
+            code: transaction.transaction_in_header.code,
+          },
           created_at: transaction.created_at,
         };
       });
@@ -605,6 +616,9 @@ export class TransactionInService {
           qty: transaction.qty,
           converted_qty: transaction.qty,
           unit: transaction.unit,
+          transaction_in_header: {
+            code: transaction.transaction_in_header.code,
+          },
           created_at: transaction.created_at,
         };
       });

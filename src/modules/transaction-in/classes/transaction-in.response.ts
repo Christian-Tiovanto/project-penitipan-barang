@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { TransactionInHeader } from '../models/transaction-in-header.entity';
 
 export class GetTransactionInResponse {
   @ApiProperty({ example: 1 })
@@ -40,6 +41,9 @@ export class GetTransactionInResponse {
 
   @ApiProperty({ example: 'Kg' })
   unit: string;
+
+  @ApiProperty({ example: { code: 'CO-00001' } })
+  transaction_in_header: Pick<TransactionInHeader, 'code'>;
 
   created_at: Date;
 }
