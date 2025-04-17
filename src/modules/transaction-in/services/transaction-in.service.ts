@@ -204,7 +204,6 @@ export class TransactionInService {
       .take(pageSize)
       .select([
         'transaction',
-        'transaction_in_header',
         'customer.name',
         'customer.id',
         'product.name',
@@ -251,9 +250,6 @@ export class TransactionInService {
           qty: transaction.qty,
           converted_qty: transaction.converted_qty,
           unit: transaction.unit,
-          transaction_in_header: {
-            code: transaction.transaction_in_header.code,
-          },
           created_at: transaction.created_at,
           transaction_in_header: {
             id: transaction.transaction_in_header.id,
@@ -629,9 +625,6 @@ export class TransactionInService {
           qty: transaction.qty,
           converted_qty: transaction.qty,
           unit: transaction.unit,
-          transaction_in_header: {
-            code: transaction.transaction_in_header.code,
-          },
           created_at: transaction.created_at,
           transaction_in_header: {
             id: transaction.transaction_in_header.id,

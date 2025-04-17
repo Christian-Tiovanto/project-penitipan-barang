@@ -29,11 +29,6 @@ export class GetTransactionInResponse {
     name: string;
   };
 
-  transaction_in_header: {
-    id: number;
-    code: string;
-  };
-
   @ApiProperty({
     example: 100,
   })
@@ -48,7 +43,7 @@ export class GetTransactionInResponse {
   unit: string;
 
   @ApiProperty({ example: { code: 'CO-00001' } })
-  transaction_in_header: Pick<TransactionInHeader, 'code'>;
+  transaction_in_header: Pick<TransactionInHeader, 'id' | 'code'>;
 
   created_at: Date;
 }
