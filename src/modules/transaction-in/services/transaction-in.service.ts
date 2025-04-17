@@ -193,6 +193,10 @@ export class TransactionInService {
       .createQueryBuilder('transaction')
       .leftJoinAndSelect('transaction.customer', 'customer')
       .leftJoinAndSelect('transaction.product', 'product')
+      .leftJoinAndSelect(
+        'transaction.transaction_in_header',
+        'transaction_in_header',
+      )
       .skip(skip)
       .take(pageSize)
       .select([
@@ -201,7 +205,10 @@ export class TransactionInService {
         'customer.id',
         'product.name',
         'product.id',
+        'transaction_in_header.id',
+        'transaction_in_header.code',
       ])
+
       .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
 
     // Conditionally add filters
@@ -241,6 +248,10 @@ export class TransactionInService {
           converted_qty: transaction.converted_qty,
           unit: transaction.unit,
           created_at: transaction.created_at,
+          transaction_in_header: {
+            id: transaction.transaction_in_header.id,
+            code: transaction.transaction_in_header.code,
+          },
         };
       });
     return [transactionInResponse, count];
@@ -531,8 +542,8 @@ export class TransactionInService {
   //   return transactions;
   // }
 
-  async getAllTransactionInByProductId(
-    productId: number,
+  async getAllTransactionInByHeaderId(
+    headerId: number,
     {
       pageNo,
       pageSize,
@@ -557,6 +568,10 @@ export class TransactionInService {
       .createQueryBuilder('transaction')
       .leftJoinAndSelect('transaction.customer', 'customer')
       .leftJoinAndSelect('transaction.product', 'product')
+      .leftJoinAndSelect(
+        'transaction.transaction_in_header',
+        'transaction_in_header',
+      )
       .skip(skip)
       .take(pageSize)
       .select([
@@ -565,9 +580,11 @@ export class TransactionInService {
         'customer.id',
         'product.name',
         'product.id',
+        'transaction_in_header.id',
+        'transaction_in_header.code',
       ])
       .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder)
-      .andWhere('product.id = :productId', { productId });
+      .andWhere('transaction_in_headerId = :headerId', { headerId });
 
     // Conditionally add filters
     if (startDate) {
@@ -606,6 +623,10 @@ export class TransactionInService {
           converted_qty: transaction.qty,
           unit: transaction.unit,
           created_at: transaction.created_at,
+          transaction_in_header: {
+            id: transaction.transaction_in_header.id,
+            code: transaction.transaction_in_header.code,
+          },
         };
       });
     return [transactionInResponse, count];

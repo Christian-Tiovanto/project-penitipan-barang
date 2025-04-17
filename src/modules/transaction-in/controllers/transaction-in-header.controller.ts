@@ -20,6 +20,7 @@ import { GetTransactionInResponse } from '../classes/transaction-in.response';
 import { SortOrder, TransactionInHeaderSort } from '@app/enums/sort-order';
 import { TransactionInHeaderService } from '../services/transaction-in-header.service';
 import { GetAllTransactionInHeaderQuery } from '../classes/transaction-in-header.query';
+import { TransactionInHeader } from '../models/transaction-in-header.entity';
 
 @ApiTags(ApiTag.TRANSACTION_IN_HEADER)
 @Controller('api/v1/transaction-in-header')
@@ -80,6 +81,20 @@ export class TransactionInHeaderController {
   ) {
     return await this.transactionInHeaderService.findTransactionInHeaderById(
       transactionInHeaderId,
+    );
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All Trans In Header By CustomerId',
+  })
+  @UseGuards(AuthenticateGuard)
+  @Get('/by-customer/:id')
+  async getAllProductUnits(
+    @Param('id', ParseIntPipe) customerId: number,
+  ): Promise<TransactionInHeader[]> {
+    return await this.transactionInHeaderService.getAllTransactionInHeadersByCustomerId(
+      customerId,
     );
   }
 }

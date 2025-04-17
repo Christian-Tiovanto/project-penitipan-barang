@@ -36,6 +36,9 @@ import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
 import { GetTransactionOutResponse } from '../classes/transaction-in.response';
 import { Customer } from '@app/modules/customer/models/customer.entity';
 import { Product } from '@app/modules/product/models/product.entity';
+import { TransactionInHeader } from '@app/modules/transaction-in/models/transaction-in-header.entity';
+import { TransactionInHeaderService } from '@app/modules/transaction-in/services/transaction-in-header.service';
+import { InsufficientStockException } from '@app/exceptions/validation.exception';
 
 interface GetAllQuery {
   pageNo: number;
@@ -63,6 +66,7 @@ export class TransactionOutService {
     private arService: ArService,
     private spbService: SpbService,
     private chargeService: ChargeService,
+    private transactionInHeaderService: TransactionInHeaderService,
   ) {}
 
   async getAllTransactionOuts({
@@ -271,6 +275,13 @@ export class TransactionOutService {
         const customerId = createTransactionOutWithSpbDto.customerId;
         const noPlat = createTransactionOutWithSpbDto.no_plat;
         const clockOut = createTransactionOutWithSpbDto.clock_out;
+        const transinHeaderId =
+          createTransactionOutWithSpbDto.transaction_in_headerId;
+
+        const detailTransIn =
+          await this.transactionInHeaderService.findTransactionInHeaderById(
+            transinHeaderId,
+          );
 
         const totalConvertedQty: number =
           createTransactionOutWithSpbDto.transaction_outs.reduce(
@@ -290,23 +301,40 @@ export class TransactionOutService {
             transactionOut.converted_qty,
           );
 
+          const productTransactionIns = detailTransIn.transaction_in.filter(
+            (t) => t.productId === transactionOut.productId,
+          );
+
+          if (productTransactionIns.length === 0) {
+            throw new NotFoundException(
+              `No incoming transaction In Detail found for productId ${transactionOut.productId}.`,
+            );
+          }
+
           let productQty: number = transactionOut.converted_qty;
 
           const totalPrice: number =
             transactionOut.converted_qty * product.price;
           amount += totalPrice;
 
-          const productTransactionIns =
-            await this.transactionInService.getTransactionInsWithRemainingQty(
-              product.id,
-              customerId,
-              transactionOut.converted_qty,
-            );
+          // const productTransactionIns =
+          //   await this.transactionInService.getTransactionInsWithRemainingQty(
+          //     product.id,
+          //     customerId,
+          //     transactionOut.converted_qty,
+          //   );
+
           for (const transactionIn of productTransactionIns) {
             if (productQty == 0) {
               break;
             }
             let qtyOut: number;
+
+            if (transactionIn.remaining_qty < productQty) {
+              throw new InsufficientStockException(
+                `Insufficient stock : ${product.name} required ${productQty}, but only ${transactionIn.remaining_qty} available in Transaction In`,
+              );
+            }
 
             await this.transactionInService.lockingTransactionInById(
               entityManager,
@@ -404,6 +432,7 @@ export class TransactionOutService {
             //save
             await entityManager.save(transactionOutSave);
           }
+          //here
         }
 
         const customer =
@@ -501,6 +530,13 @@ export class TransactionOutService {
         const customerId = createTransactionOutWithSpbDto.customerId;
         // const noPlat = createTransactionOutWithSpbDto.no_plat;
         // const clockOut = createTransactionOutWithSpbDto.clock_out;
+        const transinHeaderId =
+          createTransactionOutWithSpbDto.transaction_in_headerId;
+
+        const detailTransIn =
+          await this.transactionInHeaderService.findTransactionInHeaderById(
+            transinHeaderId,
+          );
 
         const totalConvertedQty: number =
           createTransactionOutWithSpbDto.transaction_outs.reduce(
@@ -520,18 +556,28 @@ export class TransactionOutService {
             transactionOut.converted_qty,
           );
 
+          const productTransactionIns = detailTransIn.transaction_in.filter(
+            (t) => t.productId === transactionOut.productId,
+          );
+
+          if (productTransactionIns.length === 0) {
+            throw new NotFoundException(
+              `No incoming transaction In Detail found for productId ${transactionOut.productId}.`,
+            );
+          }
+
           let productQty: number = transactionOut.converted_qty;
 
           const totalPrice: number =
             transactionOut.converted_qty * product.price;
           amount += totalPrice;
 
-          const productTransactionIns =
-            await this.transactionInService.getTransactionInsWithRemainingQty(
-              product.id,
-              customerId,
-              transactionOut.converted_qty,
-            );
+          // const productTransactionIns =
+          //   await this.transactionInService.getTransactionInsWithRemainingQty(
+          //     product.id,
+          //     customerId,
+          //     transactionOut.converted_qty,
+          //   );
           for (const transactionIn of productTransactionIns) {
             if (productQty == 0) {
               break;

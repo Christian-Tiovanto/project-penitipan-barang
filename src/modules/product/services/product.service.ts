@@ -36,7 +36,10 @@ export class ProductService {
   ) {}
 
   async getAllProducts(): Promise<Product[]> {
-    return await this.productRepository.find({ where: { is_deleted: false } }); // Assuming using TypeORM
+    return await this.productRepository.find({
+      where: { is_deleted: false },
+      relations: ['product_unit'],
+    }); // Assuming using TypeORM
   }
 
   // async getAllProductsPagination({
@@ -147,7 +150,7 @@ export class ProductService {
 
     if (product.qty < requiredQty) {
       throw new InsufficientStockException(
-        `Insufficient stock: required ${requiredQty}, but only ${product.qty} available in Stock`,
+        `Insufficient stock: ${product.name} required ${requiredQty}, but only ${product.qty} available in Stock`,
       );
     }
 
