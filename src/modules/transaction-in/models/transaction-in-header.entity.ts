@@ -42,5 +42,6 @@ export class TransactionInHeader implements ITransactionInHeader {
   )
   transaction_in: TransactionIn[];
 
+  @Column()
   customerId: number;
 }

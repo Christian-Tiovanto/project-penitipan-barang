@@ -7,7 +7,18 @@ import { TransactionOutSpbDto } from '@app/modules/spb/dtos/create-spb.dto';
 
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateTransactionOutDto
-  implements Omit<ITransactionOut, 'id' | 'created_at' | 'updated_at' | 'customer' | 'product' | 'invoice' | 'spb' | 'transaction_in'>
+  implements
+    Omit<
+      ITransactionOut,
+      | 'id'
+      | 'created_at'
+      | 'updated_at'
+      | 'customer'
+      | 'product'
+      | 'invoice'
+      | 'spb'
+      | 'transaction_in'
+    >
 {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
@@ -18,10 +29,11 @@ export class CreateTransactionOutDto
   customerId: number;
 
   @ApiProperty({ example: 1000 })
-  converted_qty: number;
   @JoiSchema(Joi.number().required())
+  converted_qty: number;
 
   transaction_inId: number;
+
   invoiceId: number;
   spbId: number;
   qty: number;
@@ -38,4 +50,8 @@ export class CreateTransactionOutWithSpbDto extends TransactionOutSpbDto {
   @ApiProperty({ type: () => [CreateTransactionOutDto] })
   @JoiSchema(Joi.array().items(Joi.object()).min(1)) // Bisa 1 transaksi atau lebih
   transaction_outs: CreateTransactionOutDto[];
+
+  @ApiProperty({ example: 1 })
+  @JoiSchema(Joi.number().required())
+  transaction_in_headerId: number;
 }

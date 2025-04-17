@@ -10,6 +10,7 @@ import { ArModule } from '../ar/ar.module';
 import { SpbModule } from '../spb/spb.module';
 import { ChargeModule } from '../charge/charge.module';
 import { CustomerModule } from '../customer/customer.module';
+import { TransactionInHeader } from '../transaction-in/models/transaction-in-header.entity';
 
 @Module({
   imports: [
