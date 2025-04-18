@@ -29,13 +29,7 @@ async function bootstrap() {
   //   };
   // }
 
-  // app.enableCors(corsOptions);
-  app.enableCors({
-    origin: '*', // Izinkan semua origin
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Accept, Authorization',
-    credentials: true, // Jika menggunakan cookies atau token
-  });
+  app.enableCors();
 
   const config = new DocumentBuilder()
     .setTitle('Endpoint Penitipan Barang')
@@ -46,6 +40,6 @@ async function bootstrap() {
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, documentFactory);
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(8000, '0.0.0.0'); // <-- PENTING BANGET!
 }
 bootstrap();
