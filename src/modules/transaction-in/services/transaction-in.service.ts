@@ -433,6 +433,7 @@ export class TransactionInService {
         "Can't update a Transaction In that already have Transaction Out",
       );
     }
+    let transactionInToUpdate: TransactionIn[] = [];
     if (updateTransactionInDto.customerId) {
       await this.customerService.findCustomerById(
         updateTransactionInDto.customerId,
@@ -441,6 +442,15 @@ export class TransactionInService {
         `${updateTransactionInDto.customerId}`,
       );
       transactionIn.customer.id = updateTransactionInDto.customerId;
+      const transIn = await this.transactionInRepository.find({
+        where: {
+          transaction_in_header: { id: transactionIn.transaction_in_headerId },
+        },
+      });
+      transactionInToUpdate = transIn.map((transactionIn) => ({
+        ...transactionIn,
+        customerId: updateTransactionInDto.customerId,
+      }));
     }
     let currentProductUnit: Pick<IProductUnit, 'conversion_to_kg' | 'name'> = {
       conversion_to_kg: transactionIn.conversion_to_kg,
@@ -478,6 +488,9 @@ export class TransactionInService {
 
         updateTransactionInDto.remaining_qty =
           updateTransactionInDto.converted_qty;
+        if (updateTransactionInDto.customerId) {
+          await entityManager.save(TransactionIn, transactionInToUpdate);
+        }
         Object.assign(transactionIn, updateTransactionInDto);
         await entityManager.save(transactionIn);
       },
