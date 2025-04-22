@@ -117,7 +117,7 @@ export class TransactionIn implements ITransactionIn {
 
   @OneToMany(
     () => TransactionOut,
-    (transaction_out) => transaction_out.transaction_inId,
+    (transaction_out) => transaction_out.transaction_in,
   )
   transaction_out: TransactionOut[];
 }

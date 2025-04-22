@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ITransactionIn, TransactionIn } from '../models/transaction-in.entity';
 import {
@@ -28,6 +32,7 @@ import { Product } from '@app/modules/product/models/product.entity';
 import { CreateBulkTransactionInDto } from '../dtos/create-bulk-transaction-in.dto';
 import { TransactionInHeaderService } from './transaction-in-header.service';
 import { TransactionInHeader } from '../models/transaction-in-header.entity';
+import { TransactionOut } from '@app/modules/transaction-out/models/transaction-out.entity';
 
 interface GetAllTransactionInQuery {
   pageNo: number;
@@ -49,6 +54,8 @@ export class TransactionInService {
   constructor(
     @InjectRepository(TransactionIn)
     private transactionInRepository: Repository<TransactionIn>,
+    @InjectRepository(TransactionOut)
+    private transactionOutRepository: Repository<TransactionOut>,
     private productService: ProductService,
     private productUnitService: ProductUnitService,
     private customerService: CustomerService,
@@ -417,6 +424,15 @@ export class TransactionInService {
     updateTransactionInDto: UpdateTransactionInDto,
   ) {
     const transactionIn = await this.findTransactionInById(transactionInId);
+    const transactionOutCount = await this.transactionOutRepository.count({
+      where: { transaction_inId: transactionInId },
+    });
+
+    if (transactionOutCount > 0) {
+      throw new ConflictException(
+        "Can't update a Transaction In that already have Transaction Out",
+      );
+    }
     if (updateTransactionInDto.customerId) {
       await this.customerService.findCustomerById(
         updateTransactionInDto.customerId,

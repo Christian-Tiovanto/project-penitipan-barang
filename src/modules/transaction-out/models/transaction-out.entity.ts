@@ -19,7 +19,7 @@ export interface ITransactionOut {
   productId: number;
   customer: Customer;
   customerId: number;
-  transaction_in: number;
+  transaction_in: TransactionIn;
   transaction_inId: number;
   spb: number;
   spbId: number;
@@ -62,7 +62,7 @@ export class TransactionOut implements ITransactionOut {
     () => TransactionIn,
     (transactionIn) => transactionIn.transaction_out,
   )
-  transaction_in: number;
+  transaction_in: TransactionIn;
 
   @ApiProperty({ example: 1 })
   @Column({ type: 'int', nullable: true })
