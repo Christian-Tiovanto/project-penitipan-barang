@@ -1,3 +1,4 @@
+import { ArPayment } from '@app/modules/ar-payment/models/ar-payment.entity';
 import { Customer } from '@app/modules/customer/models/customer.entity';
 import { PaymentMethod } from '@app/modules/payment-method/models/payment-method.entity';
 import { ApiProperty } from '@nestjs/swagger';
@@ -9,6 +10,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 
 export interface ICustomerPayment {
@@ -86,6 +88,9 @@ export class CustomerPayment implements ICustomerPayment {
     },
   })
   min_pay: number;
+
+  @OneToMany(() => ArPayment, (arPayment) => arPayment.customer_payment)
+  ar_payment: ArPayment[];
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })
   @CreateDateColumn()

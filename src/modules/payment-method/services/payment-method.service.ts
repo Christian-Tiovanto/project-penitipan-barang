@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
 import { PaymentMethod } from '../models/payment-method.entity';
@@ -138,8 +142,22 @@ export class PaymentMethodService {
   }
 
   async deletePaymentMethod(paymentMethodId: number): Promise<void> {
-    await this.findPaymentMethodById(paymentMethodId);
+    const paymentMethod = await this.paymentMethodRepository.findOne({
+      where: { id: paymentMethodId },
+      relations: ['customer_payment'],
+    });
 
+    if (!paymentMethod) {
+      throw new NotFoundException(
+        `Payment Method with id ${paymentMethodId} not found`,
+      );
+    }
+
+    if (paymentMethod.customer_payment.length != 0) {
+      throw new ConflictException(
+        "Can't delete a Payment Method that already been used for Customer Payment, delete the Customer Payment First",
+      );
+    }
     await this.paymentMethodRepository.delete(paymentMethodId);
   }
 }

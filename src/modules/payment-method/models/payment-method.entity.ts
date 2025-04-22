@@ -36,8 +36,7 @@ export class PaymentMethod implements IPaymentMethod {
 
   @OneToMany(
     () => CustomerPayment,
-    (customerPayment) => customerPayment.payment_methodId,
+    (customerPayment) => customerPayment.payment_method,
   )
   customer_payment: CustomerPayment[];
-
 }

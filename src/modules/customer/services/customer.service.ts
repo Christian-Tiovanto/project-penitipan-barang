@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
 import { Customer } from '../models/customer.entity';
@@ -139,7 +143,18 @@ export class CustomerService {
   }
 
   async deleteCustomer(customerId: number): Promise<void> {
-    await this.findCustomerById(customerId);
+    const customer = await this.customerRepository.findOne({
+      where: { id: customerId },
+      relations: ['transaction_in'],
+    });
+    if (!customer) {
+      throw new NotFoundException(`Customer with id ${customerId} not found`);
+    }
+    if (customer.transaction_in.length != 0) {
+      throw new ConflictException(
+        "Can't delete a Customer that already create Transaction In",
+      );
+    }
 
     await this.customerRepository.update(customerId, { is_deleted: true });
   }

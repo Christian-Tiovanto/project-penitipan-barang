@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   Brackets,
@@ -12,7 +16,7 @@ import { CreateProductDto } from '../dtos/create-product.dto';
 import { UpdateProductDto } from '../dtos/update-product.dto';
 import { InsufficientStockException } from '@app/exceptions/validation.exception';
 import { ProductSort } from '../classes/product.query';
-import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
+import { SortOrder } from '@app/enums/sort-order';
 import { GetProductResponse } from '../classes/product.response';
 
 interface GetAllProductQuery {
@@ -23,10 +27,6 @@ interface GetAllProductQuery {
   startDate?: Date;
   endDate?: Date;
   search?: string;
-}
-interface GetAllQuery {
-  pageNo: number;
-  pageSize: number;
 }
 @Injectable()
 export class ProductService {
@@ -204,8 +204,20 @@ export class ProductService {
   }
 
   async deleteProduct(productId: number): Promise<void> {
-    await this.findProductById(productId);
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+      relations: ['transaction_in'],
+    });
 
+    if (!product) {
+      throw new NotFoundException(`Product with id ${productId} not found`);
+    }
+
+    if (product.transaction_in.length != 0) {
+      throw new ConflictException(
+        "Can't delete a Product that already used for Transaction In",
+      );
+    }
     await this.productRepository.update(productId, { is_deleted: true });
   }
 }
