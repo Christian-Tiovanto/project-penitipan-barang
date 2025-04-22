@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -151,11 +150,12 @@ export class CustomerService {
     if (!customer) {
       throw new NotFoundException(`Customer with id ${customerId} not found`);
     }
-    if (customer.transaction_in) {
+    if (customer.transaction_in.length != 0) {
       throw new ConflictException(
         "Can't delete a Customer that already create Transaction In",
       );
     }
+
     await this.customerRepository.update(customerId, { is_deleted: true });
   }
 }
