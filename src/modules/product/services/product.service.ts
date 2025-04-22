@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   Brackets,
@@ -204,8 +209,20 @@ export class ProductService {
   }
 
   async deleteProduct(productId: number): Promise<void> {
-    await this.findProductById(productId);
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+      relations: ['transaction_in'],
+    });
 
+    if (!product) {
+      throw new NotFoundException(`Product with id ${productId} not found`);
+    }
+
+    if (product.transaction_in) {
+      throw new ConflictException(
+        "Can't delete a Product that already used for Transaction In",
+      );
+    }
     await this.productRepository.update(productId, { is_deleted: true });
   }
 }

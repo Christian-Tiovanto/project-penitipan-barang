@@ -80,7 +80,7 @@ export class Product implements IProduct {
   @UpdateDateColumn()
   updated_at: Date;
 
-  @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.productId)
+  @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.product)
   transaction_in: TransactionIn[];
 
   @OneToMany(
