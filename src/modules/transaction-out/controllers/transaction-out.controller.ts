@@ -11,7 +11,10 @@ import {
 } from '@nestjs/common';
 import { TransactionOutService } from '../services/transaction-out.service';
 import { TransactionOut } from '../models/transaction-out.entity';
-import { CreateTransactionOutWithSpbDto } from '../dtos/create-transaction-out.dto';
+import {
+  CreateTransactionOutFifoWithSpbDto,
+  CreateTransactionOutWithSpbDto,
+} from '../dtos/create-transaction-out.dto';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -101,7 +104,21 @@ export class TransactionOutController {
     return await this.transactionOutService.createTransactionOut(
       createTransactionOutWithSpbDto,
     );
+  }
 
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create Transaction Out Fifo',
+  })
+  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @Post('/fifo')
+  async createTransactionOutFifo(
+    @Body()
+    createTransactionOutFifoWithSpbDto: CreateTransactionOutFifoWithSpbDto,
+  ) {
+    return await this.transactionOutService.createTransactionOutFifo(
+      createTransactionOutFifoWithSpbDto,
+    );
   }
 
   @ApiBearerAuth()
@@ -115,6 +132,21 @@ export class TransactionOutController {
   ) {
     return await this.transactionOutService.previewTransactionOut(
       createTransactionOutWithSpbDto,
+    );
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Preview Transaction Out Fifo',
+  })
+  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @Post('/preview/fifo')
+  async previewTransactionOutFifo(
+    @Body()
+    createTransactionOutFifoWithSpbDto: CreateTransactionOutFifoWithSpbDto,
+  ) {
+    return await this.transactionOutService.previewTransactionOutFifo(
+      createTransactionOutFifoWithSpbDto,
     );
   }
 
