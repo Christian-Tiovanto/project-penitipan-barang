@@ -16,7 +16,7 @@ export class UserRoleController {
   @ApiOperation({
     summary: 'Create User Role',
   })
-  @Post('user-role')
+  @Post()
   async createUserRole(@Body() createUserRoleDto: CreateUserRoleDto) {
     return await this.userRoleService.createUserRole(createUserRoleDto);
   }
