@@ -490,6 +490,11 @@ export class TransactionInService {
           updateTransactionInDto.converted_qty;
         if (updateTransactionInDto.customerId) {
           await entityManager.save(TransactionIn, transactionInToUpdate);
+          await this.transactionInHeaderService.updateTransactionInHeaderCustomerId(
+            transactionIn.transaction_in_headerId,
+            updateTransactionInDto.customerId,
+            entityManager,
+          );
         }
         Object.assign(transactionIn, updateTransactionInDto);
         await entityManager.save(transactionIn);

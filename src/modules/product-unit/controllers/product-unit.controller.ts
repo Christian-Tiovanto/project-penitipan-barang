@@ -32,6 +32,7 @@ import {
   ProductUnitSort,
 } from '../classes/product-unit.query';
 import { SortOrder } from '@app/enums/sort-order';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
 
 @ApiTags(ApiTag.PRODUCT_UNIT)
 @Controller('api/v1/product-unit')
@@ -129,7 +130,7 @@ export class ProductUnitController {
   @ApiOperation({
     summary: 'Create Product Unit',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createProductUnit(@Body() createProductDto: CreateProductUnitDto) {
     return await this.productUnitService.createProductUnit(createProductDto);

@@ -35,6 +35,7 @@ import {
   GetAllCustomerPaymentQuery,
 } from '../classes/customer-payment.query';
 import { SortOrder } from '@app/enums/sort-order';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
 
 @ApiTags(ApiTag.CUSTOMER_PAYMENT)
 @Controller('api/v1/customer-payment')
@@ -136,7 +137,7 @@ export class CustomerPaymentController {
   @ApiOperation({
     summary: 'Create Customer Payment',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createCustomerPayment(
     @Body() createCustomerPaymentDto: CreateCustomerPaymentDto,

@@ -32,6 +32,7 @@ import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { GetCustomerResponse } from '../classes/customer.response';
 import { CustomerSort, GetAllCustomerQuery } from '../classes/customer.query';
 import { SortOrder } from '@app/enums/sort-order';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
 
 @ApiTags(ApiTag.CUSTOMER)
 @Controller('api/v1/customer')
@@ -128,7 +129,7 @@ export class CustomerController {
   @ApiOperation({
     summary: 'Create Customer',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createCustomer(@Body() createCustomerDto: CreateCustomerDto) {
     return await this.customerService.createCustomer(createCustomerDto);

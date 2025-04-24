@@ -28,6 +28,7 @@ import { GetAllTransactionInQuery } from '../classes/transaction-in.query';
 import { GetTransactionInResponse } from '../classes/transaction-in.response';
 import { SortOrder, TransactionInSort } from '@app/enums/sort-order';
 import { CreateBulkTransactionInDto } from '../dtos/create-bulk-transaction-in.dto';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
 
 @ApiTags(ApiTag.TRANSACTION_IN)
 @Controller('api/v1/transaction-in')
@@ -48,7 +49,7 @@ export class TransactionInController {
 
   @ApiOperation({ summary: 'Create bulk Transaction In' })
   @ApiBearerAuth()
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post('bulk')
   async createBulkTransactionIn(
     @Body() createBulkTransactionInDto: CreateBulkTransactionInDto,
@@ -112,7 +113,7 @@ export class TransactionInController {
   @ApiOperation({
     summary: 'Update Transaction In by id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Patch(':id')
   async updateTransactionInById(
     @Param('id', ParseIntPipe) supplierId: number,

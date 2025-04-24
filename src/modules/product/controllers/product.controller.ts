@@ -32,6 +32,7 @@ import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { GetProductResponse } from '../classes/product.response';
 import { GetAllProductQuery, ProductSort } from '../classes/product.query';
 import { SortOrder } from '@app/enums/sort-order';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
 
 @ApiTags(ApiTag.PRODUCT)
 @Controller('api/v1/product')
@@ -128,7 +129,7 @@ export class ProductController {
   @ApiOperation({
     summary: 'Create Product',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createProduct(@Body() createProductDto: CreateProductDto) {
     return await this.productService.createProduct(createProductDto);

@@ -37,6 +37,7 @@ import {
   PaymentMethodSort,
 } from '../classes/payment-method.query';
 import { SortOrder } from '@app/enums/sort-order';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
 
 @ApiTags(ApiTag.PAYMENT_METHOD)
 @Controller('api/v1/payment-method')
@@ -136,7 +137,7 @@ export class PaymentMethodController {
   @ApiOperation({
     summary: 'Create Payment Method',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createPaymentMethod(
     @Body() createPaymentMethodDto: CreatePaymentMethodDto,
