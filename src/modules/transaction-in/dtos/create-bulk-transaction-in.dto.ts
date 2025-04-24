@@ -27,6 +27,10 @@ export class BulkTransactionInDetailDto
   @JoiSchema(Joi.number().required())
   unitId: number;
 
+  @ApiProperty({ example: true })
+  @JoiSchema(Joi.boolean().required())
+  is_charge: boolean;
+
   unit: string;
   conversion_to_kg: number;
   remaining_qty: number;

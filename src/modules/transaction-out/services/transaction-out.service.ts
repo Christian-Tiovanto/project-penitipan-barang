@@ -408,23 +408,23 @@ export class TransactionOutService {
             }
 
             let charge: number = 0;
-            let chargeAmountIn: number = 0;
+            let chargeAmount: number = 0;
 
             if (valueCharge.type == ChargeType.PERCENTAGE) {
-              chargeAmountIn = (valueCharge.amount * totalPrice) / 100;
+              chargeAmount = (valueCharge.amount * totalPrice) / 100;
             } else {
-              chargeAmountIn =
-                valueCharge.amount * transactionOut.converted_qty;
+              chargeAmount = valueCharge.amount * transactionOut.converted_qty;
             }
 
-            if (
-              isOutsideBusinessHours(convertToWIB(transactionIn.created_at))
-            ) {
-              charge += chargeAmountIn;
+            if (transactionIn.is_charge == true) {
+              charge += chargeAmount;
+            }
+
+            if (transactionOut.is_charge == true) {
+              charge += chargeAmount;
             }
 
             totalCharge += charge;
-
             transactionOut.productId = transactionIn.productId;
             transactionOut.customerId = customerId;
             transactionOut.conversion_to_kg = transactionIn.conversion_to_kg;
@@ -458,18 +458,6 @@ export class TransactionOutService {
         let arMaxId: number = await this.arService.getMaxIdAr();
         arMaxId += 1;
         const arNo = `${customer.code}-${String(arMaxId).padStart(5, '0')}`;
-
-        //perhitungan charge out
-        let chargeAmountOut: number = 0;
-        if (valueCharge.type == ChargeType.PERCENTAGE) {
-          chargeAmountOut = (valueCharge.amount * amount) / 100;
-        } else {
-          chargeAmountOut = valueCharge.amount * totalConvertedQty;
-        }
-
-        if (isOutsideBusinessHours(convertToWIB(new Date()))) {
-          totalCharge += chargeAmountOut;
-        }
 
         const createInvoice = new CreateInvoiceDto();
         createInvoice.total_amount = amount;
@@ -652,19 +640,20 @@ export class TransactionOutService {
             }
 
             let charge: number = 0;
-            let chargeAmountIn: number = 0;
+            let chargeAmount: number = 0;
 
             if (valueCharge.type == ChargeType.PERCENTAGE) {
-              chargeAmountIn = (valueCharge.amount * totalPrice) / 100;
+              chargeAmount = (valueCharge.amount * totalPrice) / 100;
             } else {
-              chargeAmountIn =
-                valueCharge.amount * transactionOut.converted_qty;
+              chargeAmount = valueCharge.amount * transactionOut.converted_qty;
             }
 
-            if (
-              isOutsideBusinessHours(convertToWIB(transactionIn.created_at))
-            ) {
-              charge += chargeAmountIn;
+            if (transactionIn.is_charge == true) {
+              charge += chargeAmount;
+            }
+
+            if (transactionOut.is_charge == true) {
+              charge += chargeAmount;
             }
 
             totalCharge += charge;
@@ -702,18 +691,6 @@ export class TransactionOutService {
         let arMaxId: number = await this.arService.getMaxIdAr();
         arMaxId += 1;
         const arNo = `${customer.code}-${String(arMaxId).padStart(5, '0')}`;
-
-        //perhitungan charge out
-        let chargeAmountOut: number = 0;
-        if (valueCharge.type == ChargeType.PERCENTAGE) {
-          chargeAmountOut = (valueCharge.amount * amount) / 100;
-        } else {
-          chargeAmountOut = valueCharge.amount * totalConvertedQty;
-        }
-
-        if (isOutsideBusinessHours(convertToWIB(new Date()))) {
-          totalCharge += chargeAmountOut;
-        }
 
         const createInvoice = new CreateInvoiceDto();
         createInvoice.total_amount = amount;
@@ -902,19 +879,20 @@ export class TransactionOutService {
             }
 
             let charge: number = 0;
-            let chargeAmountIn: number = 0;
+            let chargeAmount: number = 0;
 
             if (valueCharge.type == ChargeType.PERCENTAGE) {
-              chargeAmountIn = (valueCharge.amount * totalPrice) / 100;
+              chargeAmount = (valueCharge.amount * totalPrice) / 100;
             } else {
-              chargeAmountIn =
-                valueCharge.amount * transactionOut.converted_qty;
+              chargeAmount = valueCharge.amount * transactionOut.converted_qty;
             }
 
-            if (
-              isOutsideBusinessHours(convertToWIB(transactionIn.created_at))
-            ) {
-              charge += chargeAmountIn;
+            if (transactionIn.is_charge == true) {
+              charge += chargeAmount;
+            }
+
+            if (transactionOut.is_charge == true) {
+              charge += chargeAmount;
             }
 
             totalCharge += charge;
@@ -951,18 +929,6 @@ export class TransactionOutService {
         let arMaxId: number = await this.arService.getMaxIdAr();
         arMaxId += 1;
         const arNo = `${customer.code}-${String(arMaxId).padStart(5, '0')}`;
-
-        //perhitungan charge out
-        let chargeAmountOut: number = 0;
-        if (valueCharge.type == ChargeType.PERCENTAGE) {
-          chargeAmountOut = (valueCharge.amount * amount) / 100;
-        } else {
-          chargeAmountOut = valueCharge.amount * totalConvertedQty;
-        }
-
-        if (isOutsideBusinessHours(convertToWIB(new Date()))) {
-          totalCharge += chargeAmountOut;
-        }
 
         const createInvoice = new CreateInvoiceDto();
         createInvoice.total_amount = amount;
@@ -1105,19 +1071,20 @@ export class TransactionOutService {
             }
 
             let charge: number = 0;
-            let chargeAmountIn: number = 0;
+            let chargeAmount: number = 0;
 
             if (valueCharge.type == ChargeType.PERCENTAGE) {
-              chargeAmountIn = (valueCharge.amount * totalPrice) / 100;
+              chargeAmount = (valueCharge.amount * totalPrice) / 100;
             } else {
-              chargeAmountIn =
-                valueCharge.amount * transactionOut.converted_qty;
+              chargeAmount = valueCharge.amount * transactionOut.converted_qty;
             }
 
-            if (
-              isOutsideBusinessHours(convertToWIB(transactionIn.created_at))
-            ) {
-              charge += chargeAmountIn;
+            if (transactionIn.is_charge == true) {
+              charge += chargeAmount;
+            }
+
+            if (transactionOut.is_charge == true) {
+              charge += chargeAmount;
             }
 
             totalCharge += charge;
@@ -1154,18 +1121,6 @@ export class TransactionOutService {
         let arMaxId: number = await this.arService.getMaxIdAr();
         arMaxId += 1;
         const arNo = `${customer.code}-${String(arMaxId).padStart(5, '0')}`;
-
-        //perhitungan charge out
-        let chargeAmountOut: number = 0;
-        if (valueCharge.type == ChargeType.PERCENTAGE) {
-          chargeAmountOut = (valueCharge.amount * amount) / 100;
-        } else {
-          chargeAmountOut = valueCharge.amount * totalConvertedQty;
-        }
-
-        if (isOutsideBusinessHours(convertToWIB(new Date()))) {
-          totalCharge += chargeAmountOut;
-        }
 
         const createInvoice = new CreateInvoiceDto();
         createInvoice.total_amount = amount;

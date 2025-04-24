@@ -15,6 +15,7 @@ export class UpdateTransactionInDto
       | 'product'
       | 'transaction_in_headerId'
       | 'transaction_in_header'
+      | 'is_charge'
     >
 {
   @ApiProperty({ example: 1 })

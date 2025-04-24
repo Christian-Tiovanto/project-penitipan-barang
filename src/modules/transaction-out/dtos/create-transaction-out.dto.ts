@@ -32,6 +32,10 @@ export class CreateTransactionOutDto
   @JoiSchema(Joi.number().required())
   converted_qty: number;
 
+  @ApiProperty({ example: true })
+  @JoiSchema(Joi.boolean().required())
+  is_charge: boolean;
+
   transaction_inId: number;
 
   invoiceId: number;
