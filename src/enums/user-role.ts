@@ -1,4 +1,4 @@
-import { TransactionInPermission } from './permission';
+import { ArPaymentPermission, TransactionInPermission } from './permission';
 
 export enum UserRoleEnum {
   SUPERADMIN = 'superadmin',
@@ -15,6 +15,7 @@ const permissionToObject = (arr: Array<string>) => {
 export const RoleWithPermission = Object.freeze({
   [UserRoleEnum.DEFAULT]: {
     [TransactionInPermission.LIST]: true,
+    [ArPaymentPermission.CREATE]: true,
   },
 
   [UserRoleEnum.ADMIN]: {

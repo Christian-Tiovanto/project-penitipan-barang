@@ -23,6 +23,8 @@ import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { CreateBulkArPaymentDto } from '../dtos/create-bulk-ar-payment.dto';
 import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { ArPaymentPermission } from '@app/enums/permission';
 
 @ApiTags(ApiTag.AR_PAYMENT)
 @Controller('api/v1/ar-payment')
@@ -68,6 +70,7 @@ export class ArPaymentController {
   @ApiOperation({
     summary: 'Create Acc Receivable Payment',
   })
+  @PermissionsMetatada(ArPaymentPermission.CREATE)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createArPayment(@Body() createArPaymentDto: CreateArPaymentDto) {

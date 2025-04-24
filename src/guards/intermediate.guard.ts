@@ -10,7 +10,9 @@ export class IntermediateGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request: RequestUser = context.switchToHttp().getRequest();
     // Get user with its roles corresponding to the tenantId
-    const userRoleQuery = this.userRoleService.findByUserId(request.user.id);
+    const userRoleQuery = this.userRoleService.getUserRoleByUserId(
+      request.user.id,
+    );
     const userRoles = await userRoleQuery;
     const roles: Array<UserRoleEnum> = userRoles.map(
       (userRole) => userRole.role,

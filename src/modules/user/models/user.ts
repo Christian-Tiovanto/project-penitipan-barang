@@ -23,9 +23,6 @@ export class User implements IUser {
   @PrimaryGeneratedColumn()
   id: number;
 
-  // @Column({ type: 'int' })
-  // merchant: number;
-
   @Column({ type: 'varchar' })
   fullname: string;
 
@@ -43,12 +40,6 @@ export class User implements IUser {
     // select: false
   })
   pin: string;
-
-  // @Column({ type: 'varchar' })
-  // address: string;
-
-  // @Column({ type: 'varchar', unique: true })
-  // phone: string;
 
   @Column({ type: 'boolean', default: false })
   is_deleted: boolean;

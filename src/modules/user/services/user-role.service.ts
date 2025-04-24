@@ -1,10 +1,16 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
 import { ErrorCode } from '@app/enums/error-code';
 import { RegexPatterns } from '@app/enums/regex-pattern';
 import { CreateUserRoleDto } from '../dtos/create-user-role.dto copy';
 import { UserRole } from '../models/user-role';
+import { UserRoleEnum } from '@app/enums/user-role';
+import { DeleteUserRoleDto } from '../dtos/delete-user-role.dto';
 
 @Injectable()
 export class UserRoleService {
@@ -34,13 +40,38 @@ export class UserRoleService {
     return createdUserRole;
   }
 
-  async findByUserId(userId: number) {
-    const userRoles = await this.userRoleRepository.find({ where: { userId } });
+  async getUserRoleByUserId(userId: number) {
+    const userRoles = await this.userRoleRepository.find({
+      where: { userId },
+    });
+
     return userRoles;
   }
-  // async deleteUserById(userId: number) {
-  //   const user = await this.findUserById(userId);
-  //   user.is_deleted = true;
-  //   await this.userRepository.save(user);
-  // }
+  async findUserRoleByUserIdNRole(userId: number, role: UserRoleEnum) {
+    const userRole = await this.userRoleRepository.findOne({
+      where: { userId, role },
+    });
+
+    if (!userRole) {
+      throw new NotFoundException(
+        `No User Role found with id ${userId} and role ${role}`,
+      );
+    }
+    return userRole;
+  }
+  async getUserRoleByUserIdNRole(userId: number, role: UserRoleEnum) {
+    const userRole = await this.userRoleRepository.findOne({
+      where: { userId, role },
+    });
+
+    return userRole;
+  }
+  async deleteUserRoleByUserId(deleteUserRoleDto: DeleteUserRoleDto) {
+    const user = await this.findUserRoleByUserIdNRole(
+      deleteUserRoleDto.userId,
+      deleteUserRoleDto.role,
+    );
+
+    await this.userRoleRepository.delete(user);
+  }
 }
