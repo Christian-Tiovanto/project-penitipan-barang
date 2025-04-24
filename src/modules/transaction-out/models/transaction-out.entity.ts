@@ -34,6 +34,7 @@ export interface ITransactionOut {
   total_charge: number;
   price: number;
   total_days: number;
+  is_charge: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -145,6 +146,12 @@ export class TransactionOut implements ITransactionOut {
     },
   })
   total_charge: number;
+
+  @ApiProperty({ example: true })
+  @Column({
+    type: 'boolean',
+  })
+  is_charge: boolean;
 
   @ApiProperty({ example: 1000 })
   @Column({

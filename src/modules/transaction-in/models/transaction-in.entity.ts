@@ -26,6 +26,7 @@ export interface ITransactionIn {
   remaining_qty: number;
   unit: string;
   conversion_to_kg: number;
+  is_charge: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -108,6 +109,11 @@ export class TransactionIn implements ITransactionIn {
     },
   })
   conversion_to_kg: number;
+
+  @Column({
+    type: 'boolean',
+  })
+  is_charge: boolean;
 
   @CreateDateColumn()
   created_at: Date;

@@ -10,12 +10,9 @@ async function bootstrap() {
 
   const environment = process.env.NODE_ENV || 'DEVELOPMENT';
   const domainUrl = process.env.DOMAIN_URL || 'http://localhost:5173';
-  console.log(environment);
   let corsOptions = {};
 
   if (environment === 'PRODUCTION') {
-    console.log('asem');
-    console.log(domainUrl);
     corsOptions = {
       origin: domainUrl, // hanya domain produksi yang diizinkan
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
@@ -23,7 +20,6 @@ async function bootstrap() {
       credentials: true, // jika pakai cookie/token
     };
   } else {
-    console.log('here');
     corsOptions = {
       origin: true, // izinkan semua origin saat development
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
@@ -32,10 +28,6 @@ async function bootstrap() {
     };
   }
 
-<<<<<<< Updated upstream
-  app.enableCors(corsOptions);
-  // app.enableCors();
-=======
   // if (environment === 'PRODUCTION') {
   //   corsOptions = {
   //     origin: domainUrl, // hanya domain produksi yang diizinkan
@@ -59,7 +51,6 @@ async function bootstrap() {
   //   allowedHeaders: 'Content-Type, Accept, Authorization',
   //   credentials: true, // Jika menggunakan cookies atau token
   // });
->>>>>>> Stashed changes
 
   const config = new DocumentBuilder()
     .setTitle('Endpoint Penitipan Barang')
