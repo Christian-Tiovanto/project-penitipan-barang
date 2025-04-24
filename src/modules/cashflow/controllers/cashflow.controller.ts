@@ -21,6 +21,7 @@ import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { CurrentUser } from '@app/decorators/current-user.decorator';
 import { JwtPayload } from '@app/interfaces/jwt-payload.interface';
 import { GetAllCashflowQuery } from '../classes/cashflow.query';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
 
 @ApiTags(ApiTag.CASHFLOW)
 @Controller('api/v1/cashflow')
@@ -32,7 +33,7 @@ export class CashflowController {
     summary: 'Get All Cashflow',
   })
   @UseInterceptors(OffsetPaginationInterceptor<Cashflow>)
-  @UseGuards(AuthenticateGuard)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllCashflows(
     @Query()
@@ -59,7 +60,7 @@ export class CashflowController {
   @ApiOperation({
     summary: 'Get Cashflow by Id',
   })
-  @UseGuards(AuthenticateGuard)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getCashflowById(
     @Param('id', ParseIntPipe) cashflowId: number,
@@ -71,7 +72,7 @@ export class CashflowController {
   @ApiOperation({
     summary: 'Create Cashflow',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createCashflow(
     @Body() createCashflowDto: CreateCashflowDto,

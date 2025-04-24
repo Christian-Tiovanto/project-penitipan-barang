@@ -4,7 +4,7 @@ import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from '@app/modules/user/models/user';
 import { UserService } from '@app/modules/user/services/user.service';
-import { UserRole } from '@app/enums/user-role';
+import { UserRoleEnum } from '@app/enums/user-role';
 
 @Injectable()
 export class UserSeeder {
@@ -23,7 +23,7 @@ export class UserSeeder {
       fullname: 'Admin',
       email: email,
       password: pass,
-      role: UserRole.ADMIN,
+      role: UserRoleEnum.ADMIN,
       pin: pin,
     });
 

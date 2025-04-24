@@ -35,6 +35,7 @@ import { SpbModule } from './modules/spb/spb.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
 import { UserSeeder } from './seeder/user.seeder';
 import { TransactionInHeader } from './modules/transaction-in/models/transaction-in-header.entity';
+import { UserRole } from './modules/user/models/user-role';
 
 @Module({
   providers: [
@@ -67,6 +68,7 @@ import { TransactionInHeader } from './modules/transaction-in/models/transaction
         Spb,
         Invoice,
         TransactionInHeader,
+        UserRole,
       ],
       synchronize: true,
       logger: 'advanced-console',

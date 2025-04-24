@@ -3,21 +3,19 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { UserRole } from '@app/enums/user-role';
+import { UserRole } from './user-role';
 
 export interface IUser {
   id: number;
-  // merchant: number;
-  role: UserRole;
   email: string;
   fullname: string;
   password: string;
-  // address: string;
-  // phone: string;
+  user_role: UserRole[];
 }
 
 @Entity('users')
@@ -27,9 +25,6 @@ export class User implements IUser {
 
   // @Column({ type: 'int' })
   // merchant: number;
-
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.DEFAULT })
-  role: UserRole;
 
   @Column({ type: 'varchar' })
   fullname: string;
@@ -68,4 +63,7 @@ export class User implements IUser {
   async hashPassword() {
     this.password = await bcrypt.hash(this.password, 10);
   }
+
+  @OneToMany(() => UserRole, (UserRole) => UserRole.user)
+  user_role: UserRole[];
 }

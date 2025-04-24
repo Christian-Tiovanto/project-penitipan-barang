@@ -12,12 +12,13 @@ import { ApiTag } from '@app/enums/api-tags';
 import { LoginDto } from '../dtos/login.dto';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
 
 @ApiTags(ApiTag.AUTH)
 @Controller('api/v1/auth')
 @ApiExtraModels(JwtTokenResponse)
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @ApiOperation({ summary: 'Login' })
   @Post('login')
@@ -26,7 +27,7 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @ApiOperation({
     summary: 'Create a User',
   })

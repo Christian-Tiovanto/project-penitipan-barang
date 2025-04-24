@@ -2,10 +2,12 @@ import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
 import { IUser } from '../models/user';
 import * as Joi from 'joi';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserRole } from '@app/enums/user-role';
+import { UserRoleEnum } from '@app/enums/user-role';
 
 @JoiSchemaOptions({ allowUnknown: false })
-export class CreateUserDto implements Omit<IUser, 'id' | 'is_deleted'> {
+export class CreateUserDto
+  implements Omit<IUser, 'id' | 'is_deleted' | 'user_role'>
+{
   // @ApiProperty({ example: 1 })
   // @JoiSchema(Joi.number().required())
   // merchant: number;
@@ -14,13 +16,13 @@ export class CreateUserDto implements Omit<IUser, 'id' | 'is_deleted'> {
   @JoiSchema(Joi.string().required())
   email: string;
 
-  @ApiProperty({ example: UserRole.DEFAULT, enum: UserRole })
+  @ApiProperty({ example: UserRoleEnum.DEFAULT, enum: UserRoleEnum })
   @JoiSchema(
     Joi.string()
-      .valid(...Object.values(UserRole))
+      .valid(...Object.values(UserRoleEnum))
       .required(),
   )
-  role: UserRole;
+  role: UserRoleEnum;
 
   @ApiProperty({ example: 'John Doe' })
   @JoiSchema(Joi.string().required())
