@@ -112,6 +112,7 @@ export class TransactionIn implements ITransactionIn {
 
   @Column({
     type: 'boolean',
+    default: false,
   })
   is_charge: boolean;
 

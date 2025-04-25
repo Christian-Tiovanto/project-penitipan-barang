@@ -434,14 +434,23 @@ export class TransactionInService {
       );
     }
     let transactionInToUpdate: TransactionIn[] = [];
-    if (updateTransactionInDto.customerId) {
-      await this.customerService.findCustomerById(
-        updateTransactionInDto.customerId,
-      );
-      updateTransactionInDto.customerId = parseInt(
-        `${updateTransactionInDto.customerId}`,
-      );
-      transactionIn.customer.id = updateTransactionInDto.customerId;
+    console.log(updateTransactionInDto.is_charge);
+    if (
+      updateTransactionInDto.customerId ||
+      updateTransactionInDto.is_charge !== undefined
+    ) {
+      if (updateTransactionInDto.customerId) {
+        await this.customerService.findCustomerById(
+          updateTransactionInDto.customerId,
+        );
+        updateTransactionInDto.customerId = parseInt(
+          `${updateTransactionInDto.customerId}`,
+        );
+        transactionIn.customer.id = updateTransactionInDto.customerId;
+      }
+      if (updateTransactionInDto.is_charge) {
+        transactionIn.is_charge = updateTransactionInDto.is_charge;
+      }
       const transIn = await this.transactionInRepository.find({
         where: {
           transaction_in_header: { id: transactionIn.transaction_in_headerId },
@@ -449,7 +458,12 @@ export class TransactionInService {
       });
       transactionInToUpdate = transIn.map((transactionIn) => ({
         ...transactionIn,
-        customerId: updateTransactionInDto.customerId,
+        customerId:
+          updateTransactionInDto.customerId ?? transactionIn.customerId,
+        is_charge:
+          updateTransactionInDto.is_charge !== undefined
+            ? updateTransactionInDto.is_charge
+            : transactionIn.is_charge,
       }));
     }
     let currentProductUnit: Pick<IProductUnit, 'conversion_to_kg' | 'name'> = {
@@ -488,13 +502,18 @@ export class TransactionInService {
 
         updateTransactionInDto.remaining_qty =
           updateTransactionInDto.converted_qty;
-        if (updateTransactionInDto.customerId) {
+        if (
+          updateTransactionInDto.customerId ||
+          updateTransactionInDto.is_charge !== undefined
+        ) {
           await entityManager.save(TransactionIn, transactionInToUpdate);
-          await this.transactionInHeaderService.updateTransactionInHeaderCustomerId(
-            transactionIn.transaction_in_headerId,
-            updateTransactionInDto.customerId,
-            entityManager,
-          );
+          if (updateTransactionInDto.customerId) {
+            await this.transactionInHeaderService.updateTransactionInHeaderCustomerId(
+              transactionIn.transaction_in_headerId,
+              updateTransactionInDto.customerId,
+              entityManager,
+            );
+          }
         }
         Object.assign(transactionIn, updateTransactionInDto);
         await entityManager.save(transactionIn);
