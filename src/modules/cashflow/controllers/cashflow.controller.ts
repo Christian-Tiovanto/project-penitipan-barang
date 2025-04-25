@@ -22,6 +22,8 @@ import { CurrentUser } from '@app/decorators/current-user.decorator';
 import { JwtPayload } from '@app/interfaces/jwt-payload.interface';
 import { GetAllCashflowQuery } from '../classes/cashflow.query';
 import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { CashflowPermission } from '@app/enums/permission';
 
 @ApiTags(ApiTag.CASHFLOW)
 @Controller('api/v1/cashflow')
@@ -33,6 +35,7 @@ export class CashflowController {
     summary: 'Get All Cashflow',
   })
   @UseInterceptors(OffsetPaginationInterceptor<Cashflow>)
+  @PermissionsMetatada(CashflowPermission.LIST)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllCashflows(
@@ -60,6 +63,7 @@ export class CashflowController {
   @ApiOperation({
     summary: 'Get Cashflow by Id',
   })
+  @PermissionsMetatada(CashflowPermission.VIEW)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getCashflowById(
@@ -72,6 +76,7 @@ export class CashflowController {
   @ApiOperation({
     summary: 'Create Cashflow',
   })
+  @PermissionsMetatada(CashflowPermission.CREATE)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createCashflow(

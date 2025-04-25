@@ -23,8 +23,13 @@ import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { GetAllArResponse } from '@app/modules/ar/classes/ar.response';
 import { parseBoolean } from '@app/utils/parse-boolean';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
+import { AuthorizeGuard } from '@app/guards/authorize.guard';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { ReportPermission } from '@app/enums/permission';
 @ApiTags(ApiTag.REPORT)
-@UseGuards(AuthenticateGuard)
+@UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+@PermissionsMetatada(ReportPermission.LIST)
 @ApiBearerAuth()
 @Controller(`api/v1/${ApiTag.REPORT}`)
 export class ReportController {

@@ -23,16 +23,15 @@ import {
 } from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
-import {
-  BasePaginationQuery,
-  OffsetPagination,
-} from '@app/interfaces/pagination.interface';
+import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { GetProductResponse } from '../classes/product.response';
 import { GetAllProductQuery, ProductSort } from '../classes/product.query';
 import { SortOrder } from '@app/enums/sort-order';
 import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { ProductPermission } from '@app/enums/permission';
 
 @ApiTags(ApiTag.PRODUCT)
 @Controller('api/v1/product')
@@ -43,7 +42,8 @@ export class ProductController {
   @ApiOperation({
     summary: 'Get All Product',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(ProductPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get('/all')
   async getAllProducts(): Promise<Product[]> {
     return await this.productService.getAllProducts();
@@ -79,7 +79,8 @@ export class ProductController {
   })
   @ApiOkResponse({ type: GetProductResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(ProductPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllProductsPagination(
     @Query()
@@ -117,7 +118,8 @@ export class ProductController {
   @ApiOperation({
     summary: 'Get Product by Id',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(ProductPermission.VIEW)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getProductById(
     @Param('id', ParseIntPipe) productId: number,
@@ -129,6 +131,7 @@ export class ProductController {
   @ApiOperation({
     summary: 'Create Product',
   })
+  @PermissionsMetatada(ProductPermission.CREATE)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createProduct(@Body() createProductDto: CreateProductDto) {
@@ -139,7 +142,8 @@ export class ProductController {
   @ApiOperation({
     summary: 'Update Product by Id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(ProductPermission.EDIT)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Patch(':id')
   async updateProduct(
     @Param('id', ParseIntPipe) productId: number,
@@ -152,7 +156,8 @@ export class ProductController {
   @ApiOperation({
     summary: 'Delete Product by Id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(ProductPermission.DELETE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Delete(':id')
   async deleteProduct(@Param('id', ParseIntPipe) productId: number) {
     return await this.productService.deleteProduct(productId);

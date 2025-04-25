@@ -25,6 +25,8 @@ import {
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { ChargePermission } from '@app/enums/permission';
 
 @ApiTags(ApiTag.CHARGE)
 @Controller('api/v1/charge')
@@ -36,6 +38,7 @@ export class ChargeController {
     summary: 'Get All Charge',
   })
   @UseInterceptors(OffsetPaginationInterceptor<Charge>)
+  @PermissionsMetatada(ChargePermission.LIST)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllCharge(
@@ -59,6 +62,7 @@ export class ChargeController {
   @ApiOperation({
     summary: 'Get Charge by Id',
   })
+  @PermissionsMetatada(ChargePermission.VIEW)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getChargeById(
@@ -71,6 +75,7 @@ export class ChargeController {
   @ApiOperation({
     summary: 'Create Charge',
   })
+  @PermissionsMetatada(ChargePermission.CREATE)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createCharge(@Body() createChargeDto: CreateChargeDto) {
@@ -81,6 +86,7 @@ export class ChargeController {
   @ApiOperation({
     summary: 'Update Charge by Id',
   })
+  @PermissionsMetatada(ChargePermission.EDIT)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Patch(':id')
   async updateCharge(
@@ -94,6 +100,7 @@ export class ChargeController {
   @ApiOperation({
     summary: 'Delete Charge by Id',
   })
+  @PermissionsMetatada(ChargePermission.DELETE)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Delete(':id')
   async deleteCharge(@Param('id', ParseIntPipe) chargeId: number) {

@@ -36,6 +36,7 @@ export class ArPaymentController {
     summary: 'Get All Acc Receivable Payment',
   })
   @UseInterceptors(OffsetPaginationInterceptor<ArPayment>)
+  @PermissionsMetatada(ArPaymentPermission.LIST)
   @UseGuards(AuthenticateGuard)
   @Get()
   async getAllArPayments(
@@ -58,6 +59,7 @@ export class ArPaymentController {
   @ApiOperation({
     summary: 'Get Acc Receivable Payment by Id',
   })
+  @PermissionsMetatada(ArPaymentPermission.VIEW)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getProductUnitById(
@@ -81,6 +83,7 @@ export class ArPaymentController {
   @ApiOperation({
     summary: 'Create Bulk Acc Receivable Payment',
   })
+  @PermissionsMetatada(ArPaymentPermission.CREATE)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post('bulk')
   async createBulkArPayment(

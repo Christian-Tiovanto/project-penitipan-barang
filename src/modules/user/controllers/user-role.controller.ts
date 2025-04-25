@@ -5,6 +5,10 @@ import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { UserRoleService } from '../services/user-role.service';
 import { CreateUserRoleDto } from '../dtos/create-user-role.dto copy';
 import { DeleteUserRoleDto } from '../dtos/delete-user-role.dto';
+import { AuthorizeGuard } from '@app/guards/authorize.guard';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { UserRolePermission } from '@app/enums/permission';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
 
 @ApiTags(ApiTag.USER_ROLE)
 @Controller('api/v1/user-role')
@@ -12,7 +16,8 @@ export class UserRoleController {
   constructor(private readonly userRoleService: UserRoleService) {}
 
   @ApiBearerAuth()
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(UserRolePermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @ApiOperation({
     summary: 'Create User Role',
   })
@@ -25,7 +30,8 @@ export class UserRoleController {
   @ApiOperation({
     summary: 'Delete User Role by userId and role',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(UserRolePermission.DELETE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Delete()
   async deleteUserRoleByUserId(@Body() deleteUserRoleDto: DeleteUserRoleDto) {
     return await this.userRoleService.deleteUserRoleByUserId(deleteUserRoleDto);
