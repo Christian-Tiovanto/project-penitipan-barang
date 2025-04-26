@@ -9,7 +9,6 @@ export enum UserSort {
   EMAIL = 'email',
   FULLNAME = 'fullname',
   PIN = 'pin',
-  ROLE = 'role',
 }
 
 export class GetAllUserQuery extends OptionalDateRangeQueryWithPagination {
@@ -39,7 +38,7 @@ export class GetAllUserQuery extends OptionalDateRangeQueryWithPagination {
 
   @ApiProperty({
     example: '',
-    description: 'Search User based on email,fullname,pin,role',
+    description: 'Search User based on email,fullname,pin',
     required: false,
   })
   @JoiSchema(Joi.string().optional())

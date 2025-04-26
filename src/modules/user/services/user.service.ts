@@ -22,6 +22,7 @@ import { UpdateUserDto } from '../dtos/update-user.dto';
 import { UserSort } from '../classes/user.query';
 import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
 import { GetUserResponse } from '../classes/user.response';
+import { UserRoleEnum } from '@app/enums/user-role';
 
 interface GetAllUserQuery {
   pageNo: number;
@@ -70,6 +71,7 @@ export class UserService {
   async getUserById(id: number) {
     const user = await this.userRepository.findOne({
       where: { id, is_deleted: false },
+      relations: ['user_role'],
     });
     return user;
   }
@@ -109,10 +111,21 @@ export class UserService {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
       // .leftJoinAndSelect('user.customer', 'customer')
-      // .leftJoinAndSelect('user.product', 'product')
+      .leftJoinAndSelect('user.user_role', 'user_role')
       .skip(skip)
       .take(pageSize)
       .select(['user'])
+      .andWhere('is_deleted = :isDeleted', { isDeleted: false })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('user_role.role IS NULL').orWhere(
+            'user_role.role != :superadminRole',
+            {
+              superadminRole: UserRoleEnum.SUPERADMIN,
+            },
+          );
+        }),
+      )
       .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
 
     //Conditionally add filters
@@ -129,7 +142,6 @@ export class UserService {
         new Brackets((qb) => {
           qb.where('email LIKE :search', { search: `%${search}%` })
             .orWhere('fullname LIKE :search', { search: `%${search}%` })
-            .orWhere('role LIKE :search', { search: `%${search}%` })
             .orWhere('pin LIKE :search', { search: `%${search}%` });
         }),
       );
@@ -152,6 +164,7 @@ export class UserService {
   async findUserById(id: number) {
     const user = await this.userRepository.findOne({
       where: { id, is_deleted: false },
+      relations: ['user_role'],
     });
     if (!user) throw new NotFoundException('No user with that id');
     return user;
