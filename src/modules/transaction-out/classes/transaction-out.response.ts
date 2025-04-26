@@ -41,6 +41,11 @@ export class GetTransactionOutResponse
   })
   converted_qty: number;
 
+  @ApiProperty({
+    example: true,
+  })
+  is_charge: boolean;
+
   @ApiProperty({ example: 30 })
   total_days: number;
 }

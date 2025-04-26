@@ -45,5 +45,8 @@ export class GetTransactionInResponse {
   @ApiProperty({ example: { code: 'CO-00001' } })
   transaction_in_header: Pick<TransactionInHeader, 'id' | 'code'>;
 
+  @ApiProperty({ example: true })
+  is_charge: boolean;
+
   created_at: Date;
 }
