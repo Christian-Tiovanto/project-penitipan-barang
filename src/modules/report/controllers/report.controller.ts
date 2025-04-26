@@ -35,6 +35,7 @@ import { ReportPermission } from '@app/enums/permission';
 export class ReportController {
   constructor(private readonly reportService: ReportService) {}
 
+  @PermissionsMetatada(ReportPermission.LIST)
   @Get('stock-book/product/:product_id/customer/:customer_id')
   async stockBookReport(
     @Param('product_id', ParseIntPipe) productId: number,
@@ -47,6 +48,7 @@ export class ReportController {
     });
   }
 
+  @PermissionsMetatada(ReportPermission.LIST)
   @Get('cashflow-report')
   async cashflowReport(@Query() { start_date, end_date }: DateRangeQuery) {
     return await this.reportService.cashflowReport({
@@ -55,16 +57,19 @@ export class ReportController {
     });
   }
 
+  @PermissionsMetatada(ReportPermission.LIST)
   @Get('stock-report')
   async stockReport(@Query() { end_date, customer }: StockReportQuery) {
     return await this.reportService.stockReport(end_date, parseInt(customer));
   }
 
+  @PermissionsMetatada(ReportPermission.LIST)
   @Get('stock-invoice-report')
   async stockInvoiceReport(@Query() { invoice }: StockInvoiceReportQuery) {
     return await this.reportService.stockInvoiceReport(parseInt(invoice));
   }
 
+  @PermissionsMetatada(ReportPermission.LIST)
   @ApiOkResponse({ type: NettIncomeReportResponse })
   @Get('nett-income-report')
   async nettIncomeReport(@Query() { start_date, end_date }: DateRangeQuery) {
@@ -74,6 +79,7 @@ export class ReportController {
     });
   }
 
+  @PermissionsMetatada(ReportPermission.LIST)
   @ApiOkResponse({ type: GetAllArResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
   @Get('ar-paid-report')

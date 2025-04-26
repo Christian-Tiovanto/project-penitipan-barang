@@ -20,7 +20,10 @@ export class AuthorizeGuard implements CanActivate {
     const request: RequestUser = context.switchToHttp().getRequest();
     const roles = request.user.roles;
 
-    if (roles.includes(UserRoleEnum.SUPERADMIN || UserRoleEnum.ADMIN)) {
+    if (
+      roles.includes(UserRoleEnum.SUPERADMIN) ||
+      roles.includes(UserRoleEnum.ADMIN)
+    ) {
       return true;
     }
 
@@ -42,7 +45,7 @@ export class AuthorizeGuard implements CanActivate {
 
     if (!hasRequiredPermission) {
       throw new UnauthorizedException(
-        `Access Denied - Missing Permissions ${authorizedPermissions.toString()}`,
+        `Access Denied - Missing Permissions ${authorizedPermissions[0].split('.')[0]}`,
       );
     }
     return true;

@@ -12,6 +12,7 @@ import {
   SpbPermission,
   TransactionInPermission,
   TransactionOutPermission,
+  UserPermission,
 } from './permission';
 
 export enum UserRoleEnum {
@@ -69,12 +70,38 @@ export const RoleWithPermission = Object.freeze({
   },
   [UserRoleEnum.REPORT]: {
     ...permissionToObject(Object.values(ReportPermission)),
+    [ProductPermission.LIST]: true,
+    [CustomerPermission.LIST]: true,
+    [ProductUnitPermission.LIST]: true,
+    [TransactionInPermission.LIST]: true,
+    [InvoicePermission.LIST]: true,
+    [PaymentMethodPermission.LIST]: true,
+    [ProductPermission.VIEW]: true,
+    [CustomerPermission.VIEW]: true,
+    [ProductUnitPermission.VIEW]: true,
+    [TransactionInPermission.VIEW]: true,
+    [InvoicePermission.VIEW]: true,
+    [PaymentMethodPermission.VIEW]: true,
   },
   [UserRoleEnum.SPB]: {
     ...permissionToObject(Object.values(SpbPermission)),
   },
   [UserRoleEnum.TRANSACTION_IN]: {
     ...permissionToObject(Object.values(TransactionInPermission)),
+    [ProductPermission.LIST]: true,
+    [CustomerPermission.LIST]: true,
+    [ProductUnitPermission.LIST]: true,
+    [TransactionInPermission.LIST]: true,
+    [InvoicePermission.LIST]: true,
+    [PaymentMethodPermission.LIST]: true,
+    [ProductPermission.VIEW]: true,
+    [CustomerPermission.VIEW]: true,
+    [ProductUnitPermission.VIEW]: true,
+    [TransactionInPermission.VIEW]: true,
+    [InvoicePermission.VIEW]: true,
+    [PaymentMethodPermission.VIEW]: true,
+    [UserPermission.LIST]: true,
+    [UserPermission.VIEW]: true,
   },
   [UserRoleEnum.TRANSACTION_OUT]: {
     ...permissionToObject(Object.values(TransactionOutPermission)),

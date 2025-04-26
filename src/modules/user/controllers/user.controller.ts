@@ -30,6 +30,7 @@ import { SuperAdminGuard } from '@app/guards/superadmin.guard';
 import { IntermediateGuard } from '@app/guards/intermediate.guard';
 import { PermissionsMetatada } from '@app/decorators/permission.decorator';
 import { UserPermission } from '@app/enums/permission';
+import { AuthorizeGuard } from '@app/guards/authorize.guard';
 
 @ApiTags(ApiTag.USER)
 @Controller('api/v1/user')
@@ -55,7 +56,7 @@ export class UserController {
     summary: 'Get User by Id',
   })
   @PermissionsMetatada(UserPermission.VIEW)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, SuperAdminGuard)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getUserById(@Param('id', ParseIntPipe) userId: number) {
     return await this.userService.getUserById(userId);
@@ -92,7 +93,7 @@ export class UserController {
   @ApiOkResponse({ type: GetUserResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
   @PermissionsMetatada(UserPermission.LIST)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, SuperAdminGuard)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllUser(
     @Query()

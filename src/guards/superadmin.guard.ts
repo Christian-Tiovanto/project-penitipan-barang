@@ -1,6 +1,11 @@
 import { UserRoleEnum } from '@app/enums/user-role';
 import { RequestUser } from '@app/interfaces/request.interface';
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 @Injectable()
 export class SuperAdminGuard implements CanActivate {
@@ -9,6 +14,11 @@ export class SuperAdminGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request: RequestUser = context.switchToHttp().getRequest();
     const roles = request.user.roles;
-    return roles.includes(UserRoleEnum.SUPERADMIN);
+    if (!roles.includes(UserRoleEnum.SUPERADMIN)) {
+      throw new UnauthorizedException(
+        `Access Denied - Missing Permissions. Admin`,
+      );
+    }
+    return true;
   }
 }
