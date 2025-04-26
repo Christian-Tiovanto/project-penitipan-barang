@@ -72,6 +72,6 @@ export class UserRoleService {
       deleteUserRoleDto.role,
     );
 
-    await this.userRoleRepository.delete(user);
+    await this.userRoleRepository.delete({ id: user.id });
   }
 }
