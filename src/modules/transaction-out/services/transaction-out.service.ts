@@ -36,7 +36,7 @@ import { ArStatus } from '@app/enums/ar-status';
 import { ChargeType } from '@app/enums/charge-type';
 import { TransactionOutSort } from '../classes/transaction-out.query';
 import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
-import { GetTransactionOutResponse } from '../classes/transaction-in.response';
+import { GetTransactionOutResponse } from '../classes/transaction-out.response';
 import { Customer } from '@app/modules/customer/models/customer.entity';
 import { Product } from '@app/modules/product/models/product.entity';
 import { TransactionInHeader } from '@app/modules/transaction-in/models/transaction-in-header.entity';
@@ -136,6 +136,7 @@ export class TransactionOutService {
             invoice_no: transaction.invoice.invoice_no,
           },
           converted_qty: transaction.converted_qty,
+          is_charge: transaction.is_charge,
           total_days: transaction.total_days,
         };
       });

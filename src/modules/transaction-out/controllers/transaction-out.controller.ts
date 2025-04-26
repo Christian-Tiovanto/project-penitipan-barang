@@ -30,7 +30,7 @@ import {
   GetAllTransactionOutQuery,
   TransactionOutSort,
 } from '../classes/transaction-out.query';
-import { GetTransactionOutResponse } from '../classes/transaction-in.response';
+import { GetTransactionOutResponse } from '../classes/transaction-out.response';
 import { SortOrder } from '@app/enums/sort-order';
 import { IntermediateGuard } from '@app/guards/intermediate.guard';
 import { PermissionsMetatada } from '@app/decorators/permission.decorator';

@@ -257,6 +257,7 @@ export class TransactionInService {
           qty: transaction.qty,
           converted_qty: transaction.converted_qty,
           unit: transaction.unit,
+          is_charge: transaction.is_charge,
           created_at: transaction.created_at,
           transaction_in_header: {
             id: transaction.transaction_in_header.id,
@@ -678,6 +679,7 @@ export class TransactionInService {
           qty: transaction.qty,
           converted_qty: transaction.qty,
           unit: transaction.unit,
+          is_charge: transaction.is_charge,
           created_at: transaction.created_at,
           transaction_in_header: {
             id: transaction.transaction_in_header.id,
