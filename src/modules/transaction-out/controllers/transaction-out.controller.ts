@@ -32,6 +32,9 @@ import {
 } from '../classes/transaction-out.query';
 import { GetTransactionOutResponse } from '../classes/transaction-in.response';
 import { SortOrder } from '@app/enums/sort-order';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { TransactionOutPermission } from '@app/enums/permission';
 
 @ApiTags(ApiTag.TRANSACTION_OUT)
 @Controller('api/v1/transaction-out')
@@ -44,7 +47,8 @@ export class TransactionOutController {
   })
   @ApiOkResponse({ type: GetTransactionOutResponse })
   @UseInterceptors(OffsetPaginationInterceptor<TransactionOut>)
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(TransactionOutPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllTransactionOuts(
     @Query()
@@ -82,7 +86,8 @@ export class TransactionOutController {
   @ApiOperation({
     summary: 'Get Transaction Out by Id',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(TransactionOutPermission.VIEW)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getTransactionOutById(
     @Param('id', ParseIntPipe) transactionOutId: number,
@@ -96,7 +101,8 @@ export class TransactionOutController {
   @ApiOperation({
     summary: 'Create Transaction Out',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(TransactionOutPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createTransactionOut(
     @Body() createTransactionOutWithSpbDto: CreateTransactionOutWithSpbDto,
@@ -110,7 +116,8 @@ export class TransactionOutController {
   @ApiOperation({
     summary: 'Create Transaction Out Fifo',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(TransactionOutPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post('/fifo')
   async createTransactionOutFifo(
     @Body()
@@ -125,7 +132,8 @@ export class TransactionOutController {
   @ApiOperation({
     summary: 'Preview Transaction Out',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(TransactionOutPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post('/preview')
   async previewTransactionOut(
     @Body() createTransactionOutWithSpbDto: CreateTransactionOutWithSpbDto,
@@ -139,7 +147,8 @@ export class TransactionOutController {
   @ApiOperation({
     summary: 'Preview Transaction Out Fifo',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(TransactionOutPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post('/preview/fifo')
   async previewTransactionOutFifo(
     @Body()
@@ -154,7 +163,8 @@ export class TransactionOutController {
   @ApiOperation({
     summary: 'Get All Transaction Out By Invoice Id',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(TransactionOutPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get('/by-invoice/:id')
   async getAllProductUnits(
     @Param('id', ParseIntPipe) invoiceId: number,

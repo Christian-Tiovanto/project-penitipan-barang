@@ -117,4 +117,15 @@ export class TransactionInHeaderService {
       where: { customerId },
     });
   }
+
+  async updateTransactionInHeaderCustomerId(
+    transactionHeaderId: number,
+    customerId: number,
+    entityManager: EntityManager,
+  ) {
+    const transactionInHeader =
+      await this.findTransactionInHeaderById(transactionHeaderId);
+    transactionInHeader.customer.id = customerId;
+    await entityManager.save(transactionInHeader);
+  }
 }

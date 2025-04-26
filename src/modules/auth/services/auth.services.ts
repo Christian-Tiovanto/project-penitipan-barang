@@ -25,7 +25,7 @@ export class AuthService {
     const payload: JwtPayload = {
       id: user.id,
       fullname: user.fullname,
-      role: user.role,
+      // role: user.role,
     };
     const token = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET,

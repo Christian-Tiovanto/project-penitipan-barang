@@ -15,7 +15,6 @@ export class UpdateTransactionInDto
       | 'product'
       | 'transaction_in_headerId'
       | 'transaction_in_header'
-      | 'is_charge'
     >
 {
   @ApiProperty({ example: 1 })
@@ -37,6 +36,9 @@ export class UpdateTransactionInDto
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().optional())
   unitId: number;
+
+  @JoiSchema(Joi.boolean().options({ convert: true }).optional())
+  is_charge: boolean;
 
   unit: string;
   conversion_to_kg: number;

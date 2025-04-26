@@ -23,10 +23,7 @@ import {
 } from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
-import {
-  BasePaginationQuery,
-  OffsetPagination,
-} from '@app/interfaces/pagination.interface';
+import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { GetCustomerPaymentResponse } from '../classes/customer-payment.response';
@@ -35,6 +32,9 @@ import {
   GetAllCustomerPaymentQuery,
 } from '../classes/customer-payment.query';
 import { SortOrder } from '@app/enums/sort-order';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { CustomerPaymentPermission } from '@app/enums/permission';
 
 @ApiTags(ApiTag.CUSTOMER_PAYMENT)
 @Controller('api/v1/customer-payment')
@@ -46,7 +46,8 @@ export class CustomerPaymentController {
   @ApiOperation({
     summary: 'Get All Customer Payment',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(CustomerPaymentPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get('/all')
   async getAllCustomerPayments(): Promise<CustomerPayment[]> {
     return await this.customerPaymentService.getAllCustomerPayments();
@@ -83,7 +84,8 @@ export class CustomerPaymentController {
   })
   @ApiOkResponse({ type: GetCustomerPaymentResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(CustomerPaymentPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllCustomerPaymentsPagination(
     @Query()
@@ -122,7 +124,8 @@ export class CustomerPaymentController {
   @ApiOperation({
     summary: 'Get Customer Payment by Id',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(CustomerPaymentPermission.VIEW)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getCustomerPaymentById(
     @Param('id', ParseIntPipe) customerPaymentId: number,
@@ -136,7 +139,8 @@ export class CustomerPaymentController {
   @ApiOperation({
     summary: 'Create Customer Payment',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(CustomerPaymentPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createCustomerPayment(
     @Body() createCustomerPaymentDto: CreateCustomerPaymentDto,
@@ -150,7 +154,8 @@ export class CustomerPaymentController {
   @ApiOperation({
     summary: 'Update Merchant Payment by Id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(CustomerPaymentPermission.EDIT)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Patch(':id')
   async updateMerchantPayment(
     @Param('id', ParseIntPipe) customerPaymentId: number,
@@ -166,7 +171,8 @@ export class CustomerPaymentController {
   @ApiOperation({
     summary: 'Delete Customer Payment by Id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(CustomerPaymentPermission.DELETE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Delete(':id')
   async deleteCustomerPayment(
     @Param('id', ParseIntPipe) customerPaymentId: number,

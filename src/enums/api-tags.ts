@@ -1,5 +1,6 @@
 export enum ApiTag {
   USER = 'user',
+  USER_ROLE = 'user-role',
   AUTH = 'auth',
   MERCHANT = 'merchant',
   SUPPLIER = 'supplier',

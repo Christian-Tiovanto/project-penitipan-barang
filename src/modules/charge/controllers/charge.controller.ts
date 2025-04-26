@@ -24,6 +24,9 @@ import {
 } from '@app/interfaces/pagination.interface';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { ChargePermission } from '@app/enums/permission';
 
 @ApiTags(ApiTag.CHARGE)
 @Controller('api/v1/charge')
@@ -35,7 +38,8 @@ export class ChargeController {
     summary: 'Get All Charge',
   })
   @UseInterceptors(OffsetPaginationInterceptor<Charge>)
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(ChargePermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllCharge(
     @Query() { page_no, page_size }: BasePaginationQuery,
@@ -58,7 +62,8 @@ export class ChargeController {
   @ApiOperation({
     summary: 'Get Charge by Id',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(ChargePermission.VIEW)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getChargeById(
     @Param('id', ParseIntPipe) chargeId: number,
@@ -70,7 +75,8 @@ export class ChargeController {
   @ApiOperation({
     summary: 'Create Charge',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(ChargePermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createCharge(@Body() createChargeDto: CreateChargeDto) {
     return await this.chargeService.createCharge(createChargeDto);
@@ -80,7 +86,8 @@ export class ChargeController {
   @ApiOperation({
     summary: 'Update Charge by Id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(ChargePermission.EDIT)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Patch(':id')
   async updateCharge(
     @Param('id', ParseIntPipe) chargeId: number,
@@ -93,7 +100,8 @@ export class ChargeController {
   @ApiOperation({
     summary: 'Delete Charge by Id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(ChargePermission.DELETE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Delete(':id')
   async deleteCharge(@Param('id', ParseIntPipe) chargeId: number) {
     return await this.chargeService.deleteCharge(chargeId);

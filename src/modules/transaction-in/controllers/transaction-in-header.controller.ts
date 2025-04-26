@@ -21,6 +21,10 @@ import { SortOrder, TransactionInHeaderSort } from '@app/enums/sort-order';
 import { TransactionInHeaderService } from '../services/transaction-in-header.service';
 import { GetAllTransactionInHeaderQuery } from '../classes/transaction-in-header.query';
 import { TransactionInHeader } from '../models/transaction-in-header.entity';
+import { AuthorizeGuard } from '@app/guards/authorize.guard';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { TransactionInPermission } from '@app/enums/permission';
 
 @ApiTags(ApiTag.TRANSACTION_IN_HEADER)
 @Controller('api/v1/transaction-in-header')
@@ -35,7 +39,8 @@ export class TransactionInHeaderController {
   })
   @ApiOkResponse({ type: GetTransactionInResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(TransactionInPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllTransactionInHeader(
     @Query()
@@ -74,7 +79,8 @@ export class TransactionInHeaderController {
   @ApiOperation({
     summary: 'Get Transaction In Header by Id',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(TransactionInPermission.VIEW)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getTransactionInHeaderById(
     @Param('id', ParseIntPipe) transactionInHeaderId: number,
@@ -88,7 +94,8 @@ export class TransactionInHeaderController {
   @ApiOperation({
     summary: 'Get All Trans In Header By CustomerId',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(TransactionInPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get('/by-customer/:id')
   async getAllProductUnits(
     @Param('id', ParseIntPipe) customerId: number,

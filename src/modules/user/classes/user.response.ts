@@ -5,11 +5,6 @@ export class GetUserResponse {
   id: number;
 
   @ApiProperty({
-    example: 'default',
-  })
-  role: string;
-
-  @ApiProperty({
     example: 'John Doe',
   })
   fullname: string;

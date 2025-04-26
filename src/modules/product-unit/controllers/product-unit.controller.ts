@@ -32,6 +32,9 @@ import {
   ProductUnitSort,
 } from '../classes/product-unit.query';
 import { SortOrder } from '@app/enums/sort-order';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { ProductUnitPermission } from '@app/enums/permission';
 
 @ApiTags(ApiTag.PRODUCT_UNIT)
 @Controller('api/v1/product-unit')
@@ -42,7 +45,8 @@ export class ProductUnitController {
   @ApiOperation({
     summary: 'Get All Product Unit',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(ProductUnitPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get('/all')
   async getAllProductUnits(): Promise<ProductUnit[]> {
     return await this.productUnitService.getAllProductUnits();
@@ -74,11 +78,12 @@ export class ProductUnitController {
 
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Get All Transaction In Pagination',
+    summary: 'Get All Product Unit with Pagination',
   })
   @ApiOkResponse({ type: GetProductUnitResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(ProductUnitPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllProductUnitsPagination(
     @Query()
@@ -117,7 +122,8 @@ export class ProductUnitController {
   @ApiOperation({
     summary: 'Get Product Unit by Id',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(ProductUnitPermission.VIEW)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getProductUnitById(
     @Param('id', ParseIntPipe) productUnitId: number,
@@ -129,7 +135,8 @@ export class ProductUnitController {
   @ApiOperation({
     summary: 'Create Product Unit',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(ProductUnitPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createProductUnit(@Body() createProductDto: CreateProductUnitDto) {
     return await this.productUnitService.createProductUnit(createProductDto);
@@ -139,7 +146,8 @@ export class ProductUnitController {
   @ApiOperation({
     summary: 'Update Product Unit by Id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(ProductUnitPermission.EDIT)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Patch(':id')
   async updateProductUnit(
     @Param('id', ParseIntPipe) productUnitId: number,
@@ -155,7 +163,8 @@ export class ProductUnitController {
   @ApiOperation({
     summary: 'Delete Product Unit by Id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(ProductUnitPermission.DELETE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Delete(':id')
   async deleteProductUnit(@Param('id', ParseIntPipe) productUnitId: number) {
     return await this.productUnitService.deleteProductUnit(productUnitId);
@@ -165,7 +174,8 @@ export class ProductUnitController {
   @ApiOperation({
     summary: 'Get Product Unit by Product Id',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(ProductUnitPermission.VIEW)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get('/by-product/:id')
   async getProductUnitByProductId(
     @Param('id', ParseIntPipe) productId: number,
