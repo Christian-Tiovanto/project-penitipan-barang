@@ -4,29 +4,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { UserSeeder } from './seeder/user.seeder';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule);
   const seeder = app.get(UserSeeder);
   await seeder.run();
 
-  const environment = process.env.NODE_ENV || 'DEVELOPMENT';
-  const domainUrl = process.env.DOMAIN_URL || 'http://localhost:5173';
-  let corsOptions = {};
+  // const environment = process.env.NODE_ENV || 'DEVELOPMENT';
+  // const domainUrl = process.env.DOMAIN_URL || 'http://localhost:5173';
 
-  if (environment === 'PRODUCTION') {
-    corsOptions = {
-      origin: domainUrl, // hanya domain produksi yang diizinkan
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-      allowedHeaders: 'Content-Type, Accept, Authorization',
-      credentials: true, // jika pakai cookie/token
-    };
-  } else {
-    corsOptions = {
-      origin: true, // izinkan semua origin saat development
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-      allowedHeaders: 'Content-Type, Accept, Authorization',
-      credentials: true,
-    };
-  }
+  // let corsOptions = {};
 
   // if (environment === 'PRODUCTION') {
   //   corsOptions = {
@@ -61,6 +46,6 @@ async function bootstrap() {
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, documentFactory);
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(8000, '0.0.0.0'); // <-- PENTING BANGET!
 }
 bootstrap();
