@@ -11,7 +11,10 @@ import {
 } from '@nestjs/common';
 import { TransactionOutService } from '../services/transaction-out.service';
 import { TransactionOut } from '../models/transaction-out.entity';
-import { CreateTransactionOutWithSpbDto } from '../dtos/create-transaction-out.dto';
+import {
+  CreateTransactionOutFifoWithSpbDto,
+  CreateTransactionOutWithSpbDto,
+} from '../dtos/create-transaction-out.dto';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -27,8 +30,11 @@ import {
   GetAllTransactionOutQuery,
   TransactionOutSort,
 } from '../classes/transaction-out.query';
-import { GetTransactionOutResponse } from '../classes/transaction-in.response';
+import { GetTransactionOutResponse } from '../classes/transaction-out.response';
 import { SortOrder } from '@app/enums/sort-order';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { TransactionOutPermission } from '@app/enums/permission';
 
 @ApiTags(ApiTag.TRANSACTION_OUT)
 @Controller('api/v1/transaction-out')
@@ -41,7 +47,8 @@ export class TransactionOutController {
   })
   @ApiOkResponse({ type: GetTransactionOutResponse })
   @UseInterceptors(OffsetPaginationInterceptor<TransactionOut>)
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(TransactionOutPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllTransactionOuts(
     @Query()
@@ -79,7 +86,8 @@ export class TransactionOutController {
   @ApiOperation({
     summary: 'Get Transaction Out by Id',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(TransactionOutPermission.VIEW)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getTransactionOutById(
     @Param('id', ParseIntPipe) transactionOutId: number,
@@ -93,7 +101,8 @@ export class TransactionOutController {
   @ApiOperation({
     summary: 'Create Transaction Out',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(TransactionOutPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createTransactionOut(
     @Body() createTransactionOutWithSpbDto: CreateTransactionOutWithSpbDto,
@@ -101,14 +110,30 @@ export class TransactionOutController {
     return await this.transactionOutService.createTransactionOut(
       createTransactionOutWithSpbDto,
     );
+  }
 
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create Transaction Out Fifo',
+  })
+  @PermissionsMetatada(TransactionOutPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  @Post('/fifo')
+  async createTransactionOutFifo(
+    @Body()
+    createTransactionOutFifoWithSpbDto: CreateTransactionOutFifoWithSpbDto,
+  ) {
+    return await this.transactionOutService.createTransactionOutFifo(
+      createTransactionOutFifoWithSpbDto,
+    );
   }
 
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Preview Transaction Out',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(TransactionOutPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post('/preview')
   async previewTransactionOut(
     @Body() createTransactionOutWithSpbDto: CreateTransactionOutWithSpbDto,
@@ -120,9 +145,26 @@ export class TransactionOutController {
 
   @ApiBearerAuth()
   @ApiOperation({
+    summary: 'Preview Transaction Out Fifo',
+  })
+  @PermissionsMetatada(TransactionOutPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  @Post('/preview/fifo')
+  async previewTransactionOutFifo(
+    @Body()
+    createTransactionOutFifoWithSpbDto: CreateTransactionOutFifoWithSpbDto,
+  ) {
+    return await this.transactionOutService.previewTransactionOutFifo(
+      createTransactionOutFifoWithSpbDto,
+    );
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
     summary: 'Get All Transaction Out By Invoice Id',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(TransactionOutPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get('/by-invoice/:id')
   async getAllProductUnits(
     @Param('id', ParseIntPipe) invoiceId: number,

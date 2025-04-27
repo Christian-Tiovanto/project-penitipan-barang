@@ -23,20 +23,18 @@ import {
 } from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
-import {
-  BasePaginationQuery,
-  OffsetPagination,
-} from '@app/interfaces/pagination.interface';
+import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { GetPaymentMethodResponse } from '../classes/payment-method.response';
-import { GetAllUserQuery } from '@app/modules/user/classes/user.query';
-import { GetUserResponse } from '@app/modules/user/classes/user.response';
 import {
   GetAllPaymentMethodQuery,
   PaymentMethodSort,
 } from '../classes/payment-method.query';
 import { SortOrder } from '@app/enums/sort-order';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { PaymentMethodPermission } from '@app/enums/permission';
 
 @ApiTags(ApiTag.PAYMENT_METHOD)
 @Controller('api/v1/payment-method')
@@ -46,7 +44,8 @@ export class PaymentMethodController {
   @ApiOperation({
     summary: 'Get All Payment Method',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(PaymentMethodPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get('/all')
   async getAllPaymentMethods(): Promise<PaymentMethod[]> {
     return await this.paymentMethodService.getAllPaymentMethods();
@@ -83,7 +82,8 @@ export class PaymentMethodController {
   })
   @ApiOkResponse({ type: GetPaymentMethodResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(PaymentMethodPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllPaymentMethodsPagination(
     @Query()
@@ -122,7 +122,8 @@ export class PaymentMethodController {
   @ApiOperation({
     summary: 'Get Payment Method by Id',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(PaymentMethodPermission.VIEW)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getPaymentMethodById(
     @Param('id', ParseIntPipe) paymentMethodId: number,
@@ -136,7 +137,8 @@ export class PaymentMethodController {
   @ApiOperation({
     summary: 'Create Payment Method',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(PaymentMethodPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createPaymentMethod(
     @Body() createPaymentMethodDto: CreatePaymentMethodDto,
@@ -150,7 +152,8 @@ export class PaymentMethodController {
   @ApiOperation({
     summary: 'Update Payment Method by Id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(PaymentMethodPermission.EDIT)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Patch(':id')
   async updatePaymentMethod(
     @Param('id', ParseIntPipe) paymentMethodId: number,
@@ -166,7 +169,8 @@ export class PaymentMethodController {
   @ApiOperation({
     summary: 'Delete Payment Method by Id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(PaymentMethodPermission.DELETE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Delete(':id')
   async deletePaymentMethod(
     @Param('id', ParseIntPipe) paymentMethodId: number,

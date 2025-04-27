@@ -20,6 +20,10 @@ import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { InvoiceSort, SortOrder } from '@app/enums/sort-order';
 import { Invoice } from '../models/invoice.entity';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
+import { AuthorizeGuard } from '@app/guards/authorize.guard';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { InvoicePermission } from '@app/enums/permission';
 
 @ApiTags(ApiTag.INVOICE)
 @Controller('api/v1/invoice')
@@ -30,7 +34,8 @@ export class InvoiceController {
   @ApiOperation({
     summary: 'Get All Invoices',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(InvoicePermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get('/all')
   async getAllInvoices(): Promise<Invoice[]> {
     return await this.invoiceService.getAllInvoices();
@@ -38,6 +43,8 @@ export class InvoiceController {
 
   @ApiOkResponse({ type: GetAllInvoiceResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
+  @PermissionsMetatada(InvoicePermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllInvoicesPagination(
     @Query()

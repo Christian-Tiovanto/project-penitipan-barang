@@ -19,7 +19,7 @@ export interface ITransactionOut {
   productId: number;
   customer: Customer;
   customerId: number;
-  transaction_in: number;
+  transaction_in: TransactionIn;
   transaction_inId: number;
   spb: number;
   spbId: number;
@@ -34,6 +34,7 @@ export interface ITransactionOut {
   total_charge: number;
   price: number;
   total_days: number;
+  is_charge: boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -62,7 +63,7 @@ export class TransactionOut implements ITransactionOut {
     () => TransactionIn,
     (transactionIn) => transactionIn.transaction_out,
   )
-  transaction_in: number;
+  transaction_in: TransactionIn;
 
   @ApiProperty({ example: 1 })
   @Column({ type: 'int', nullable: true })
@@ -145,6 +146,12 @@ export class TransactionOut implements ITransactionOut {
     },
   })
   total_charge: number;
+
+  @ApiProperty({ example: true })
+  @Column({
+    type: 'boolean',
+  })
+  is_charge: boolean;
 
   @ApiProperty({ example: 1000 })
   @Column({

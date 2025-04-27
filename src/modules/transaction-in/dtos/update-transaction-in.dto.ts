@@ -37,6 +37,9 @@ export class UpdateTransactionInDto
   @JoiSchema(Joi.number().optional())
   unitId: number;
 
+  @JoiSchema(Joi.boolean().options({ convert: true }).optional())
+  is_charge: boolean;
+
   unit: string;
   conversion_to_kg: number;
   remaining_qty: number;

@@ -9,10 +9,15 @@ import { CustomerModule } from '../customer/customer.module';
 import { TransactionInHeaderService } from './services/transaction-in-header.service';
 import { TransactionInHeader } from './models/transaction-in-header.entity';
 import { TransactionInHeaderController } from './controllers/transaction-in-header.controller';
+import { TransactionOut } from '../transaction-out/models/transaction-out.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([TransactionIn, TransactionInHeader]),
+    TypeOrmModule.forFeature([
+      TransactionIn,
+      TransactionInHeader,
+      TransactionOut,
+    ]),
     ProductModule,
     ProductUnitModule,
     CustomerModule,

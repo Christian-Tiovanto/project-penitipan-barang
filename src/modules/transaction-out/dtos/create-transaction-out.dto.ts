@@ -32,6 +32,10 @@ export class CreateTransactionOutDto
   @JoiSchema(Joi.number().required())
   converted_qty: number;
 
+  @ApiProperty({ example: true })
+  @JoiSchema(Joi.boolean().required())
+  is_charge: boolean;
+
   transaction_inId: number;
 
   invoiceId: number;
@@ -54,4 +58,14 @@ export class CreateTransactionOutWithSpbDto extends TransactionOutSpbDto {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
   transaction_in_headerId: number;
+}
+
+export class CreateTransactionOutFifoWithSpbDto extends TransactionOutSpbDto {
+  @ApiProperty({ type: () => [CreateTransactionOutDto] })
+  @JoiSchema(Joi.array().items(Joi.object()).min(1)) // Bisa 1 transaksi atau lebih
+  transaction_outs: CreateTransactionOutDto[];
+
+  // @ApiProperty({ example: 1 })
+  // @JoiSchema(Joi.number().required())
+  // transaction_in_headerId: number;
 }

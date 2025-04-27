@@ -23,15 +23,15 @@ import {
 } from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
-import {
-  BasePaginationQuery,
-  OffsetPagination,
-} from '@app/interfaces/pagination.interface';
+import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { GetCustomerResponse } from '../classes/customer.response';
 import { CustomerSort, GetAllCustomerQuery } from '../classes/customer.query';
 import { SortOrder } from '@app/enums/sort-order';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { CustomerPermission } from '@app/enums/permission';
 
 @ApiTags(ApiTag.CUSTOMER)
 @Controller('api/v1/customer')
@@ -42,7 +42,8 @@ export class CustomerController {
   @ApiOperation({
     summary: 'Get All Customer',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(CustomerPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get('/all')
   async getAllCustomers(): Promise<Customer[]> {
     return await this.customerService.getAllCustomers();
@@ -78,7 +79,8 @@ export class CustomerController {
   })
   @ApiOkResponse({ type: GetCustomerResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(CustomerPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllCustomersPagination(
     @Query()
@@ -116,7 +118,8 @@ export class CustomerController {
   @ApiOperation({
     summary: 'Get Customer by Id',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(CustomerPermission.VIEW)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getCustomerById(
     @Param('id', ParseIntPipe) customerId: number,
@@ -128,7 +131,8 @@ export class CustomerController {
   @ApiOperation({
     summary: 'Create Customer',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(CustomerPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createCustomer(@Body() createCustomerDto: CreateCustomerDto) {
     return await this.customerService.createCustomer(createCustomerDto);
@@ -138,7 +142,8 @@ export class CustomerController {
   @ApiOperation({
     summary: 'Update Customer by Id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(CustomerPermission.EDIT)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Patch(':id')
   async updateCustomer(
     @Param('id', ParseIntPipe) customerId: number,
@@ -154,7 +159,8 @@ export class CustomerController {
   @ApiOperation({
     summary: 'Delete Customer by Id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(CustomerPermission.DELETE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Delete(':id')
   async deleteCustomer(@Param('id', ParseIntPipe) customerId: number) {
     return await this.customerService.deleteCustomer(customerId);

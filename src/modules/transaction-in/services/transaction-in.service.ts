@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ITransactionIn, TransactionIn } from '../models/transaction-in.entity';
 import {
@@ -28,6 +32,7 @@ import { Product } from '@app/modules/product/models/product.entity';
 import { CreateBulkTransactionInDto } from '../dtos/create-bulk-transaction-in.dto';
 import { TransactionInHeaderService } from './transaction-in-header.service';
 import { TransactionInHeader } from '../models/transaction-in-header.entity';
+import { TransactionOut } from '@app/modules/transaction-out/models/transaction-out.entity';
 
 interface GetAllTransactionInQuery {
   pageNo: number;
@@ -49,6 +54,8 @@ export class TransactionInService {
   constructor(
     @InjectRepository(TransactionIn)
     private transactionInRepository: Repository<TransactionIn>,
+    @InjectRepository(TransactionOut)
+    private transactionOutRepository: Repository<TransactionOut>,
     private productService: ProductService,
     private productUnitService: ProductUnitService,
     private customerService: CustomerService,
@@ -250,6 +257,7 @@ export class TransactionInService {
           qty: transaction.qty,
           converted_qty: transaction.converted_qty,
           unit: transaction.unit,
+          is_charge: transaction.is_charge,
           created_at: transaction.created_at,
           transaction_in_header: {
             id: transaction.transaction_in_header.id,
@@ -417,14 +425,47 @@ export class TransactionInService {
     updateTransactionInDto: UpdateTransactionInDto,
   ) {
     const transactionIn = await this.findTransactionInById(transactionInId);
-    if (updateTransactionInDto.customerId) {
-      await this.customerService.findCustomerById(
-        updateTransactionInDto.customerId,
+    const transactionOutCount = await this.transactionOutRepository.count({
+      where: { transaction_inId: transactionInId },
+    });
+
+    if (transactionOutCount > 0) {
+      throw new ConflictException(
+        "Can't update a Transaction In that already have Transaction Out",
       );
-      updateTransactionInDto.customerId = parseInt(
-        `${updateTransactionInDto.customerId}`,
-      );
-      transactionIn.customer.id = updateTransactionInDto.customerId;
+    }
+    let transactionInToUpdate: TransactionIn[] = [];
+    console.log(updateTransactionInDto.is_charge);
+    if (
+      updateTransactionInDto.customerId ||
+      updateTransactionInDto.is_charge !== undefined
+    ) {
+      if (updateTransactionInDto.customerId) {
+        await this.customerService.findCustomerById(
+          updateTransactionInDto.customerId,
+        );
+        updateTransactionInDto.customerId = parseInt(
+          `${updateTransactionInDto.customerId}`,
+        );
+        transactionIn.customer.id = updateTransactionInDto.customerId;
+      }
+      if (updateTransactionInDto.is_charge) {
+        transactionIn.is_charge = updateTransactionInDto.is_charge;
+      }
+      const transIn = await this.transactionInRepository.find({
+        where: {
+          transaction_in_header: { id: transactionIn.transaction_in_headerId },
+        },
+      });
+      transactionInToUpdate = transIn.map((transactionIn) => ({
+        ...transactionIn,
+        customerId:
+          updateTransactionInDto.customerId ?? transactionIn.customerId,
+        is_charge:
+          updateTransactionInDto.is_charge !== undefined
+            ? updateTransactionInDto.is_charge
+            : transactionIn.is_charge,
+      }));
     }
     let currentProductUnit: Pick<IProductUnit, 'conversion_to_kg' | 'name'> = {
       conversion_to_kg: transactionIn.conversion_to_kg,
@@ -462,6 +503,19 @@ export class TransactionInService {
 
         updateTransactionInDto.remaining_qty =
           updateTransactionInDto.converted_qty;
+        if (
+          updateTransactionInDto.customerId ||
+          updateTransactionInDto.is_charge !== undefined
+        ) {
+          await entityManager.save(TransactionIn, transactionInToUpdate);
+          if (updateTransactionInDto.customerId) {
+            await this.transactionInHeaderService.updateTransactionInHeaderCustomerId(
+              transactionIn.transaction_in_headerId,
+              updateTransactionInDto.customerId,
+              entityManager,
+            );
+          }
+        }
         Object.assign(transactionIn, updateTransactionInDto);
         await entityManager.save(transactionIn);
       },
@@ -625,6 +679,7 @@ export class TransactionInService {
           qty: transaction.qty,
           converted_qty: transaction.qty,
           unit: transaction.unit,
+          is_charge: transaction.is_charge,
           created_at: transaction.created_at,
           transaction_in_header: {
             id: transaction.transaction_in_header.id,

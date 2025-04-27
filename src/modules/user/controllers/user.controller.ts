@@ -21,16 +21,16 @@ import {
 import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { UpdatePasswordDto } from '../dtos/update-password.dto';
 import { UpdateUserDto } from '../dtos/update-user.dto';
-import { AuthorizeGuard } from '@app/guards/authorize.guard';
-import {
-  BasePaginationQuery,
-  OffsetPagination,
-} from '@app/interfaces/pagination.interface';
-import { User } from '../models/user';
+import { OffsetPagination } from '@app/interfaces/pagination.interface';
 import { OffsetPaginationInterceptor } from '@app/interceptors/offset-pagination.interceptor';
 import { GetAllUserQuery, UserSort } from '../classes/user.query';
 import { GetUserResponse } from '../classes/user.response';
 import { SortOrder } from '@app/enums/sort-order';
+import { SuperAdminGuard } from '@app/guards/superadmin.guard';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { UserPermission } from '@app/enums/permission';
+import { AuthorizeGuard } from '@app/guards/authorize.guard';
 
 @ApiTags(ApiTag.USER)
 @Controller('api/v1/user')
@@ -38,10 +38,11 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @ApiBearerAuth()
-  @UseGuards(AuthenticateGuard)
   @ApiOperation({
     summary: 'Update User Password',
   })
+  // @PermissionsMetatada(UserPermission.EDIT)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Patch(':id/update-password')
   async updatePassword(
     @Param('id', ParseIntPipe) userId: number,
@@ -54,7 +55,8 @@ export class UserController {
   @ApiOperation({
     summary: 'Get User by Id',
   })
-  @UseGuards(AuthenticateGuard)
+  // @PermissionsMetatada(UserPermission.VIEW)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getUserById(@Param('id', ParseIntPipe) userId: number) {
     return await this.userService.getUserById(userId);
@@ -90,7 +92,8 @@ export class UserController {
   })
   @ApiOkResponse({ type: GetUserResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(UserPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllUser(
     @Query()
@@ -128,7 +131,8 @@ export class UserController {
   @ApiOperation({
     summary: 'Update User by id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  // @PermissionsMetatada(UserPermission.EDIT)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Patch(':id')
   async updateUserById(
     @Param('id', ParseIntPipe) userId: number,
@@ -141,7 +145,8 @@ export class UserController {
   @ApiOperation({
     summary: 'Delete User by id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(UserPermission.DELETE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, SuperAdminGuard)
   @Delete(':id')
   async deleteUserById(@Param('id', ParseIntPipe) userId: number) {
     return await this.userService.deleteUserById(userId);

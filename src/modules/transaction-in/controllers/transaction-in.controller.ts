@@ -28,6 +28,9 @@ import { GetAllTransactionInQuery } from '../classes/transaction-in.query';
 import { GetTransactionInResponse } from '../classes/transaction-in.response';
 import { SortOrder, TransactionInSort } from '@app/enums/sort-order';
 import { CreateBulkTransactionInDto } from '../dtos/create-bulk-transaction-in.dto';
+import { IntermediateGuard } from '@app/guards/intermediate.guard';
+import { PermissionsMetatada } from '@app/decorators/permission.decorator';
+import { TransactionInPermission } from '@app/enums/permission';
 
 @ApiTags(ApiTag.TRANSACTION_IN)
 @Controller('api/v1/transaction-in')
@@ -36,7 +39,8 @@ export class TransactionInController {
 
   @ApiOperation({ summary: 'Create a Transaction In' })
   @ApiBearerAuth()
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(TransactionInPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post()
   async createTransactionIn(
     @Body() createTransactionInDto: CreateTransactionInDto,
@@ -48,7 +52,8 @@ export class TransactionInController {
 
   @ApiOperation({ summary: 'Create bulk Transaction In' })
   @ApiBearerAuth()
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(TransactionInPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Post('bulk')
   async createBulkTransactionIn(
     @Body() createBulkTransactionInDto: CreateBulkTransactionInDto,
@@ -64,7 +69,8 @@ export class TransactionInController {
   })
   @ApiOkResponse({ type: GetTransactionInResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(TransactionInPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get()
   async getAllTransactionIn(
     @Query()
@@ -102,7 +108,8 @@ export class TransactionInController {
   @ApiOperation({
     summary: 'Get Transaction In by Id',
   })
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(TransactionInPermission.VIEW)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getTransactionInById(@Param('id', ParseIntPipe) supplierId: number) {
     return await this.transactionInService.findTransactionInById(supplierId);
@@ -112,7 +119,8 @@ export class TransactionInController {
   @ApiOperation({
     summary: 'Update Transaction In by id',
   })
-  @UseGuards(AuthenticateGuard, AuthorizeGuard)
+  @PermissionsMetatada(TransactionInPermission.EDIT)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Patch(':id')
   async updateTransactionInById(
     @Param('id', ParseIntPipe) supplierId: number,
@@ -158,7 +166,8 @@ export class TransactionInController {
   })
   @ApiOkResponse({ type: GetTransactionInResponse })
   @UseInterceptors(OffsetPaginationInterceptor)
-  @UseGuards(AuthenticateGuard)
+  @PermissionsMetatada(TransactionInPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get('by-header/:id')
   async getAllTransactionInByHeaderId(
     @Param('id', ParseIntPipe) headerId: number,

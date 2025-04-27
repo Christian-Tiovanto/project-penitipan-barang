@@ -30,6 +30,12 @@ async function bootstrap() {
   // }
 
   app.enableCors();
+  // app.enableCors({
+  //   origin: '*', // Izinkan semua origin
+  //   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  //   allowedHeaders: 'Content-Type, Accept, Authorization',
+  //   credentials: true, // Jika menggunakan cookies atau token
+  // });
 
   const config = new DocumentBuilder()
     .setTitle('Endpoint Penitipan Barang')

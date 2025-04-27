@@ -54,7 +54,7 @@ export class Customer implements ICustomer {
   @UpdateDateColumn()
   updated_at: Date;
 
-  @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.customerId)
+  @OneToMany(() => TransactionIn, (transaction_in) => transaction_in.customer)
   transaction_in: TransactionIn[];
 
   @OneToMany(
