@@ -72,7 +72,10 @@ import { UserRole } from './modules/user/models/user-role';
       ],
       synchronize: true,
       logger: 'advanced-console',
-      timezone: 'Z',
+      timezone: '+07:00',
+      extra: {
+        timezone: '+07:00',
+      },
     }),
     UserModule,
     AuthModule,

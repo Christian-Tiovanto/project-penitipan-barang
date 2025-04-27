@@ -109,7 +109,7 @@ export class ReportService {
   }
 
   async stockInvoiceReport(invoiceId?: number) {
-    const query = `
+    let query = `
     SELECT 
       b.invoiceId, 
       a.invoice_no,
@@ -123,8 +123,15 @@ export class ReportService {
     INNER JOIN transaction_outs b ON a.id = b.invoiceId
     INNER JOIN transaction_ins c ON b.transaction_inid = c.id AND b.productId = c.productId AND b.customerId = c.customerId
     INNER JOIN products d ON b.productId = d.id
-    INNER JOIN customers e ON b.customerId = e.id
-    WHERE a.id = ?
+    INNER JOIN customers e ON b.customerId = e.id`;
+
+    const params = [];
+    if (invoiceId) {
+      query += ` WHERE a.id = ?`;
+      params.push(invoiceId);
+    }
+
+    query += `
     GROUP BY 
       d.name, 
       e.name, 
@@ -134,7 +141,7 @@ export class ReportService {
       c.converted_qty,
       a.created_at
   `;
-    return await this.transactionInRepository.query(query, [invoiceId]);
+    return await this.transactionInRepository.query(query, params);
   }
 
   async cashflowReport({
