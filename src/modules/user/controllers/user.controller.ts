@@ -41,8 +41,8 @@ export class UserController {
   @ApiOperation({
     summary: 'Update User Password',
   })
-  @PermissionsMetatada(UserPermission.EDIT)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, SuperAdminGuard)
+  // @PermissionsMetatada(UserPermission.EDIT)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Patch(':id/update-password')
   async updatePassword(
     @Param('id', ParseIntPipe) userId: number,
@@ -55,7 +55,7 @@ export class UserController {
   @ApiOperation({
     summary: 'Get User by Id',
   })
-  @PermissionsMetatada(UserPermission.VIEW)
+  // @PermissionsMetatada(UserPermission.VIEW)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
   async getUserById(@Param('id', ParseIntPipe) userId: number) {
@@ -131,8 +131,8 @@ export class UserController {
   @ApiOperation({
     summary: 'Update User by id',
   })
-  @PermissionsMetatada(UserPermission.EDIT)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, SuperAdminGuard)
+  // @PermissionsMetatada(UserPermission.EDIT)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Patch(':id')
   async updateUserById(
     @Param('id', ParseIntPipe) userId: number,
