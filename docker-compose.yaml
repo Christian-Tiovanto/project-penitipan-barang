@@ -30,6 +30,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: ${DB_NAME}
+      TZ: Asia/Jakarta
     ports:
       - '${DB_PORT}:3306'
     # volumes:
