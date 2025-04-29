@@ -291,6 +291,7 @@ export class TransactionOutService {
         const clockOut = createTransactionOutWithSpbDto.clock_out;
         const transinHeaderId =
           createTransactionOutWithSpbDto.transaction_in_headerId;
+        const transDate = createTransactionOutWithSpbDto.transaction_date;
 
         const detailTransIn =
           await this.transactionInHeaderService.findTransactionInHeaderById(
@@ -356,13 +357,13 @@ export class TransactionOutService {
             );
 
             let fine: number = 0;
-            if (isPastDays(transactionIn.created_at, 120)) {
+            if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
-            } else if (isPastDays(transactionIn.created_at, 90)) {
+            } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
               fine = totalPrice * 3;
-            } else if (isPastDays(transactionIn.created_at, 60)) {
+            } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
               fine = totalPrice * 2;
-            } else if (isPastDays(transactionIn.created_at, 30)) {
+            } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
               fine = totalPrice;
             }
 
@@ -438,6 +439,8 @@ export class TransactionOutService {
               product.price * transactionOut.converted_qty;
             transactionOut.unit = transactionIn.unit;
             transactionOut.transaction_inId = transactionIn.id;
+            transactionOut.created_at = transDate;
+            transactionOut.updated_at = transDate;
 
             const transactionOutSave = entityManager.create(
               TransactionOut,
@@ -471,6 +474,9 @@ export class TransactionOutService {
         createInvoice.total_order = totalQty;
         createInvoice.total_order_converted = totalConvertedQty;
         createInvoice.charge = totalCharge;
+        createInvoice.created_at = transDate;
+        createInvoice.updated_at = transDate;
+
         const invoice = await this.invoiceService.createInvoice(
           createInvoice,
           entityManager,
@@ -481,6 +487,8 @@ export class TransactionOutService {
         createSpb.invoiceId = invoice.id;
         createSpb.customerId = customerId;
         createSpb.no_plat = noPlat;
+        createSpb.created_at = transDate;
+        createSpb.updated_at = transDate;
 
         const spb = await this.spbService.createSpb(createSpb, entityManager);
 
@@ -502,6 +510,9 @@ export class TransactionOutService {
           invoice.charge +
           invoice.tax -
           invoice.discount;
+        createAr.created_at = transDate;
+        createAr.updated_at = transDate;
+
         const ar = await this.arService.createAr(createAr, entityManager);
 
         await this.updateTransactionOutNull(entityManager, invoice.id, spb.id);
@@ -521,6 +532,7 @@ export class TransactionOutService {
         const customerId = createTransactionOutFifoWithSpbDto.customerId;
         const noPlat = createTransactionOutFifoWithSpbDto.no_plat;
         const clockOut = createTransactionOutFifoWithSpbDto.clock_out;
+        const transDate = createTransactionOutFifoWithSpbDto.transaction_date;
         // const transinHeaderId =
         //   createTransactionOutWithSpbDto.transaction_in_headerId;
 
@@ -588,13 +600,13 @@ export class TransactionOutService {
             );
 
             let fine: number = 0;
-            if (isPastDays(transactionIn.created_at, 120)) {
+            if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
-            } else if (isPastDays(transactionIn.created_at, 90)) {
+            } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
               fine = totalPrice * 3;
-            } else if (isPastDays(transactionIn.created_at, 60)) {
+            } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
               fine = totalPrice * 2;
-            } else if (isPastDays(transactionIn.created_at, 30)) {
+            } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
               fine = totalPrice;
             }
 
@@ -671,6 +683,8 @@ export class TransactionOutService {
               product.price * transactionOut.converted_qty;
             transactionOut.unit = transactionIn.unit;
             transactionOut.transaction_inId = transactionIn.id;
+            transactionOut.created_at = transDate;
+            transactionOut.updated_at = transDate;
 
             const transactionOutSave = entityManager.create(
               TransactionOut,
@@ -704,6 +718,9 @@ export class TransactionOutService {
         createInvoice.total_order = totalQty;
         createInvoice.total_order_converted = totalConvertedQty;
         createInvoice.charge = totalCharge;
+        createInvoice.created_at = transDate;
+        createInvoice.updated_at = transDate;
+
         const invoice = await this.invoiceService.createInvoice(
           createInvoice,
           entityManager,
@@ -714,6 +731,8 @@ export class TransactionOutService {
         createSpb.invoiceId = invoice.id;
         createSpb.customerId = customerId;
         createSpb.no_plat = noPlat;
+        createSpb.created_at = transDate;
+        createSpb.updated_at = transDate;
 
         const spb = await this.spbService.createSpb(createSpb, entityManager);
 
@@ -735,6 +754,8 @@ export class TransactionOutService {
           invoice.charge +
           invoice.tax -
           invoice.discount;
+        createAr.created_at = transDate;
+        createAr.updated_at = transDate;
         const ar = await this.arService.createAr(createAr, entityManager);
 
         await this.updateTransactionOutNull(entityManager, invoice.id, spb.id);
@@ -772,6 +793,8 @@ export class TransactionOutService {
           await this.transactionInHeaderService.findTransactionInHeaderById(
             transinHeaderId,
           );
+
+        const transDate = createTransactionOutWithSpbDto.transaction_date;
 
         const totalConvertedQty: number =
           createTransactionOutWithSpbDto.transaction_outs.reduce(
@@ -831,13 +854,13 @@ export class TransactionOutService {
             );
 
             let fine: number = 0;
-            if (isPastDays(transactionIn.created_at, 120)) {
+            if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
-            } else if (isPastDays(transactionIn.created_at, 90)) {
+            } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
               fine = totalPrice * 3;
-            } else if (isPastDays(transactionIn.created_at, 60)) {
+            } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
               fine = totalPrice * 2;
-            } else if (isPastDays(transactionIn.created_at, 30)) {
+            } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
               fine = totalPrice;
             }
 
@@ -910,6 +933,8 @@ export class TransactionOutService {
               product.price * transactionOut.converted_qty;
             transactionOut.unit = transactionIn.unit;
             transactionOut.transaction_inId = transactionIn.id;
+            transactionOut.created_at = transDate;
+            transactionOut.updated_at = transDate;
 
             // const transactionOutSave = entityManager.create(
             //   TransactionOut,
@@ -942,6 +967,8 @@ export class TransactionOutService {
         createInvoice.total_order = totalQty;
         createInvoice.total_order_converted = totalConvertedQty;
         createInvoice.charge = totalCharge;
+        createInvoice.created_at = transDate;
+        createInvoice.updated_at = transDate;
         // const invoice = await this.invoiceService.createInvoice(createInvoice, entityManager)
 
         // const createSpb = new CreateSpbDto();
@@ -977,6 +1004,7 @@ export class TransactionOutService {
         let amount: number = 0;
         let totalQty: number = 0;
         const customerId = createTransactionOutFifoWithSpbDto.customerId;
+        const transDate = createTransactionOutFifoWithSpbDto.transaction_date;
         // const noPlat = createTransactionOutWithSpbDto.no_plat;
         // const clockOut = createTransactionOutWithSpbDto.clock_out;
 
@@ -1023,13 +1051,13 @@ export class TransactionOutService {
             );
 
             let fine: number = 0;
-            if (isPastDays(transactionIn.created_at, 120)) {
+            if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
-            } else if (isPastDays(transactionIn.created_at, 90)) {
+            } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
               fine = totalPrice * 3;
-            } else if (isPastDays(transactionIn.created_at, 60)) {
+            } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
               fine = totalPrice * 2;
-            } else if (isPastDays(transactionIn.created_at, 30)) {
+            } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
               fine = totalPrice;
             }
 
@@ -1102,6 +1130,8 @@ export class TransactionOutService {
               product.price * transactionOut.converted_qty;
             transactionOut.unit = transactionIn.unit;
             transactionOut.transaction_inId = transactionIn.id;
+            transactionOut.created_at = transDate;
+            transactionOut.updated_at = transDate;
 
             // const transactionOutSave = entityManager.create(
             //   TransactionOut,
@@ -1134,6 +1164,8 @@ export class TransactionOutService {
         createInvoice.total_order = totalQty;
         createInvoice.total_order_converted = totalConvertedQty;
         createInvoice.charge = totalCharge;
+        createInvoice.created_at = transDate;
+        createInvoice.updated_at = transDate;
         // const invoice = await this.invoiceService.createInvoice(createInvoice, entityManager)
 
         // const createSpb = new CreateSpbDto();
