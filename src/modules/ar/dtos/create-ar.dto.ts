@@ -17,4 +17,6 @@ export class CreateArDto
   to_paid: number;
   status: ArStatus;
   paid_date: Date;
+  created_at: Date;
+  updated_at: Date;
 }

@@ -6,7 +6,8 @@ import { InvoiceStatus } from '@app/enums/invoice-status';
 
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateInvoiceDto
-  implements Omit<IInvoice, 'id' | 'created_at' | 'updated_at' | 'customer' | ''>
+  implements
+    Omit<IInvoice, 'id' | 'created_at' | 'updated_at' | 'customer' | ''>
 {
   // @ApiProperty({ example: 1 })
   // @JoiSchema(Joi.number().required())
@@ -20,4 +21,6 @@ export class CreateInvoiceDto
   total_order_converted: number;
   tax: number;
   status: InvoiceStatus;
+  created_at: Date;
+  updated_at: Date;
 }
