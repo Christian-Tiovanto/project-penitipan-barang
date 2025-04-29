@@ -20,6 +20,12 @@ export class StockInvoiceReportQuery {
   invoice: string;
 }
 
+export class AgingReportQuery {
+  @ApiProperty({ example: '1', required: false })
+  @JoiSchema(Joi.string().optional())
+  customer: string;
+}
+
 export class ArPaidReportQuery extends OptionalDateRangeQueryWithPagination {
   @ApiProperty({
     enum: ArSort,

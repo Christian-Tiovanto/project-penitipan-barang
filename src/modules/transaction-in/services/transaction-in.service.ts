@@ -100,10 +100,12 @@ export class TransactionInService {
 
     return transaction;
   }
+
   async createBulkTransactionIn(
     createBulkTransactionInDto: CreateBulkTransactionInDto,
   ): Promise<TransactionIn[]> {
     const { customerId } = createBulkTransactionInDto;
+    const { transaction_date } = createBulkTransactionInDto;
     const customer = await this.customerService.findCustomerById(customerId);
     const transaction = await this.transactionInRepository.manager.transaction(
       async (entityManager: EntityManager) => {
@@ -111,6 +113,7 @@ export class TransactionInService {
           await this.transactionInHeaderService.createTransactionInHeader(
             customer,
             entityManager,
+            transaction_date,
           );
         const {
           transactionsToCreate,
@@ -120,6 +123,7 @@ export class TransactionInService {
             createBulkTransactionInDto,
             customer,
             transactionInHeader,
+            transaction_date,
           );
         const newTransactionIn = entityManager.create(
           TransactionIn,
@@ -140,6 +144,7 @@ export class TransactionInService {
     createBulkTransactionInDto: CreateBulkTransactionInDto,
     customer: Customer,
     transactionInHeader: TransactionInHeader,
+    transactionDate: Date,
   ) {
     const transactionsToCreate = [];
     const productToUpdate: Product[] = [];
@@ -160,6 +165,9 @@ export class TransactionInService {
       transactionIn.unit = productUnit.name;
       transactionIn.transaction_in_headerId = transactionInHeader.id;
       transactionIn.customerId = customer.id;
+      transactionIn.created_at = transactionDate;
+      transactionIn.updated_at = transactionDate;
+
       const productAlreadyIn = productToUpdate.find(
         (value) => value.id === product.id,
       );

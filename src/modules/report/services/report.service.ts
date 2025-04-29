@@ -144,6 +144,24 @@ export class ReportService {
     return await this.transactionInRepository.query(query, params);
   }
 
+  async agingReport(customerId?: number) {
+    let query = `
+    SELECT c.name as product_name, a.created_at, b.code, CAST(a.remaining_qty AS DECIMAL(10,2)) as remaining_qty
+    , a.conversion_to_kg , a.unit, d.name as customer_name
+    FROM transaction_ins a 
+    LEFT JOIN transaction_in_header b ON a.transaction_in_headerid = b.id 
+    LEFT JOIN products c ON a.productId = c.id
+    LEFT JOIN customers d ON b.customerId = d.id`;
+
+    const params = [];
+    if (customerId) {
+      query += ` WHERE b.customerId = ?`;
+      params.push(customerId);
+    }
+
+    return await this.transactionInRepository.query(query, params);
+  }
+
   async cashflowReport({
     startDate,
     endDate,
