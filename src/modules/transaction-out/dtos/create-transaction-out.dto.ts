@@ -48,6 +48,8 @@ export class CreateTransactionOutDto
   total_charge: number;
   price: number;
   total_days: number;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export class CreateTransactionOutWithSpbDto extends TransactionOutSpbDto {
@@ -58,6 +60,10 @@ export class CreateTransactionOutWithSpbDto extends TransactionOutSpbDto {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
   transaction_in_headerId: number;
+
+  @ApiProperty({ example: '2025-04-29T00:00:00Z' })
+  @JoiSchema(Joi.date().required())
+  transaction_date: Date;
 }
 
 export class CreateTransactionOutFifoWithSpbDto extends TransactionOutSpbDto {
@@ -65,7 +71,7 @@ export class CreateTransactionOutFifoWithSpbDto extends TransactionOutSpbDto {
   @JoiSchema(Joi.array().items(Joi.object()).min(1)) // Bisa 1 transaksi atau lebih
   transaction_outs: CreateTransactionOutDto[];
 
-  // @ApiProperty({ example: 1 })
-  // @JoiSchema(Joi.number().required())
-  // transaction_in_headerId: number;
+  @ApiProperty({ example: '2025-04-29T00:00:00Z' })
+  @JoiSchema(Joi.date().required())
+  transaction_date: Date;
 }
