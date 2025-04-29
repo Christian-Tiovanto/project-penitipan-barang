@@ -854,13 +854,21 @@ export class TransactionOutService {
             );
 
             let fine: number = 0;
-            if (isPastDays(transactionIn.created_at, 120, transDate)) {
+            if (
+              isPastDays(convertToWIB(transactionIn.created_at), 120, transDate)
+            ) {
               fine = totalPrice * 4;
-            } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
+            } else if (
+              isPastDays(convertToWIB(transactionIn.created_at), 90, transDate)
+            ) {
               fine = totalPrice * 3;
-            } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
+            } else if (
+              isPastDays(convertToWIB(transactionIn.created_at), 60, transDate)
+            ) {
               fine = totalPrice * 2;
-            } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
+            } else if (
+              isPastDays(convertToWIB(transactionIn.created_at), 30, transDate)
+            ) {
               fine = totalPrice;
             }
 
