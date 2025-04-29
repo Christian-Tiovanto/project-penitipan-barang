@@ -37,6 +37,8 @@ export class BulkTransactionInDetailDto
   converted_qty: number;
   customerId: number;
   transaction_in_headerId: number;
+  created_at: Date;
+  updated_at: Date;
 }
 
 @JoiSchemaOptions({ allowUnknown: false })
@@ -54,4 +56,8 @@ export class CreateBulkTransactionInDto
     Joi.array().items(schema).min(1).required(),
   )
   data: BulkTransactionInDetailDto[];
+
+  @ApiProperty({ example: '2025-04-29T00:00:00Z' })
+  @JoiSchema(Joi.date().required())
+  transaction_date: Date;
 }

@@ -33,15 +33,19 @@ export class TransactionInHeaderService {
   async createTransactionInHeader(
     customer: Customer,
     entityManager: EntityManager,
+    transactionDate: Date,
   ): Promise<TransactionInHeader> {
     const transactionInHeader = entityManager.create(TransactionInHeader, {
       customer: {
         id: customer.id,
       },
+      created_at: transactionDate,
+      updated_at: transactionDate,
     });
     await entityManager.save(transactionInHeader);
 
     transactionInHeader.code = `${customer.code}-${String(transactionInHeader.id).padStart(5, '0')}`;
+    // transactionInHeader.updated_at = transactionInHeader.created_at;
     await entityManager.save(TransactionInHeader, transactionInHeader);
     return transactionInHeader;
   }
