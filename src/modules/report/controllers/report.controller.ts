@@ -12,6 +12,7 @@ import { DateRangeQuery } from '@app/commons/queries/date-range.query';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ApiTag } from '@app/enums/api-tags';
 import {
+  AgingReportQuery,
   ArPaidReportQuery,
   StockInvoiceReportQuery,
   StockReportQuery,
@@ -67,6 +68,12 @@ export class ReportController {
   @Get('stock-invoice-report')
   async stockInvoiceReport(@Query() { invoice }: StockInvoiceReportQuery) {
     return await this.reportService.stockInvoiceReport(parseInt(invoice));
+  }
+
+  @PermissionsMetatada(ReportPermission.LIST)
+  @Get('aging-report')
+  async agingReport(@Query() { customer }: AgingReportQuery) {
+    return await this.reportService.agingReport(parseInt(customer));
   }
 
   @PermissionsMetatada(ReportPermission.LIST)
