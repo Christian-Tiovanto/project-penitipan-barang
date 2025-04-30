@@ -74,3 +74,11 @@ export interface IStockInvoiceReportData {
 export class StockInvoiceReportResponse {
   data: IStockInvoiceReportData[];
 }
+
+export interface CustomerProductMutationReport {
+  date: Date;
+  productId: number;
+  name: string;
+  qty_in: number;
+  qty_out: number;
+}

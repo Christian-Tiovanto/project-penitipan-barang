@@ -3,6 +3,7 @@ import { TransactionInService } from '@app/modules/transaction-in/services/trans
 import { TransactionOutService } from '@app/modules/transaction-out/services/transaction-out.service';
 import {
   CashflowReportResponse,
+  CustomerProductMutationReport,
   IStockReportData,
   NettIncomeReportResponse,
   StockBookReportResponse,
@@ -19,6 +20,10 @@ import { ArSort, SortOrder } from '@app/enums/sort-order';
 import { ArStatus } from '@app/enums/ar-status';
 import { CashflowFrom } from '@app/modules/cashflow/models/cashflow.entity';
 interface StockBookReportQuery {
+  startDate: Date;
+  endDate: Date;
+}
+interface CustomerProductMutationReportQuery {
   startDate: Date;
   endDate: Date;
 }
@@ -318,6 +323,200 @@ export class ReportService {
       customer,
       with_payment,
       status,
+    });
+  }
+
+  async customerProductMutationReport(
+    customerId: number,
+    { startDate, endDate }: CustomerProductMutationReportQuery,
+  ) {
+    const queryBefore = `SELECT 
+    DATE(all_records.date) as date,
+    all_records.productId,
+    products.name,
+    COALESCE(transaction_ins.totals, 0) AS qty_in,
+    COALESCE(transaction_outs.totals, 0) AS qty_out
+FROM (
+    SELECT DISTINCT 
+        DATE(created_at) AS date,
+        productId
+    FROM (
+        -- Get base records from BOTH tables with date filter
+        SELECT created_at, productId 
+        FROM transaction_ins 
+        WHERE customerId = ${customerId}
+          AND created_at < "${startDate}"   -- END DATE + 1 DAY
+        UNION ALL
+        SELECT created_at, productId 
+        FROM transaction_outs 
+        WHERE customerId = ${customerId}
+          AND created_at < "${startDate}"   -- END DATE + 1 DAY
+    ) AS combined_records
+) AS all_records
+LEFT JOIN products on all_records.productId = products.id
+LEFT JOIN (
+    -- Aggregated ins with date filter
+    SELECT 
+        DATE(created_at) AS date,
+        productId,
+        SUM(converted_qty) AS totals
+    FROM transaction_ins
+    WHERE customerId = ${customerId}
+      AND created_at < "${startDate}"
+    GROUP BY DATE(created_at), productId
+) AS transaction_ins 
+    ON all_records.date = transaction_ins.date
+    AND all_records.productId = transaction_ins.productId
+LEFT JOIN (
+    -- Aggregated outs with date filter
+    SELECT 
+        DATE(created_at) AS date,
+        productId,
+        SUM(converted_qty) AS totals
+    FROM transaction_outs
+    WHERE customerId = ${customerId}
+      AND created_at < "${startDate}"
+    GROUP BY DATE(created_at), productId
+) AS transaction_outs 
+    ON all_records.date = transaction_outs.date
+    AND all_records.productId = transaction_outs.productId
+ORDER BY all_records.date, all_records.productId;`;
+
+    const query = `SELECT 
+    DATE(all_records.date) as date,
+    all_records.productId,
+    products.name,
+    COALESCE(transaction_ins.totals, 0) AS qty_in,
+    COALESCE(transaction_outs.totals, 0) AS qty_out
+FROM (
+    SELECT DISTINCT 
+        DATE(created_at) AS date,
+        productId
+    FROM (
+        -- Get base records from BOTH tables with date filter
+        SELECT created_at, productId 
+        FROM transaction_ins 
+        WHERE customerId = ${customerId}
+          AND created_at >= "${startDate}"  -- START DATE
+          AND created_at < "${endDate}"   -- END DATE + 1 DAY
+        UNION ALL
+        SELECT created_at, productId 
+        FROM transaction_outs 
+        WHERE customerId = ${customerId}
+          AND created_at >= "${startDate}"  -- START DATE
+          AND created_at < "${endDate}"   -- END DATE + 1 DAY
+    ) AS combined_records
+) AS all_records
+LEFT JOIN products on all_records.productId = products.id
+LEFT JOIN (
+    -- Aggregated ins with date filter
+    SELECT 
+        DATE(created_at) AS date,
+        productId,
+        SUM(converted_qty) AS totals
+    FROM transaction_ins
+    WHERE customerId = ${customerId}
+      AND created_at >= "${startDate}"
+      AND created_at < "${endDate}"
+    GROUP BY DATE(created_at), productId
+) AS transaction_ins 
+    ON all_records.date = transaction_ins.date
+    AND all_records.productId = transaction_ins.productId
+LEFT JOIN (
+    -- Aggregated outs with date filter
+    SELECT 
+        DATE(created_at) AS date,
+        productId,
+        SUM(converted_qty) AS totals
+    FROM transaction_outs
+    WHERE customerId = ${customerId}
+      AND created_at >= "${startDate}"
+      AND created_at < "${endDate}"
+    GROUP BY DATE(created_at), productId
+) AS transaction_outs 
+    ON all_records.date = transaction_outs.date
+    AND all_records.productId = transaction_outs.productId
+ORDER BY all_records.date, all_records.productId;`;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const dataBefore: CustomerProductMutationReport[] =
+      await this.transactionInRepository.query(queryBefore);
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const data: CustomerProductMutationReport[] =
+      await this.transactionInRepository.query(query);
+
+    const dataBeforeMap = new Map<number, CustomerProductMutationReport[]>();
+    for (const row of dataBefore) {
+      const parsedRow = {
+        ...row,
+        qty_in: Number(row.qty_in),
+        qty_out: Number(row.qty_out),
+      };
+
+      const arr = dataBeforeMap.get(parsedRow.productId);
+      if (arr) {
+        arr.push(parsedRow);
+      } else {
+        dataBeforeMap.set(parsedRow.productId, [parsedRow]);
+      }
+    }
+    const initialStockMap = new Map<number, number>();
+
+    for (const [key, value] of dataBeforeMap) {
+      let initialStock = 0;
+      for (const productTrans of value) {
+        initialStock =
+          initialStock +
+          Number(productTrans.qty_in) -
+          Number(productTrans.qty_out);
+      }
+      initialStockMap.set(key, initialStock);
+    }
+
+    const mutationDataMap = new Map<number, CustomerProductMutationReport[]>();
+
+    for (const row of data) {
+      const parsedRow = {
+        ...row,
+        qty_in: Number(row.qty_in),
+        qty_out: Number(row.qty_out),
+      };
+
+      const arr = mutationDataMap.get(parsedRow.productId);
+      if (arr) {
+        arr.push(parsedRow);
+      } else {
+        mutationDataMap.set(parsedRow.productId, [parsedRow]);
+      }
+    }
+    const productNotInMutationDataMap = new Map<
+      number,
+      CustomerProductMutationReport[]
+    >();
+    for (const [key, value] of dataBeforeMap) {
+      if (!mutationDataMap.get(key)) {
+        productNotInMutationDataMap.set(key, []);
+      }
+    }
+    return Array.from(
+      // Combine keys from both maps
+      new Set([...mutationDataMap.keys(), ...dataBeforeMap.keys()]),
+    ).map((productId) => {
+      // Get records from mutation data or empty array
+      const records = mutationDataMap.get(productId) || [];
+
+      // Get product name from either dataset
+      const productName =
+        records[0]?.name ||
+        dataBeforeMap.get(productId)?.[0]?.name ||
+        'Unknown';
+
+      return {
+        productId,
+        productName,
+        initialValue: initialStockMap.get(productId) ?? 0,
+        records,
+      };
     });
   }
 }
