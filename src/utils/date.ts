@@ -31,3 +31,8 @@ export function convertToWIB(utcDate: Date): Date {
   const wibOffset = 7;
   return new Date(utcDate.getTime() + wibOffset * 60 * 60 * 1000);
 }
+
+export function convertToUTC(utcDate: Date): Date {
+  const wibOffset = 7;
+  return new Date(utcDate.getTime() - wibOffset * 60 * 60 * 1000);
+}

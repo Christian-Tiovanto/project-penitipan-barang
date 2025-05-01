@@ -18,6 +18,7 @@ import { ProductService } from '@app/modules/product/services/product.service';
 import { CustomerService } from '@app/modules/customer/services/customer.service';
 import { TransactionInService } from '@app/modules/transaction-in/services/transaction-in.service';
 import {
+  convertToUTC,
   convertToWIB,
   isOutsideBusinessHours,
   isPastDays,
@@ -439,8 +440,8 @@ export class TransactionOutService {
               product.price * transactionOut.converted_qty;
             transactionOut.unit = transactionIn.unit;
             transactionOut.transaction_inId = transactionIn.id;
-            transactionOut.created_at = transDate;
-            transactionOut.updated_at = transDate;
+            transactionOut.created_at = convertToUTC(transDate);
+            transactionOut.updated_at = convertToUTC(transDate);
 
             const transactionOutSave = entityManager.create(
               TransactionOut,
@@ -474,8 +475,8 @@ export class TransactionOutService {
         createInvoice.total_order = totalQty;
         createInvoice.total_order_converted = totalConvertedQty;
         createInvoice.charge = totalCharge;
-        createInvoice.created_at = transDate;
-        createInvoice.updated_at = transDate;
+        createInvoice.created_at = convertToUTC(transDate);
+        createInvoice.updated_at = convertToUTC(transDate);
 
         const invoice = await this.invoiceService.createInvoice(
           createInvoice,
@@ -487,8 +488,8 @@ export class TransactionOutService {
         createSpb.invoiceId = invoice.id;
         createSpb.customerId = customerId;
         createSpb.no_plat = noPlat;
-        createSpb.created_at = transDate;
-        createSpb.updated_at = transDate;
+        createSpb.created_at = convertToUTC(transDate);
+        createSpb.updated_at = convertToUTC(transDate);
 
         const spb = await this.spbService.createSpb(createSpb, entityManager);
 
@@ -510,8 +511,8 @@ export class TransactionOutService {
           invoice.charge +
           invoice.tax -
           invoice.discount;
-        createAr.created_at = transDate;
-        createAr.updated_at = transDate;
+        createAr.created_at = convertToUTC(transDate);
+        createAr.updated_at = convertToUTC(transDate);
 
         const ar = await this.arService.createAr(createAr, entityManager);
 
@@ -683,8 +684,8 @@ export class TransactionOutService {
               product.price * transactionOut.converted_qty;
             transactionOut.unit = transactionIn.unit;
             transactionOut.transaction_inId = transactionIn.id;
-            transactionOut.created_at = transDate;
-            transactionOut.updated_at = transDate;
+            transactionOut.created_at = convertToUTC(transDate);
+            transactionOut.updated_at = convertToUTC(transDate);
 
             const transactionOutSave = entityManager.create(
               TransactionOut,
@@ -718,8 +719,8 @@ export class TransactionOutService {
         createInvoice.total_order = totalQty;
         createInvoice.total_order_converted = totalConvertedQty;
         createInvoice.charge = totalCharge;
-        createInvoice.created_at = transDate;
-        createInvoice.updated_at = transDate;
+        createInvoice.created_at = convertToUTC(transDate);
+        createInvoice.updated_at = convertToUTC(transDate);
 
         const invoice = await this.invoiceService.createInvoice(
           createInvoice,
@@ -731,8 +732,8 @@ export class TransactionOutService {
         createSpb.invoiceId = invoice.id;
         createSpb.customerId = customerId;
         createSpb.no_plat = noPlat;
-        createSpb.created_at = transDate;
-        createSpb.updated_at = transDate;
+        createSpb.created_at = convertToUTC(transDate);
+        createSpb.updated_at = convertToUTC(transDate);
 
         const spb = await this.spbService.createSpb(createSpb, entityManager);
 
@@ -754,8 +755,8 @@ export class TransactionOutService {
           invoice.charge +
           invoice.tax -
           invoice.discount;
-        createAr.created_at = transDate;
-        createAr.updated_at = transDate;
+        createAr.created_at = convertToUTC(transDate);
+        createAr.updated_at = convertToUTC(transDate);
         const ar = await this.arService.createAr(createAr, entityManager);
 
         await this.updateTransactionOutNull(entityManager, invoice.id, spb.id);
@@ -941,8 +942,8 @@ export class TransactionOutService {
               product.price * transactionOut.converted_qty;
             transactionOut.unit = transactionIn.unit;
             transactionOut.transaction_inId = transactionIn.id;
-            transactionOut.created_at = transDate;
-            transactionOut.updated_at = transDate;
+            transactionOut.created_at = convertToUTC(transDate);
+            transactionOut.updated_at = convertToUTC(transDate);
 
             // const transactionOutSave = entityManager.create(
             //   TransactionOut,
@@ -975,8 +976,8 @@ export class TransactionOutService {
         createInvoice.total_order = totalQty;
         createInvoice.total_order_converted = totalConvertedQty;
         createInvoice.charge = totalCharge;
-        createInvoice.created_at = transDate;
-        createInvoice.updated_at = transDate;
+        createInvoice.created_at = convertToUTC(transDate);
+        createInvoice.updated_at = convertToUTC(transDate);
         // const invoice = await this.invoiceService.createInvoice(createInvoice, entityManager)
 
         // const createSpb = new CreateSpbDto();
@@ -1138,8 +1139,8 @@ export class TransactionOutService {
               product.price * transactionOut.converted_qty;
             transactionOut.unit = transactionIn.unit;
             transactionOut.transaction_inId = transactionIn.id;
-            transactionOut.created_at = transDate;
-            transactionOut.updated_at = transDate;
+            transactionOut.created_at = convertToUTC(transDate);
+            transactionOut.updated_at = convertToUTC(transDate);
 
             // const transactionOutSave = entityManager.create(
             //   TransactionOut,
@@ -1172,8 +1173,8 @@ export class TransactionOutService {
         createInvoice.total_order = totalQty;
         createInvoice.total_order_converted = totalConvertedQty;
         createInvoice.charge = totalCharge;
-        createInvoice.created_at = transDate;
-        createInvoice.updated_at = transDate;
+        createInvoice.created_at = convertToUTC(transDate);
+        createInvoice.updated_at = convertToUTC(transDate);
         // const invoice = await this.invoiceService.createInvoice(createInvoice, entityManager)
 
         // const createSpb = new CreateSpbDto();
