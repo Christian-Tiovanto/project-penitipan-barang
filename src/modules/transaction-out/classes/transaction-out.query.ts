@@ -10,6 +10,8 @@ export enum TransactionOutSort {
   CONVERTED_QTY = 'converted_qty',
   TOTAL_DAYS = 'total_days',
   INVOICE = 'invoice',
+  CREATED_AT = 'created_at',
+  IS_CHARGE = 'is_charge',
 }
 
 export class GetAllTransactionOutQuery extends OptionalDateRangeQueryWithPagination {
