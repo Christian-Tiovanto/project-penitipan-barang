@@ -66,6 +66,10 @@ export class TransactionInHeaderService {
       sortBy = `${sort}.name`;
     }
 
+    if (sort === TransactionInHeaderSort.IS_CHARGE) {
+      sortBy = `transaction_in.${sort}`;
+    }
+
     const queryBuilder = this.transactionInHeaderRepository
       .createQueryBuilder('transaction-header')
       .leftJoinAndSelect('transaction-header.customer', 'customer')

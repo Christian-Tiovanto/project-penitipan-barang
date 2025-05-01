@@ -32,6 +32,7 @@ export enum TransactionInSort {
   CONVERTED_QTY = 'converted_qty',
   UNIT = 'unit',
   TRANSACTION_IN_HEADER = 'transaction_in_header',
+  IS_CHARGE = 'is_charge',
 }
 
 export enum TransactionInHeaderSort {
@@ -39,6 +40,7 @@ export enum TransactionInHeaderSort {
   CUSTOMER = 'customer',
   CODE = 'code',
   CREATED_AT = 'created_at',
+  IS_CHARGE = 'is_charge',
 }
 
 export type SortOrderQueryBuilder = 'ASC' | 'DESC';
