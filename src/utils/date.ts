@@ -32,7 +32,13 @@ export function convertToWIB(utcDate: Date): Date {
   return new Date(utcDate.getTime() + wibOffset * 60 * 60 * 1000);
 }
 
-export function convertToUTC(utcDate: Date): Date {
-  const wibOffset = 7;
-  return new Date(utcDate.getTime() - wibOffset * 60 * 60 * 1000);
+export function convertToUTC(wibDate: Date | string): Date {
+  const dateObj = new Date(wibDate); // pastikan input jadi Date object
+
+  if (isNaN(dateObj.getTime())) {
+    throw new Error('Invalid date format');
+  }
+
+  const wibOffset = 7; // WIB = UTC+7
+  return new Date(dateObj.getTime() - wibOffset * 60 * 60 * 1000);
 }
