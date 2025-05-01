@@ -65,6 +65,18 @@ export class ReportController {
   }
 
   @PermissionsMetatada(ReportPermission.LIST)
+  @Get('customer-mutation-stock/:customer_id')
+  async customerProductMutationReport(
+    @Query() { start_date, end_date }: DateRangeQuery,
+    @Param('customer_id', ParseIntPipe) customerId: number,
+  ) {
+    return await this.reportService.customerProductMutationReport(customerId, {
+      startDate: start_date,
+      endDate: end_date,
+    });
+  }
+
+  @PermissionsMetatada(ReportPermission.LIST)
   @Get('stock-invoice-report')
   async stockInvoiceReport(@Query() { invoice }: StockInvoiceReportQuery) {
     return await this.reportService.stockInvoiceReport(parseInt(invoice));
