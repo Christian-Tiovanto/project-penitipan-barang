@@ -33,6 +33,7 @@ import { CreateBulkTransactionInDto } from '../dtos/create-bulk-transaction-in.d
 import { TransactionInHeaderService } from './transaction-in-header.service';
 import { TransactionInHeader } from '../models/transaction-in-header.entity';
 import { TransactionOut } from '@app/modules/transaction-out/models/transaction-out.entity';
+import { convertToUTC } from '@app/utils/date';
 
 interface GetAllTransactionInQuery {
   pageNo: number;
@@ -105,7 +106,8 @@ export class TransactionInService {
     createBulkTransactionInDto: CreateBulkTransactionInDto,
   ): Promise<TransactionIn[]> {
     const { customerId } = createBulkTransactionInDto;
-    const { transaction_date } = createBulkTransactionInDto;
+    let { transaction_date } = createBulkTransactionInDto;
+    transaction_date = convertToUTC(transaction_date); //convert to utc
     const customer = await this.customerService.findCustomerById(customerId);
     const transaction = await this.transactionInRepository.manager.transaction(
       async (entityManager: EntityManager) => {
