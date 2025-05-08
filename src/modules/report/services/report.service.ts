@@ -19,6 +19,7 @@ import { ArService } from '@app/modules/ar/services/ar.service';
 import { ArSort, SortOrder } from '@app/enums/sort-order';
 import { ArStatus } from '@app/enums/ar-status';
 import { CashflowFrom } from '@app/modules/cashflow/models/cashflow.entity';
+import { ProductUnitService } from '@app/modules/product-unit/services/product-unit.service';
 interface StockBookReportQuery {
   startDate: Date;
   endDate: Date;
@@ -51,6 +52,7 @@ export class ReportService {
     private readonly transactionInService: TransactionInService,
     private readonly transactionOutService: TransactionOutService,
     private readonly productService: ProductService,
+    private readonly productUnitService: ProductUnitService,
     private readonly cashflowService: CashflowService,
     @InjectRepository(TransactionIn)
     private readonly transactionInRepository: Repository<TransactionIn>,
@@ -359,7 +361,7 @@ LEFT JOIN (
     SELECT 
         DATE(created_at) AS date,
         productId,
-        SUM(converted_qty) AS totals
+        SUM(qty) AS totals
     FROM transaction_ins
     WHERE customerId = ${customerId}
       AND created_at < "${startDate}"
@@ -372,7 +374,7 @@ LEFT JOIN (
     SELECT 
         DATE(created_at) AS date,
         productId,
-        SUM(converted_qty) AS totals
+        SUM(qty) AS totals
     FROM transaction_outs
     WHERE customerId = ${customerId}
       AND created_at < "${startDate}"
@@ -413,7 +415,7 @@ LEFT JOIN (
     SELECT 
         DATE(created_at) AS date,
         productId,
-        SUM(converted_qty) AS totals
+        SUM(qty) AS totals
     FROM transaction_ins
     WHERE customerId = ${customerId}
       AND created_at >= "${startDate}"
@@ -427,7 +429,7 @@ LEFT JOIN (
     SELECT 
         DATE(created_at) AS date,
         productId,
-        SUM(converted_qty) AS totals
+        SUM(qty) AS totals
     FROM transaction_outs
     WHERE customerId = ${customerId}
       AND created_at >= "${startDate}"
@@ -474,7 +476,7 @@ ORDER BY all_records.date, all_records.productId;`;
     }
 
     const mutationDataMap = new Map<number, CustomerProductMutationReport[]>();
-
+    console.log(data);
     for (const row of data) {
       const parsedRow = {
         ...row,
@@ -498,25 +500,26 @@ ORDER BY all_records.date, all_records.productId;`;
         productNotInMutationDataMap.set(key, []);
       }
     }
-    return Array.from(
-      // Combine keys from both maps
-      new Set([...mutationDataMap.keys(), ...dataBeforeMap.keys()]),
-    ).map((productId) => {
-      // Get records from mutation data or empty array
-      const records = mutationDataMap.get(productId) || [];
+    return await Promise.all(
+      Array.from(
+        // Combine keys from both maps
+        new Set([...mutationDataMap.keys(), ...dataBeforeMap.keys()]),
+      ).map(async (productId) => {
+        // Get records from mutation data or empty array
+        const records = mutationDataMap.get(productId) || [];
 
-      // Get product name from either dataset
-      const productName =
-        records[0]?.name ||
-        dataBeforeMap.get(productId)?.[0]?.name ||
-        'Unknown';
-
-      return {
-        productId,
-        productName,
-        initialValue: initialStockMap.get(productId) ?? 0,
-        records,
-      };
-    });
+        // Get product name from either dataset
+        const productName =
+          records[0]?.name ||
+          dataBeforeMap.get(productId)?.[0]?.name ||
+          'Unknown';
+        return {
+          productId,
+          productName,
+          initialValue: initialStockMap.get(productId) ?? 0,
+          records,
+        };
+      }),
+    );
   }
 }

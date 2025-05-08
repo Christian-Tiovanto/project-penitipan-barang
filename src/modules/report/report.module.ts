@@ -7,6 +7,7 @@ import { ProductModule } from '../product/product.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CashflowModule } from '../cashflow/cashflow.module';
 import { ArModule } from '../ar/ar.module';
+import { ProductUnitModule } from '../product-unit/product-unit.module';
 
 @Module({
   providers: [ReportService],
@@ -18,6 +19,7 @@ import { ArModule } from '../ar/ar.module';
     ProductModule,
     CashflowModule,
     TypeOrmModule,
+    ProductUnitModule,
   ],
 })
 export class ReportModule {}

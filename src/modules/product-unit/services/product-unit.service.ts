@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
 import { ProductUnit } from '../models/product-unit.entity';
@@ -140,10 +144,23 @@ export class ProductUnitService {
     }
     return productUnit;
   }
+  async getProductUnitProductId(productId: number): Promise<ProductUnit> {
+    const productUnit = await this.productUnitRepository.findOne({
+      where: { productId: productId },
+    });
+    return productUnit;
+  }
 
   async createProductUnit(
     createProductDto: CreateProductUnitDto,
   ): Promise<ProductUnit> {
+    const productUnit = await this.getProductUnitProductId(
+      createProductDto.productId,
+    );
+    if (productUnit)
+      throw new BadRequestException(
+        `Product ${createProductDto.productId} already has Product Unit`,
+      );
     const newProductUnit = this.productUnitRepository.create(createProductDto);
     return await this.productUnitRepository.save(newProductUnit);
   }
