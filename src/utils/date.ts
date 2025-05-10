@@ -12,8 +12,8 @@ export function isPastDays(
   return now.getTime() > targetDate.getTime();
 }
 
-export function pastDaysCount(startDate: Date): number {
-  const now = new Date();
+export function pastDaysCount(startDate: Date, endDate: Date): number {
+  const now = new Date(endDate);
   const diffTime = now.getTime() - startDate.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 

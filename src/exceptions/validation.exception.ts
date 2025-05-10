@@ -10,3 +10,9 @@ export class InsufficientStockException extends BadRequestException {
     super(message);
   }
 }
+
+export class InvalidDateRangeException extends BadRequestException {
+  constructor(message: string) {
+    super(message);
+  }
+}

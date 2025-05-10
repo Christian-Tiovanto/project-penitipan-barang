@@ -11,6 +11,7 @@ import { SpbModule } from '../spb/spb.module';
 import { ChargeModule } from '../charge/charge.module';
 import { CustomerModule } from '../customer/customer.module';
 import { TransactionInHeader } from '../transaction-in/models/transaction-in-header.entity';
+import { ProductUnitModule } from '../product-unit/product-unit.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TransactionInHeader } from '../transaction-in/models/transaction-in-hea
     SpbModule,
     ChargeModule,
     CustomerModule,
+    ProductUnitModule,
   ],
   controllers: [TransactionOutController],
   providers: [TransactionOutService],
