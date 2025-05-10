@@ -382,16 +382,16 @@ export class TransactionOutService {
             let priceOut: number = product.price;
             if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
-              priceOut = product.price * 4;
+              priceOut = product.price * 5;
             } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
               fine = totalPrice * 3;
-              priceOut = product.price * 3;
+              priceOut = product.price * 4;
             } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
               fine = totalPrice * 2;
-              priceOut = product.price * 2;
+              priceOut = product.price * 3;
             } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
               fine = totalPrice;
-              priceOut = product.price;
+              priceOut = product.price * 2;
             }
 
             const totalDays = pastDaysCount(
@@ -649,16 +649,16 @@ export class TransactionOutService {
             let priceOut: number = product.price;
             if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
-              priceOut = product.price * 4;
+              priceOut = product.price * 5;
             } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
               fine = totalPrice * 3;
-              priceOut = product.price * 3;
+              priceOut = product.price * 4;
             } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
               fine = totalPrice * 2;
-              priceOut = product.price * 2;
+              priceOut = product.price * 3;
             } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
               fine = totalPrice;
-              priceOut = product.price;
+              priceOut = product.price * 2;
             }
 
             const totalDays = pastDaysCount(
@@ -929,16 +929,16 @@ export class TransactionOutService {
             let priceOut: number = product.price;
             if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
-              priceOut = product.price * 4;
+              priceOut = product.price * 5;
             } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
               fine = totalPrice * 3;
-              priceOut = product.price * 3;
+              priceOut = product.price * 4;
             } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
               fine = totalPrice * 2;
-              priceOut = product.price * 2;
+              priceOut = product.price * 3;
             } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
               fine = totalPrice;
-              priceOut = product.price;
+              priceOut = product.price * 2;
             }
 
             const totalDays = pastDaysCount(
@@ -1152,16 +1152,16 @@ export class TransactionOutService {
             let priceOut: number = product.price;
             if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
-              priceOut = product.price * 4;
+              priceOut = product.price * 5;
             } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
               fine = totalPrice * 3;
-              priceOut = product.price * 3;
+              priceOut = product.price * 4;
             } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
               fine = totalPrice * 2;
-              priceOut = product.price * 2;
+              priceOut = product.price * 3;
             } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
               fine = totalPrice;
-              priceOut = product.price;
+              priceOut = product.price * 2;
             }
 
             const totalDays = pastDaysCount(
