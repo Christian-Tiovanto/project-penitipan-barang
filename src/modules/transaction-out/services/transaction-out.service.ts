@@ -366,11 +366,9 @@ export class TransactionOutService {
               );
             }
 
-            console.log(transDate);
-            console.log(transactionIn.created_at);
             const transOutDate = new Date(transDate);
-            console.log(transOutDate);
-            if (transOutDate < transactionIn.created_at) {
+
+            if (transOutDate < convertToWIB(transactionIn.created_at)) {
               throw new InvalidDateRangeException(
                 `Transaction In Date can't be later than Transaction Out Date.`,
               );
@@ -628,11 +626,9 @@ export class TransactionOutService {
             }
             let qtyOut: number;
 
-            console.log(transDate);
-            console.log(transactionIn.created_at);
             const transOutDate = new Date(transDate);
-            console.log(transOutDate);
-            if (transOutDate < transactionIn.created_at) {
+
+            if (transOutDate < convertToWIB(transactionIn.created_at)) {
               throw new InvalidDateRangeException(
                 `Transaction In Date can't be later than Transaction Out Date.`,
               );
@@ -916,11 +912,9 @@ export class TransactionOutService {
               );
             }
 
-            console.log(transDate);
-            console.log(transactionIn.created_at);
             const transOutDate = new Date(transDate);
-            console.log(transOutDate);
-            if (transOutDate < transactionIn.created_at) {
+
+            if (transOutDate < convertToWIB(transactionIn.created_at)) {
               throw new InvalidDateRangeException(
                 `Transaction In Date can't be later than Transaction Out Date.`,
               );
@@ -1116,10 +1110,6 @@ export class TransactionOutService {
           transactionOut.converted_qty =
             transactionOut.qty * productUnit[0].conversion_to_kg;
 
-          console.log(transactionOut.qty);
-
-          console.log(transactionOut.converted_qty);
-
           const product = await this.productService.lockingProductById(
             entityManager,
             transactionOut.productId,
@@ -1145,11 +1135,9 @@ export class TransactionOutService {
             }
             let qtyOut: number;
 
-            console.log(transDate);
-            console.log(transactionIn.created_at);
             const transOutDate = new Date(transDate);
-            console.log(transOutDate);
-            if (transOutDate < transactionIn.created_at) {
+
+            if (transOutDate < convertToWIB(transactionIn.created_at)) {
               throw new InvalidDateRangeException(
                 `Transaction In Date can't be later than Transaction Out Date.`,
               );
