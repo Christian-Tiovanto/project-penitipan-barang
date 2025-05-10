@@ -77,7 +77,8 @@ export class TransactionInService {
     await this.customerService.findCustomerById(
       createTransactionInDto.customerId,
     );
-    createTransactionInDto.remaining_qty = createTransactionInDto.qty;
+    createTransactionInDto.remaining_qty =
+      createTransactionInDto.qty * productUnit.conversion_to_kg;
     createTransactionInDto.converted_qty =
       createTransactionInDto.qty * productUnit.conversion_to_kg;
     createTransactionInDto.conversion_to_kg = productUnit.conversion_to_kg;
@@ -160,7 +161,7 @@ export class TransactionInService {
         );
 
       const convertedQty = transactionIn.qty * productUnit.conversion_to_kg;
-      transactionIn.remaining_qty = transactionIn.qty;
+      transactionIn.remaining_qty = convertedQty;
       transactionIn.converted_qty = convertedQty;
       transactionIn.conversion_to_kg = productUnit.conversion_to_kg;
       transactionIn.unit = productUnit.name;
@@ -444,7 +445,7 @@ export class TransactionInService {
       );
     }
     let transactionInToUpdate: TransactionIn[] = [];
-
+    console.log(updateTransactionInDto.is_charge);
     if (
       updateTransactionInDto.customerId ||
       updateTransactionInDto.is_charge !== undefined
@@ -510,7 +511,8 @@ export class TransactionInService {
           entityManager,
         );
 
-        updateTransactionInDto.remaining_qty = updateTransactionInDto.qty;
+        updateTransactionInDto.remaining_qty =
+          updateTransactionInDto.converted_qty;
         if (
           updateTransactionInDto.customerId ||
           updateTransactionInDto.is_charge !== undefined
