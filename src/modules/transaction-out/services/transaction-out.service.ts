@@ -42,7 +42,11 @@ import { Customer } from '@app/modules/customer/models/customer.entity';
 import { Product } from '@app/modules/product/models/product.entity';
 import { TransactionInHeader } from '@app/modules/transaction-in/models/transaction-in-header.entity';
 import { TransactionInHeaderService } from '@app/modules/transaction-in/services/transaction-in-header.service';
-import { InsufficientStockException } from '@app/exceptions/validation.exception';
+import {
+  InsufficientStockException,
+  InvalidDateRangeException,
+} from '@app/exceptions/validation.exception';
+import { ProductUnitService } from '@app/modules/product-unit/services/product-unit.service';
 
 interface GetAllQuery {
   pageNo: number;
@@ -71,6 +75,7 @@ export class TransactionOutService {
     private spbService: SpbService,
     private chargeService: ChargeService,
     private transactionInHeaderService: TransactionInHeaderService,
+    private productUnitService: ProductUnitService,
   ) {}
 
   async getAllTransactionOuts({
@@ -286,7 +291,8 @@ export class TransactionOutService {
     const transaction = await this.transactionOutRepository.manager.transaction(
       async (entityManager: EntityManager) => {
         let amount: number = 0;
-        let totalQty: number = 0;
+        // let totalQty: number = 0;
+        let totalConvertedQty: number = 0;
         const customerId = createTransactionOutWithSpbDto.customerId;
         const noPlat = createTransactionOutWithSpbDto.no_plat;
         const clockOut = createTransactionOutWithSpbDto.clock_out;
@@ -299,9 +305,9 @@ export class TransactionOutService {
             transinHeaderId,
           );
 
-        const totalConvertedQty: number =
+        const totalQtyOut: number =
           createTransactionOutWithSpbDto.transaction_outs.reduce(
-            (sum, transaction) => sum + transaction.converted_qty,
+            (sum, transaction) => sum + transaction.qty,
             0,
           );
 
@@ -311,6 +317,14 @@ export class TransactionOutService {
         const valueCharge = await this.chargeService.findChargeById(1);
 
         for (const transactionOut of createTransactionOutWithSpbDto.transaction_outs) {
+          const productUnit =
+            await this.productUnitService.getProductUnitsByProductId(
+              transactionOut.productId,
+            );
+
+          transactionOut.converted_qty =
+            transactionOut.qty * productUnit[0].conversion_to_kg;
+
           const product = await this.productService.lockingProductById(
             entityManager,
             transactionOut.productId,
@@ -352,23 +366,40 @@ export class TransactionOutService {
               );
             }
 
+            console.log(transDate);
+            console.log(transactionIn.created_at);
+            const transOutDate = new Date(transDate);
+            console.log(transOutDate);
+            if (transOutDate < transactionIn.created_at) {
+              throw new InvalidDateRangeException(
+                `Transaction In Date can't be later than Transaction Out Date.`,
+              );
+            }
             await this.transactionInService.lockingTransactionInById(
               entityManager,
               transactionIn.id,
             );
 
             let fine: number = 0;
+            let priceOut: number = product.price;
             if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
+              priceOut = product.price * 4;
             } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
               fine = totalPrice * 3;
+              priceOut = product.price * 3;
             } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
               fine = totalPrice * 2;
+              priceOut = product.price * 2;
             } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
               fine = totalPrice;
+              priceOut = product.price;
             }
 
-            const totalDays = pastDaysCount(transactionIn.created_at);
+            const totalDays = pastDaysCount(
+              transactionIn.created_at,
+              transDate,
+            );
             totalFine += fine;
 
             if (transactionIn.remaining_qty > productQty) {
@@ -385,7 +416,7 @@ export class TransactionOutService {
               );
 
               qtyOut = productQty / transactionIn.conversion_to_kg;
-              totalQty += qtyOut;
+              totalConvertedQty += productQty;
               transactionOut.converted_qty = productQty;
               productQty = 0;
             } else {
@@ -393,7 +424,7 @@ export class TransactionOutService {
 
               qtyOut =
                 transactionIn.remaining_qty / transactionIn.conversion_to_kg;
-              totalQty += qtyOut;
+              totalConvertedQty += transactionIn.remaining_qty;
 
               transactionOut.converted_qty = transactionIn.remaining_qty;
 
@@ -432,7 +463,7 @@ export class TransactionOutService {
             transactionOut.customerId = customerId;
             transactionOut.conversion_to_kg = transactionIn.conversion_to_kg;
             transactionOut.qty = qtyOut;
-            transactionOut.price = product.price;
+            transactionOut.price = priceOut;
             transactionOut.total_charge = charge;
             transactionOut.total_days = totalDays;
             transactionOut.total_fine = fine;
@@ -472,7 +503,7 @@ export class TransactionOutService {
         createInvoice.invoice_no = invoiceNo;
         createInvoice.status = InvoiceStatus.PENDING;
         createInvoice.tax = 0;
-        createInvoice.total_order = totalQty;
+        createInvoice.total_order = totalQtyOut;
         createInvoice.total_order_converted = totalConvertedQty;
         createInvoice.charge = totalCharge;
         createInvoice.created_at = convertToUTC(transDate);
@@ -484,7 +515,7 @@ export class TransactionOutService {
         );
 
         const createSpb = new CreateSpbDto();
-        createSpb.clock_out = clockOut;
+        createSpb.clock_out = convertToUTC(clockOut);
         createSpb.invoiceId = invoice.id;
         createSpb.customerId = customerId;
         createSpb.no_plat = noPlat;
@@ -529,7 +560,7 @@ export class TransactionOutService {
     const transaction = await this.transactionOutRepository.manager.transaction(
       async (entityManager: EntityManager) => {
         let amount: number = 0;
-        let totalQty: number = 0;
+        // let totalQty: number = 0;
         const customerId = createTransactionOutFifoWithSpbDto.customerId;
         const noPlat = createTransactionOutFifoWithSpbDto.no_plat;
         const clockOut = createTransactionOutFifoWithSpbDto.clock_out;
@@ -541,10 +572,10 @@ export class TransactionOutService {
         //   await this.transactionInHeaderService.findTransactionInHeaderById(
         //     transinHeaderId,
         //   );
-
-        const totalConvertedQty: number =
+        let totalConvertedQty: number = 0;
+        const totalQtyOut: number =
           createTransactionOutFifoWithSpbDto.transaction_outs.reduce(
-            (sum, transaction) => sum + transaction.converted_qty,
+            (sum, transaction) => sum + transaction.qty,
             0,
           );
 
@@ -554,6 +585,14 @@ export class TransactionOutService {
         const valueCharge = await this.chargeService.findChargeById(1);
 
         for (const transactionOut of createTransactionOutFifoWithSpbDto.transaction_outs) {
+          const productUnit =
+            await this.productUnitService.getProductUnitsByProductId(
+              transactionOut.productId,
+            );
+
+          transactionOut.converted_qty =
+            transactionOut.qty * productUnit[0].conversion_to_kg;
+
           const product = await this.productService.lockingProductById(
             entityManager,
             transactionOut.productId,
@@ -589,6 +628,16 @@ export class TransactionOutService {
             }
             let qtyOut: number;
 
+            console.log(transDate);
+            console.log(transactionIn.created_at);
+            const transOutDate = new Date(transDate);
+            console.log(transOutDate);
+            if (transOutDate < transactionIn.created_at) {
+              throw new InvalidDateRangeException(
+                `Transaction In Date can't be later than Transaction Out Date.`,
+              );
+            }
+
             // if (transactionIn.remaining_qty < productQty) {
             //   throw new InsufficientStockException(
             //     `Insufficient stock : ${product.name} required ${productQty}, but only ${transactionIn.remaining_qty} available in Transaction In`,
@@ -601,17 +650,25 @@ export class TransactionOutService {
             );
 
             let fine: number = 0;
+            let priceOut: number = product.price;
             if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
+              priceOut = product.price * 4;
             } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
               fine = totalPrice * 3;
+              priceOut = product.price * 3;
             } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
               fine = totalPrice * 2;
+              priceOut = product.price * 2;
             } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
               fine = totalPrice;
+              priceOut = product.price;
             }
 
-            const totalDays = pastDaysCount(transactionIn.created_at);
+            const totalDays = pastDaysCount(
+              transactionIn.created_at,
+              transDate,
+            );
             totalFine += fine;
 
             if (transactionIn.remaining_qty > productQty) {
@@ -628,7 +685,7 @@ export class TransactionOutService {
               );
 
               qtyOut = productQty / transactionIn.conversion_to_kg;
-              totalQty += qtyOut;
+              totalConvertedQty += productQty;
               transactionOut.converted_qty = productQty;
               productQty = 0;
             } else {
@@ -636,7 +693,7 @@ export class TransactionOutService {
 
               qtyOut =
                 transactionIn.remaining_qty / transactionIn.conversion_to_kg;
-              totalQty += qtyOut;
+              totalConvertedQty += transactionIn.remaining_qty;
 
               transactionOut.converted_qty = transactionIn.remaining_qty;
 
@@ -676,7 +733,7 @@ export class TransactionOutService {
             transactionOut.customerId = customerId;
             transactionOut.conversion_to_kg = transactionIn.conversion_to_kg;
             transactionOut.qty = qtyOut;
-            transactionOut.price = product.price;
+            transactionOut.price = priceOut;
             transactionOut.total_charge = charge;
             transactionOut.total_days = totalDays;
             transactionOut.total_fine = fine;
@@ -716,7 +773,7 @@ export class TransactionOutService {
         createInvoice.invoice_no = invoiceNo;
         createInvoice.status = InvoiceStatus.PENDING;
         createInvoice.tax = 0;
-        createInvoice.total_order = totalQty;
+        createInvoice.total_order = totalQtyOut;
         createInvoice.total_order_converted = totalConvertedQty;
         createInvoice.charge = totalCharge;
         createInvoice.created_at = convertToUTC(transDate);
@@ -728,7 +785,7 @@ export class TransactionOutService {
         );
 
         const createSpb = new CreateSpbDto();
-        createSpb.clock_out = clockOut;
+        createSpb.clock_out = convertToUTC(clockOut);
         createSpb.invoiceId = invoice.id;
         createSpb.customerId = customerId;
         createSpb.no_plat = noPlat;
@@ -783,7 +840,7 @@ export class TransactionOutService {
     const transaction = await this.transactionOutRepository.manager.transaction(
       async (entityManager: EntityManager) => {
         let amount: number = 0;
-        let totalQty: number = 0;
+        // let totalQty: number = 0;
         const customerId = createTransactionOutWithSpbDto.customerId;
         // const noPlat = createTransactionOutWithSpbDto.no_plat;
         // const clockOut = createTransactionOutWithSpbDto.clock_out;
@@ -797,9 +854,11 @@ export class TransactionOutService {
 
         const transDate = createTransactionOutWithSpbDto.transaction_date;
 
-        const totalConvertedQty: number =
+        let totalConvertedQty: number = 0;
+
+        const totalQtyOut: number =
           createTransactionOutWithSpbDto.transaction_outs.reduce(
-            (sum, transaction) => sum + transaction.converted_qty,
+            (sum, transaction) => sum + transaction.qty,
             0,
           );
 
@@ -809,6 +868,14 @@ export class TransactionOutService {
         const valueCharge = await this.chargeService.findChargeById(1);
 
         for (const transactionOut of createTransactionOutWithSpbDto.transaction_outs) {
+          const productUnit =
+            await this.productUnitService.getProductUnitsByProductId(
+              transactionOut.productId,
+            );
+
+          transactionOut.converted_qty =
+            transactionOut.qty * productUnit[0].conversion_to_kg;
+
           const product = await this.productService.lockingProductById(
             entityManager,
             transactionOut.productId,
@@ -849,31 +916,41 @@ export class TransactionOutService {
               );
             }
 
+            console.log(transDate);
+            console.log(transactionIn.created_at);
+            const transOutDate = new Date(transDate);
+            console.log(transOutDate);
+            if (transOutDate < transactionIn.created_at) {
+              throw new InvalidDateRangeException(
+                `Transaction In Date can't be later than Transaction Out Date.`,
+              );
+            }
+
             await this.transactionInService.lockingTransactionInById(
               entityManager,
               transactionIn.id,
             );
 
             let fine: number = 0;
-            if (
-              isPastDays(convertToWIB(transactionIn.created_at), 120, transDate)
-            ) {
+            let priceOut: number = product.price;
+            if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
-            } else if (
-              isPastDays(convertToWIB(transactionIn.created_at), 90, transDate)
-            ) {
+              priceOut = product.price * 4;
+            } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
               fine = totalPrice * 3;
-            } else if (
-              isPastDays(convertToWIB(transactionIn.created_at), 60, transDate)
-            ) {
+              priceOut = product.price * 3;
+            } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
               fine = totalPrice * 2;
-            } else if (
-              isPastDays(convertToWIB(transactionIn.created_at), 30, transDate)
-            ) {
+              priceOut = product.price * 2;
+            } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
               fine = totalPrice;
+              priceOut = product.price;
             }
 
-            const totalDays = pastDaysCount(transactionIn.created_at);
+            const totalDays = pastDaysCount(
+              transactionIn.created_at,
+              transDate,
+            );
             totalFine += fine;
 
             if (transactionIn.remaining_qty > productQty) {
@@ -888,7 +965,7 @@ export class TransactionOutService {
               //   productQty,)
 
               qtyOut = productQty / transactionIn.conversion_to_kg;
-              totalQty += qtyOut;
+              totalConvertedQty += productQty;
               transactionOut.converted_qty = productQty;
               productQty = 0;
             } else {
@@ -896,7 +973,7 @@ export class TransactionOutService {
 
               qtyOut =
                 transactionIn.remaining_qty / transactionIn.conversion_to_kg;
-              totalQty += qtyOut;
+              totalConvertedQty += transactionIn.remaining_qty;
 
               transactionOut.converted_qty = transactionIn.remaining_qty;
 
@@ -934,7 +1011,7 @@ export class TransactionOutService {
             transactionOut.customerId = customerId;
             transactionOut.conversion_to_kg = transactionIn.conversion_to_kg;
             transactionOut.qty = qtyOut;
-            transactionOut.price = product.price;
+            transactionOut.price = priceOut;
             transactionOut.total_charge = charge;
             transactionOut.total_days = totalDays;
             transactionOut.total_fine = fine;
@@ -973,7 +1050,7 @@ export class TransactionOutService {
         createInvoice.invoice_no = invoiceNo;
         createInvoice.status = InvoiceStatus.PENDING;
         createInvoice.tax = 0;
-        createInvoice.total_order = totalQty;
+        createInvoice.total_order = totalQtyOut;
         createInvoice.total_order_converted = totalConvertedQty;
         createInvoice.charge = totalCharge;
         createInvoice.created_at = convertToUTC(transDate);
@@ -1011,15 +1088,17 @@ export class TransactionOutService {
     const transaction = await this.transactionOutRepository.manager.transaction(
       async (entityManager: EntityManager) => {
         let amount: number = 0;
-        let totalQty: number = 0;
+        // let totalQty: number = 0;
         const customerId = createTransactionOutFifoWithSpbDto.customerId;
         const transDate = createTransactionOutFifoWithSpbDto.transaction_date;
         // const noPlat = createTransactionOutWithSpbDto.no_plat;
         // const clockOut = createTransactionOutWithSpbDto.clock_out;
 
-        const totalConvertedQty: number =
+        let totalConvertedQty: number = 0;
+
+        const totalQtyOut: number =
           createTransactionOutFifoWithSpbDto.transaction_outs.reduce(
-            (sum, transaction) => sum + transaction.converted_qty,
+            (sum, transaction) => sum + transaction.qty,
             0,
           );
 
@@ -1029,6 +1108,18 @@ export class TransactionOutService {
         const valueCharge = await this.chargeService.findChargeById(1);
 
         for (const transactionOut of createTransactionOutFifoWithSpbDto.transaction_outs) {
+          const productUnit =
+            await this.productUnitService.getProductUnitsByProductId(
+              transactionOut.productId,
+            );
+
+          transactionOut.converted_qty =
+            transactionOut.qty * productUnit[0].conversion_to_kg;
+
+          console.log(transactionOut.qty);
+
+          console.log(transactionOut.converted_qty);
+
           const product = await this.productService.lockingProductById(
             entityManager,
             transactionOut.productId,
@@ -1054,23 +1145,41 @@ export class TransactionOutService {
             }
             let qtyOut: number;
 
+            console.log(transDate);
+            console.log(transactionIn.created_at);
+            const transOutDate = new Date(transDate);
+            console.log(transOutDate);
+            if (transOutDate < transactionIn.created_at) {
+              throw new InvalidDateRangeException(
+                `Transaction In Date can't be later than Transaction Out Date.`,
+              );
+            }
+
             await this.transactionInService.lockingTransactionInById(
               entityManager,
               transactionIn.id,
             );
 
             let fine: number = 0;
+            let priceOut: number = product.price;
             if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
+              priceOut = product.price * 4;
             } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
               fine = totalPrice * 3;
+              priceOut = product.price * 3;
             } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
               fine = totalPrice * 2;
+              priceOut = product.price * 2;
             } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
               fine = totalPrice;
+              priceOut = product.price;
             }
 
-            const totalDays = pastDaysCount(transactionIn.created_at);
+            const totalDays = pastDaysCount(
+              transactionIn.created_at,
+              transDate,
+            );
             totalFine += fine;
 
             if (transactionIn.remaining_qty > productQty) {
@@ -1085,7 +1194,7 @@ export class TransactionOutService {
               //   productQty,)
 
               qtyOut = productQty / transactionIn.conversion_to_kg;
-              totalQty += qtyOut;
+              totalConvertedQty += productQty;
               transactionOut.converted_qty = productQty;
               productQty = 0;
             } else {
@@ -1093,7 +1202,7 @@ export class TransactionOutService {
 
               qtyOut =
                 transactionIn.remaining_qty / transactionIn.conversion_to_kg;
-              totalQty += qtyOut;
+              totalConvertedQty += transactionIn.remaining_qty;
 
               transactionOut.converted_qty = transactionIn.remaining_qty;
 
@@ -1131,7 +1240,7 @@ export class TransactionOutService {
             transactionOut.customerId = customerId;
             transactionOut.conversion_to_kg = transactionIn.conversion_to_kg;
             transactionOut.qty = qtyOut;
-            transactionOut.price = product.price;
+            transactionOut.price = priceOut;
             transactionOut.total_charge = charge;
             transactionOut.total_days = totalDays;
             transactionOut.total_fine = fine;
@@ -1170,7 +1279,7 @@ export class TransactionOutService {
         createInvoice.invoice_no = invoiceNo;
         createInvoice.status = InvoiceStatus.PENDING;
         createInvoice.tax = 0;
-        createInvoice.total_order = totalQty;
+        createInvoice.total_order = totalQtyOut;
         createInvoice.total_order_converted = totalConvertedQty;
         createInvoice.charge = totalCharge;
         createInvoice.created_at = convertToUTC(transDate);

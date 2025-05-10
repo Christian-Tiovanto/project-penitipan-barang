@@ -28,8 +28,6 @@ export class CreateTransactionOutDto
   // @JoiSchema(Joi.number().required())
   customerId: number;
 
-  @ApiProperty({ example: 1000 })
-  @JoiSchema(Joi.number().required())
   converted_qty: number;
 
   @ApiProperty({ example: true })
@@ -40,7 +38,11 @@ export class CreateTransactionOutDto
 
   invoiceId: number;
   spbId: number;
+
+  @ApiProperty({ example: 1000 })
+  @JoiSchema(Joi.number().required())
   qty: number;
+
   conversion_to_kg: number;
   unit: string;
   total_price: number;

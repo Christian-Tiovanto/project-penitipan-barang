@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
 import { ProductUnit } from '../models/product-unit.entity';
@@ -7,6 +11,7 @@ import { UpdateProductUnitDto } from '../dtos/update-product-unit.dto';
 import { ProductUnitSort } from '../classes/product-unit.query';
 import { GetProductUnitResponse } from '../classes/product-unit.response';
 import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
+import { TransactionIn } from '@app/modules/transaction-in/models/transaction-in.entity';
 interface GetAllProductUnitQuery {
   pageNo: number;
   pageSize: number;
@@ -21,6 +26,8 @@ export class ProductUnitService {
   constructor(
     @InjectRepository(ProductUnit)
     private readonly productUnitRepository: Repository<ProductUnit>,
+    @InjectRepository(TransactionIn)
+    private readonly transactionInRepository: Repository<TransactionIn>,
   ) {}
 
   async getAllProductUnits(): Promise<ProductUnit[]> {
@@ -140,10 +147,23 @@ export class ProductUnitService {
     }
     return productUnit;
   }
+  async getProductUnitProductId(productId: number): Promise<ProductUnit> {
+    const productUnit = await this.productUnitRepository.findOne({
+      where: { productId: productId },
+    });
+    return productUnit;
+  }
 
   async createProductUnit(
     createProductDto: CreateProductUnitDto,
   ): Promise<ProductUnit> {
+    const productUnit = await this.getProductUnitProductId(
+      createProductDto.productId,
+    );
+    if (productUnit)
+      throw new BadRequestException(
+        `Product ${createProductDto.productId} already has Product Unit`,
+      );
     const newProductUnit = this.productUnitRepository.create(createProductDto);
     return await this.productUnitRepository.save(newProductUnit);
   }
@@ -153,7 +173,14 @@ export class ProductUnitService {
     updateProductDto: UpdateProductUnitDto,
   ): Promise<ProductUnit> {
     const productUnit = await this.findProductUnitById(productUnitId);
-
+    const transactionInExist = await this.transactionInRepository.findOne({
+      where: { productId: productUnit.productId },
+    });
+    console.log(transactionInExist);
+    if (transactionInExist)
+      throw new BadRequestException(
+        "Can't Update Product Unit that already been used for Transaction In",
+      );
     Object.assign(productUnit, updateProductDto);
 
     return this.productUnitRepository.save(productUnit);
