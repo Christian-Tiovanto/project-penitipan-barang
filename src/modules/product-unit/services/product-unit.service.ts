@@ -11,6 +11,7 @@ import { UpdateProductUnitDto } from '../dtos/update-product-unit.dto';
 import { ProductUnitSort } from '../classes/product-unit.query';
 import { GetProductUnitResponse } from '../classes/product-unit.response';
 import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
+import { TransactionIn } from '@app/modules/transaction-in/models/transaction-in.entity';
 interface GetAllProductUnitQuery {
   pageNo: number;
   pageSize: number;
@@ -25,6 +26,8 @@ export class ProductUnitService {
   constructor(
     @InjectRepository(ProductUnit)
     private readonly productUnitRepository: Repository<ProductUnit>,
+    @InjectRepository(TransactionIn)
+    private readonly transactionInRepository: Repository<TransactionIn>,
   ) {}
 
   async getAllProductUnits(): Promise<ProductUnit[]> {
@@ -170,7 +173,14 @@ export class ProductUnitService {
     updateProductDto: UpdateProductUnitDto,
   ): Promise<ProductUnit> {
     const productUnit = await this.findProductUnitById(productUnitId);
-
+    const transactionInExist = await this.transactionInRepository.findOne({
+      where: { productId: productUnit.productId },
+    });
+    console.log(transactionInExist);
+    if (transactionInExist)
+      throw new BadRequestException(
+        "Can't Update Product Unit that already been used for Transaction In",
+      );
     Object.assign(productUnit, updateProductDto);
 
     return this.productUnitRepository.save(productUnit);
