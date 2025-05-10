@@ -381,7 +381,7 @@ export class TransactionOutService {
             );
 
             let fine: number = 0;
-            let priceOut: number = 0;
+            let priceOut: number = product.price;
             if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
               priceOut = product.price * 4;
@@ -650,7 +650,7 @@ export class TransactionOutService {
             );
 
             let fine: number = 0;
-            let priceOut: number = 0;
+            let priceOut: number = product.price;
             if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
               priceOut = product.price * 4;
@@ -932,7 +932,7 @@ export class TransactionOutService {
             );
 
             let fine: number = 0;
-            let priceOut: number = 0;
+            let priceOut: number = product.price;
             if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
               priceOut = product.price * 4;
@@ -1161,7 +1161,7 @@ export class TransactionOutService {
             );
 
             let fine: number = 0;
-            let priceOut: number = 0;
+            let priceOut: number = product.price;
             if (isPastDays(transactionIn.created_at, 120, transDate)) {
               fine = totalPrice * 4;
               priceOut = product.price * 4;
