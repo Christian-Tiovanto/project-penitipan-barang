@@ -378,28 +378,6 @@ export class TransactionOutService {
               transactionIn.id,
             );
 
-            let fine: number = 0;
-            let priceOut: number = product.price;
-            if (isPastDays(transactionIn.created_at, 120, transDate)) {
-              fine = totalPrice * 4;
-              priceOut = product.price * 5;
-            } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
-              fine = totalPrice * 3;
-              priceOut = product.price * 4;
-            } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
-              fine = totalPrice * 2;
-              priceOut = product.price * 3;
-            } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
-              fine = totalPrice;
-              priceOut = product.price * 2;
-            }
-
-            const totalDays = pastDaysCount(
-              transactionIn.created_at,
-              transDate,
-            );
-            totalFine += fine;
-
             if (transactionIn.remaining_qty > productQty) {
               await this.productService.withdrawProductQtyWithEntityManager(
                 entityManager,
@@ -438,6 +416,29 @@ export class TransactionOutService {
                 transactionIn.remaining_qty,
               );
             }
+
+            let totalPriceOut = product.price * transactionOut.converted_qty;
+            let fine: number = 0;
+            let priceOut: number = product.price;
+            if (isPastDays(transactionIn.created_at, 120, transDate)) {
+              fine = totalPriceOut * 4;
+              priceOut = product.price * 5;
+            } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
+              fine = totalPriceOut * 3;
+              priceOut = product.price * 4;
+            } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
+              fine = totalPriceOut * 2;
+              priceOut = product.price * 3;
+            } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
+              fine = totalPriceOut;
+              priceOut = product.price * 2;
+            }
+
+            const totalDays = pastDaysCount(
+              transactionIn.created_at,
+              transDate,
+            );
+            totalFine += fine;
 
             let charge: number = 0;
             let chargeAmount: number = 0;
@@ -645,28 +646,6 @@ export class TransactionOutService {
               transactionIn.id,
             );
 
-            let fine: number = 0;
-            let priceOut: number = product.price;
-            if (isPastDays(transactionIn.created_at, 120, transDate)) {
-              fine = totalPrice * 4;
-              priceOut = product.price * 5;
-            } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
-              fine = totalPrice * 3;
-              priceOut = product.price * 4;
-            } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
-              fine = totalPrice * 2;
-              priceOut = product.price * 3;
-            } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
-              fine = totalPrice;
-              priceOut = product.price * 2;
-            }
-
-            const totalDays = pastDaysCount(
-              transactionIn.created_at,
-              transDate,
-            );
-            totalFine += fine;
-
             if (transactionIn.remaining_qty > productQty) {
               await this.productService.withdrawProductQtyWithEntityManager(
                 entityManager,
@@ -705,6 +684,29 @@ export class TransactionOutService {
                 transactionIn.remaining_qty,
               );
             }
+
+            let totalPriceOut = product.price * transactionOut.converted_qty;
+            let fine: number = 0;
+            let priceOut: number = product.price;
+            if (isPastDays(transactionIn.created_at, 120, transDate)) {
+              fine = totalPriceOut * 4;
+              priceOut = product.price * 5;
+            } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
+              fine = totalPriceOut * 3;
+              priceOut = product.price * 4;
+            } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
+              fine = totalPriceOut * 2;
+              priceOut = product.price * 3;
+            } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
+              fine = totalPriceOut;
+              priceOut = product.price * 2;
+            }
+
+            const totalDays = pastDaysCount(
+              transactionIn.created_at,
+              transDate,
+            );
+            totalFine += fine;
 
             let charge: number = 0;
             let chargeAmount: number = 0;
@@ -925,28 +927,6 @@ export class TransactionOutService {
               transactionIn.id,
             );
 
-            let fine: number = 0;
-            let priceOut: number = product.price;
-            if (isPastDays(transactionIn.created_at, 120, transDate)) {
-              fine = totalPrice * 4;
-              priceOut = product.price * 5;
-            } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
-              fine = totalPrice * 3;
-              priceOut = product.price * 4;
-            } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
-              fine = totalPrice * 2;
-              priceOut = product.price * 3;
-            } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
-              fine = totalPrice;
-              priceOut = product.price * 2;
-            }
-
-            const totalDays = pastDaysCount(
-              transactionIn.created_at,
-              transDate,
-            );
-            totalFine += fine;
-
             if (transactionIn.remaining_qty > productQty) {
               // await this.productService.withdrawProductQtyWithEntityManager(
               //   entityManager,
@@ -981,6 +961,29 @@ export class TransactionOutService {
               //   transactionIn,
               //   transactionIn.remaining_qty,);
             }
+
+            let totalPriceOut = product.price * transactionOut.converted_qty;
+            let fine: number = 0;
+            let priceOut: number = product.price;
+            if (isPastDays(transactionIn.created_at, 120, transDate)) {
+              fine = totalPriceOut * 4;
+              priceOut = product.price * 5;
+            } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
+              fine = totalPriceOut * 3;
+              priceOut = product.price * 4;
+            } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
+              fine = totalPriceOut * 2;
+              priceOut = product.price * 3;
+            } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
+              fine = totalPriceOut;
+              priceOut = product.price * 2;
+            }
+
+            const totalDays = pastDaysCount(
+              transactionIn.created_at,
+              transDate,
+            );
+            totalFine += fine;
 
             let charge: number = 0;
             let chargeAmount: number = 0;
@@ -1148,28 +1151,6 @@ export class TransactionOutService {
               transactionIn.id,
             );
 
-            let fine: number = 0;
-            let priceOut: number = product.price;
-            if (isPastDays(transactionIn.created_at, 120, transDate)) {
-              fine = totalPrice * 4;
-              priceOut = product.price * 5;
-            } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
-              fine = totalPrice * 3;
-              priceOut = product.price * 4;
-            } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
-              fine = totalPrice * 2;
-              priceOut = product.price * 3;
-            } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
-              fine = totalPrice;
-              priceOut = product.price * 2;
-            }
-
-            const totalDays = pastDaysCount(
-              transactionIn.created_at,
-              transDate,
-            );
-            totalFine += fine;
-
             if (transactionIn.remaining_qty > productQty) {
               // await this.productService.withdrawProductQtyWithEntityManager(
               //   entityManager,
@@ -1204,6 +1185,29 @@ export class TransactionOutService {
               //   transactionIn,
               //   transactionIn.remaining_qty,);
             }
+
+            let totalPriceOut = product.price * transactionOut.converted_qty;
+            let fine: number = 0;
+            let priceOut: number = product.price;
+            if (isPastDays(transactionIn.created_at, 120, transDate)) {
+              fine = totalPriceOut * 4;
+              priceOut = product.price * 5;
+            } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
+              fine = totalPriceOut * 3;
+              priceOut = product.price * 4;
+            } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
+              fine = totalPriceOut * 2;
+              priceOut = product.price * 3;
+            } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
+              fine = totalPriceOut;
+              priceOut = product.price * 2;
+            }
+
+            const totalDays = pastDaysCount(
+              transactionIn.created_at,
+              transDate,
+            );
+            totalFine += fine;
 
             let charge: number = 0;
             let chargeAmount: number = 0;
