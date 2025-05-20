@@ -166,10 +166,25 @@ export class TransactionOutController {
   @PermissionsMetatada(TransactionOutPermission.LIST)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get('/by-invoice/:id')
-  async getAllProductUnits(
+  async getTransactionOutsByInvoiceId(
     @Param('id', ParseIntPipe) invoiceId: number,
   ): Promise<TransactionOut[]> {
     return await this.transactionOutService.getTransactionOutsByInvoiceId(
+      invoiceId,
+    );
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All Transaction Out By Invoice Id',
+  })
+  @PermissionsMetatada(TransactionOutPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  @Get('/by-invoice-brg-luar/:id')
+  async getTransactionOutsByInvoiceIdWithBrgLuar(
+    @Param('id', ParseIntPipe) invoiceId: number,
+  ): Promise<TransactionOut[]> {
+    return await this.transactionOutService.getTransactionOutsByInvoiceIdWithBrgLuar(
       invoiceId,
     );
   }

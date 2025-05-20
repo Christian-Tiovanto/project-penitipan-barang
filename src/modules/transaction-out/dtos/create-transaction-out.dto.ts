@@ -21,8 +21,12 @@ export class CreateTransactionOutDto
     >
 {
   @ApiProperty({ example: 1 })
-  @JoiSchema(Joi.number().required())
+  @JoiSchema(Joi.number().optional())
   productId: number;
+
+  @ApiProperty({ example: 'Apel' })
+  @JoiSchema(Joi.number().required())
+  productName: string;
 
   // @ApiProperty({ example: 1 })
   // @JoiSchema(Joi.number().required())
@@ -59,6 +63,10 @@ export class CreateTransactionOutWithSpbDto extends TransactionOutSpbDto {
   @JoiSchema(Joi.array().items(Joi.object()).min(1)) // Bisa 1 transaksi atau lebih
   transaction_outs: CreateTransactionOutDto[];
 
+  @ApiProperty({ type: () => [CreateTransactionOutDto] })
+  @JoiSchema(Joi.array().items(Joi.object()).min(0)) // ✅ Tambahkan ini
+  transaction_outs_brg_luar: CreateTransactionOutDto[];
+
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
   transaction_in_headerId: number;
@@ -72,6 +80,10 @@ export class CreateTransactionOutFifoWithSpbDto extends TransactionOutSpbDto {
   @ApiProperty({ type: () => [CreateTransactionOutDto] })
   @JoiSchema(Joi.array().items(Joi.object()).min(1)) // Bisa 1 transaksi atau lebih
   transaction_outs: CreateTransactionOutDto[];
+
+  @ApiProperty({ type: () => [CreateTransactionOutDto] })
+  @JoiSchema(Joi.array().items(Joi.object()).min(0)) // ✅ Tambahkan ini
+  transaction_outs_brg_luar: CreateTransactionOutDto[];
 
   @ApiProperty({ example: '2025-04-29T00:00:00Z' })
   @JoiSchema(Joi.date().required())

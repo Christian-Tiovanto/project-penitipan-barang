@@ -483,6 +483,30 @@ export class TransactionOutService {
           //here
         }
 
+        for (const transactionOutBrgLuar of createTransactionOutWithSpbDto.transaction_outs_brg_luar) {
+          transactionOutBrgLuar.converted_qty =
+            transactionOutBrgLuar.converted_qty;
+          transactionOutBrgLuar.productName = transactionOutBrgLuar.productName;
+          transactionOutBrgLuar.total_price = transactionOutBrgLuar.total_price;
+          transactionOutBrgLuar.price = transactionOutBrgLuar.price;
+          transactionOutBrgLuar.conversion_to_kg = 0;
+          transactionOutBrgLuar.unit = '';
+          transactionOutBrgLuar.total_fine = 0;
+          transactionOutBrgLuar.total_charge = 0;
+          transactionOutBrgLuar.total_days = 0;
+          transactionOutBrgLuar.created_at = convertToUTC(transDate);
+          transactionOutBrgLuar.updated_at = convertToUTC(transDate);
+
+          amount += transactionOutBrgLuar.total_price;
+
+          const transactionOutSave = entityManager.create(
+            TransactionOut,
+            transactionOutBrgLuar,
+          );
+          //save
+          await entityManager.save(transactionOutSave);
+        }
+
         const customer =
           await this.customerService.findCustomerById(customerId);
 
@@ -750,6 +774,31 @@ export class TransactionOutService {
             await entityManager.save(transactionOutSave);
           }
           //here
+        }
+
+        //brg luar
+        for (const transactionOutBrgLuar of createTransactionOutFifoWithSpbDto.transaction_outs_brg_luar) {
+          transactionOutBrgLuar.converted_qty =
+            transactionOutBrgLuar.converted_qty;
+          transactionOutBrgLuar.productName = transactionOutBrgLuar.productName;
+          transactionOutBrgLuar.total_price = transactionOutBrgLuar.total_price;
+          transactionOutBrgLuar.price = transactionOutBrgLuar.price;
+          transactionOutBrgLuar.conversion_to_kg = 0;
+          transactionOutBrgLuar.unit = '';
+          transactionOutBrgLuar.total_fine = 0;
+          transactionOutBrgLuar.total_charge = 0;
+          transactionOutBrgLuar.total_days = 0;
+          transactionOutBrgLuar.created_at = convertToUTC(transDate);
+          transactionOutBrgLuar.updated_at = convertToUTC(transDate);
+
+          amount += transactionOutBrgLuar.total_price;
+
+          const transactionOutSave = entityManager.create(
+            TransactionOut,
+            transactionOutBrgLuar,
+          );
+          //save
+          await entityManager.save(transactionOutSave);
         }
 
         const customer =
@@ -1027,6 +1076,29 @@ export class TransactionOutService {
             // await entityManager.save(transactionOutSave);
           }
         }
+        for (const transactionOutBrgLuar of createTransactionOutWithSpbDto.transaction_outs_brg_luar) {
+          transactionOutBrgLuar.converted_qty =
+            transactionOutBrgLuar.converted_qty;
+          transactionOutBrgLuar.productName = transactionOutBrgLuar.productName;
+          transactionOutBrgLuar.total_price = transactionOutBrgLuar.total_price;
+          transactionOutBrgLuar.price = transactionOutBrgLuar.price;
+          transactionOutBrgLuar.conversion_to_kg = 0;
+          transactionOutBrgLuar.unit = '';
+          transactionOutBrgLuar.total_fine = 0;
+          transactionOutBrgLuar.total_charge = 0;
+          transactionOutBrgLuar.total_days = 0;
+          transactionOutBrgLuar.created_at = convertToUTC(transDate);
+          transactionOutBrgLuar.updated_at = convertToUTC(transDate);
+
+          amount += transactionOutBrgLuar.total_price;
+
+          // const transactionOutSave = entityManager.create(
+          //   TransactionOut,
+          //   transactionOutBrgLuar,
+          // );
+          // //save
+          // await entityManager.save(transactionOutSave);
+        }
 
         const customer =
           await this.customerService.findCustomerById(customerId);
@@ -1252,6 +1324,30 @@ export class TransactionOutService {
           }
         }
 
+        for (const transactionOutBrgLuar of createTransactionOutFifoWithSpbDto.transaction_outs_brg_luar) {
+          transactionOutBrgLuar.converted_qty =
+            transactionOutBrgLuar.converted_qty;
+          transactionOutBrgLuar.productName = transactionOutBrgLuar.productName;
+          transactionOutBrgLuar.total_price = transactionOutBrgLuar.total_price;
+          transactionOutBrgLuar.price = transactionOutBrgLuar.price;
+          transactionOutBrgLuar.conversion_to_kg = 0;
+          transactionOutBrgLuar.unit = '';
+          transactionOutBrgLuar.total_fine = 0;
+          transactionOutBrgLuar.total_charge = 0;
+          transactionOutBrgLuar.total_days = 0;
+          transactionOutBrgLuar.created_at = convertToUTC(transDate);
+          transactionOutBrgLuar.updated_at = convertToUTC(transDate);
+
+          amount += transactionOutBrgLuar.total_price;
+
+          // const transactionOutSave = entityManager.create(
+          //   TransactionOut,
+          //   transactionOutBrgLuar,
+          // );
+          // //save
+          // await entityManager.save(transactionOutSave);
+        }
+
         const customer =
           await this.customerService.findCustomerById(customerId);
 
@@ -1306,16 +1402,37 @@ export class TransactionOutService {
   async getTransactionOutsByInvoiceId(
     invoiceId: number,
   ): Promise<TransactionOut[]> {
-    const transactionOuts = await this.transactionOutRepository.find({
+    const allTransactionOuts = await this.transactionOutRepository.find({
       where: { invoiceId },
       relations: ['product', 'customer'],
     });
 
-    if (transactionOuts.length === 0) {
+    if (allTransactionOuts.length === 0) {
       throw new NotFoundException(
         `Transaction Out with Invoice Id ${invoiceId} not found`,
       );
     }
+
+    const transactionOuts = allTransactionOuts.filter(
+      (t) => t.productId !== null,
+    );
     return transactionOuts;
+  }
+
+  async getTransactionOutsByInvoiceIdWithBrgLuar(
+    invoiceId: number,
+  ): Promise<TransactionOut[]> {
+    const allTransactionOuts = await this.transactionOutRepository.find({
+      where: { invoiceId },
+      relations: ['product', 'customer'],
+    });
+
+    if (allTransactionOuts.length === 0) {
+      throw new NotFoundException(
+        `Transaction Out with Invoice Id ${invoiceId} not found`,
+      );
+    }
+
+    return allTransactionOuts;
   }
 }
