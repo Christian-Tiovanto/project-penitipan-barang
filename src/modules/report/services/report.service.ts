@@ -348,11 +348,13 @@ FROM (
         FROM transaction_ins 
         WHERE customerId = ${customerId}
           AND created_at < "${startDate}"   -- END DATE + 1 DAY
+          AND productId > 0
         UNION ALL
         SELECT created_at, productId 
         FROM transaction_outs 
         WHERE customerId = ${customerId}
           AND created_at < "${startDate}"   -- END DATE + 1 DAY
+          AND productId > 0
     ) AS combined_records
 ) AS all_records
 LEFT JOIN products on all_records.productId = products.id
@@ -365,6 +367,7 @@ LEFT JOIN (
     FROM transaction_ins
     WHERE customerId = ${customerId}
       AND created_at < "${startDate}"
+      AND productId > 0
     GROUP BY DATE(created_at), productId
 ) AS transaction_ins 
     ON all_records.date = transaction_ins.date
@@ -378,6 +381,7 @@ LEFT JOIN (
     FROM transaction_outs
     WHERE customerId = ${customerId}
       AND created_at < "${startDate}"
+      AND productId > 0
     GROUP BY DATE(created_at), productId
 ) AS transaction_outs 
     ON all_records.date = transaction_outs.date
@@ -401,12 +405,14 @@ FROM (
         WHERE customerId = ${customerId}
           AND created_at >= "${startDate}"  -- START DATE
           AND created_at < "${endDate}"   -- END DATE + 1 DAY
+          AND productId > 0
         UNION ALL
         SELECT created_at, productId 
         FROM transaction_outs 
         WHERE customerId = ${customerId}
           AND created_at >= "${startDate}"  -- START DATE
           AND created_at < "${endDate}"   -- END DATE + 1 DAY
+          AND productId > 0
     ) AS combined_records
 ) AS all_records
 LEFT JOIN products on all_records.productId = products.id
@@ -420,6 +426,7 @@ LEFT JOIN (
     WHERE customerId = ${customerId}
       AND created_at >= "${startDate}"
       AND created_at < "${endDate}"
+      AND productId > 0
     GROUP BY DATE(created_at), productId
 ) AS transaction_ins 
     ON all_records.date = transaction_ins.date
@@ -434,6 +441,7 @@ LEFT JOIN (
     WHERE customerId = ${customerId}
       AND created_at >= "${startDate}"
       AND created_at < "${endDate}"
+      AND productId > 0
     GROUP BY DATE(created_at), productId
 ) AS transaction_outs 
     ON all_records.date = transaction_outs.date

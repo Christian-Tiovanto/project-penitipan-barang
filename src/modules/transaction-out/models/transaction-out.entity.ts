@@ -17,6 +17,7 @@ export interface ITransactionOut {
   id: number;
   product: Product;
   productId: number;
+  productName: string;
   customer: Customer;
   customerId: number;
   transaction_in: TransactionIn;
@@ -51,6 +52,10 @@ export class TransactionOut implements ITransactionOut {
   @ApiProperty({ example: 1 })
   @Column({ type: 'int', nullable: true })
   productId: number;
+
+  @ApiProperty({ example: 'Apel' })
+  @Column({ type: 'varchar', nullable: true })
+  productName: string;
 
   @ManyToOne(() => Customer, (customer) => customer.transaction_out)
   customer: Customer;

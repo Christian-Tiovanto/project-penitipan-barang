@@ -48,4 +48,6 @@ export class GetTransactionOutResponse
 
   @ApiProperty({ example: 30 })
   total_days: number;
+
+  productName?: string;
 }
