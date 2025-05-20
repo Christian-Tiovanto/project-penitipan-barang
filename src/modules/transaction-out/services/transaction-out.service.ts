@@ -494,6 +494,7 @@ export class TransactionOutService {
           transactionOutBrgLuar.total_fine = 0;
           transactionOutBrgLuar.total_charge = 0;
           transactionOutBrgLuar.total_days = 0;
+          transactionOutBrgLuar.customerId = customerId;
           transactionOutBrgLuar.created_at = convertToUTC(transDate);
           transactionOutBrgLuar.updated_at = convertToUTC(transDate);
 
@@ -788,6 +789,7 @@ export class TransactionOutService {
           transactionOutBrgLuar.total_fine = 0;
           transactionOutBrgLuar.total_charge = 0;
           transactionOutBrgLuar.total_days = 0;
+          transactionOutBrgLuar.customerId = customerId;
           transactionOutBrgLuar.created_at = convertToUTC(transDate);
           transactionOutBrgLuar.updated_at = convertToUTC(transDate);
 
@@ -1087,6 +1089,7 @@ export class TransactionOutService {
           transactionOutBrgLuar.total_fine = 0;
           transactionOutBrgLuar.total_charge = 0;
           transactionOutBrgLuar.total_days = 0;
+          transactionOutBrgLuar.customerId = customerId;
           transactionOutBrgLuar.created_at = convertToUTC(transDate);
           transactionOutBrgLuar.updated_at = convertToUTC(transDate);
 
@@ -1335,6 +1338,7 @@ export class TransactionOutService {
           transactionOutBrgLuar.total_fine = 0;
           transactionOutBrgLuar.total_charge = 0;
           transactionOutBrgLuar.total_days = 0;
+          transactionOutBrgLuar.customerId = customerId;
           transactionOutBrgLuar.created_at = convertToUTC(transDate);
           transactionOutBrgLuar.updated_at = convertToUTC(transDate);
 
