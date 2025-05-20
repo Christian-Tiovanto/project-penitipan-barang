@@ -125,13 +125,15 @@ export class TransactionOutService {
     }
 
     const [transactionsOuts, count] = await queryBuilder.getManyAndCount();
+    console.log('transactionsOuts');
+    console.log(transactionsOuts);
     const transactionOutResponse: GetTransactionOutResponse[] =
       transactionsOuts.map((transaction: GetTransactionOutResponse) => {
         return {
           id: transaction.id,
           product: {
-            id: transaction.product.id,
-            name: transaction.product.name,
+            id: transaction.product?.id ?? 0,
+            name: transaction?.product?.name ?? transaction.productName,
           },
           customer: {
             id: transaction.customer.id,
