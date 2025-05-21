@@ -140,4 +140,47 @@ export class ReportController {
       filteredCount: report[1],
     };
   }
+
+  @PermissionsMetatada(ReportPermission.LIST)
+  @ApiOkResponse({ type: GetAllArResponse })
+  @UseInterceptors(OffsetPaginationInterceptor)
+  @Get('to-paid-report')
+  async arToPaidReport(
+    @Query()
+    {
+      start_date,
+      end_date,
+      page_no,
+      page_size,
+      sort,
+      order,
+      customer,
+      compact,
+      with_payment,
+      status,
+    }: ArPaidReportQuery,
+  ): Promise<OffsetPagination<GetAllArResponse>> {
+    const pageSize = parseInt(page_size) || 10;
+    const pageNo = parseInt(page_no) || 1;
+    sort = !sort ? ArSort.ID : sort;
+    order = !order ? SortOrder.ASC : order;
+
+    const report = await this.reportService.arPaidReport({
+      sort,
+      order,
+      startDate: start_date,
+      endDate: end_date,
+      pageNo,
+      pageSize,
+      customer,
+      status,
+      compact: parseBoolean(compact),
+      with_payment: parseBoolean(with_payment),
+    });
+    return {
+      data: report[0],
+      totalCount: report[1],
+      filteredCount: report[1],
+    };
+  }
 }

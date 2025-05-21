@@ -98,6 +98,133 @@ export class ArService {
     ];
     return ars;
   }
+  async arPaidReport({
+    pageNo,
+    pageSize,
+    sort,
+    order,
+    startDate,
+    endDate,
+    compact,
+    customer,
+    with_payment,
+    status,
+  }: GetAllQuery): Promise<[GetAllArResponse[], number]> {
+    const skip = (pageNo - 1) * pageSize;
+    let sortBy: string = `ar.${sort}`;
+    if (sort === ArSort.CUSTOMER) {
+      sortBy = `${sort}.name`;
+    }
+
+    if (sort === ArSort.AR_PAYMENT && !with_payment) {
+      throw new BadRequestException(
+        'sort by Payment can only be used along with `with_payment`',
+      );
+    }
+    if (sort === ArSort.AR_PAYMENT) {
+      sortBy = `${sort}.payment_method_name`;
+    }
+
+    const queryBuilder = this.arRepository
+      .createQueryBuilder('ar')
+      .skip(skip)
+      .take(pageSize)
+      .leftJoinAndSelect('ar.customer', 'customer')
+      .select(['ar', 'customer.name', 'customer.id'])
+      .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder)
+      .where('ar.to_paid = :toPaid', { toPaid: 0 });
+    if (!compact) {
+      queryBuilder.leftJoinAndSelect('ar.invoice', 'invoice');
+    }
+
+    if (with_payment) {
+      queryBuilder.leftJoinAndSelect('ar.ar_payment', 'ar_payment');
+    }
+    if (customer) {
+      queryBuilder.andWhere({ customerId: customer });
+    }
+
+    if (status) {
+      queryBuilder.andWhere({ status });
+    }
+    if (startDate) {
+      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    }
+
+    const ars = (await queryBuilder.getManyAndCount()) as unknown as [
+      GetAllArResponse[],
+      number,
+    ];
+    return ars;
+  }
+
+  async arToPaidReport({
+    pageNo,
+    pageSize,
+    sort,
+    order,
+    startDate,
+    endDate,
+    compact,
+    customer,
+    with_payment,
+    status,
+  }: GetAllQuery): Promise<[GetAllArResponse[], number]> {
+    const skip = (pageNo - 1) * pageSize;
+    let sortBy: string = `ar.${sort}`;
+    if (sort === ArSort.CUSTOMER) {
+      sortBy = `${sort}.name`;
+    }
+
+    if (sort === ArSort.AR_PAYMENT && !with_payment) {
+      throw new BadRequestException(
+        'sort by Payment can only be used along with `with_payment`',
+      );
+    }
+    if (sort === ArSort.AR_PAYMENT) {
+      sortBy = `${sort}.payment_method_name`;
+    }
+
+    const queryBuilder = this.arRepository
+      .createQueryBuilder('ar')
+      .skip(skip)
+      .take(pageSize)
+      .leftJoinAndSelect('ar.customer', 'customer')
+      .select(['ar', 'customer.name', 'customer.id'])
+      .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder)
+      .where('ar.to_paid > :toPaid', { toPaid: 0 });
+    if (!compact) {
+      queryBuilder.leftJoinAndSelect('ar.invoice', 'invoice');
+    }
+
+    if (with_payment) {
+      queryBuilder.leftJoinAndSelect('ar.ar_payment', 'ar_payment');
+    }
+    if (customer) {
+      queryBuilder.andWhere({ customerId: customer });
+    }
+
+    if (status) {
+      queryBuilder.andWhere({ status });
+    }
+    if (startDate) {
+      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    }
+
+    const ars = (await queryBuilder.getManyAndCount()) as unknown as [
+      GetAllArResponse[],
+      number,
+    ];
+    return ars;
+  }
 
   async getArById(arId: number): Promise<Ar> {
     return await this.arRepository.findOne({ where: { id: arId } });

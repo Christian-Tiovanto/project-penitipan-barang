@@ -314,7 +314,7 @@ export class ReportService {
     status,
     with_payment,
   }: ArPaidReportQuery) {
-    return await this.arService.getAllArs({
+    return await this.arService.arPaidReport({
       pageNo,
       pageSize,
       startDate,
