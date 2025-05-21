@@ -136,6 +136,7 @@ export class ArPaymentService {
       }
       if (ar.to_paid === 0) {
         ar.status = ArStatus.COMPLETED;
+        ar.paid_date = new Date();
         toUpdateInvoice.push(ar.invoiceId);
       }
       const createArPaymentDto: CreateArPaymentDto = {
