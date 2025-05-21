@@ -302,6 +302,32 @@ export class ReportService {
     };
   }
 
+  async arList({
+    sort,
+    order,
+    startDate,
+    endDate,
+    pageNo,
+    pageSize,
+    compact,
+    customer,
+    status,
+    with_payment,
+  }: ArPaidReportQuery) {
+    return await this.arService.getAllArs({
+      pageNo,
+      pageSize,
+      startDate,
+      endDate,
+      sort,
+      order,
+      compact,
+      customer,
+      with_payment,
+      status,
+    });
+  }
+
   async arPaidReport({
     sort,
     order,
@@ -315,6 +341,32 @@ export class ReportService {
     with_payment,
   }: ArPaidReportQuery) {
     return await this.arService.arPaidReport({
+      pageNo,
+      pageSize,
+      startDate,
+      endDate,
+      sort,
+      order,
+      compact,
+      customer,
+      with_payment,
+      status,
+    });
+  }
+
+  async arToPaidReport({
+    sort,
+    order,
+    startDate,
+    endDate,
+    pageNo,
+    pageSize,
+    compact,
+    customer,
+    status,
+    with_payment,
+  }: ArPaidReportQuery) {
+    return await this.arService.arToPaidReport({
       pageNo,
       pageSize,
       startDate,
