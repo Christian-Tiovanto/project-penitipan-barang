@@ -98,6 +98,24 @@ export class ArService {
     ];
     return ars;
   }
+
+  async getTotalBills({ startDate, endDate }: GetAllQuery) {
+    const queryBuilder = this.arRepository
+      .createQueryBuilder('ar')
+      .select('SUM(ar.total_bill)', 'total');
+
+    if (startDate) {
+      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    }
+
+    const ar: { total: string } = await queryBuilder.getRawOne();
+    return ar;
+  }
+
   async arPaidReport({
     pageNo,
     pageSize,
@@ -132,7 +150,7 @@ export class ArService {
       .leftJoinAndSelect('ar.customer', 'customer')
       .select(['ar', 'customer.name', 'customer.id'])
       .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder)
-      .where('ar.to_paid = :toPaid', { toPaid: 0 });
+      .where('ar.total_paid > :totalPaid', { totalPaid: 0 });
     if (!compact) {
       queryBuilder.leftJoinAndSelect('ar.invoice', 'invoice');
     }

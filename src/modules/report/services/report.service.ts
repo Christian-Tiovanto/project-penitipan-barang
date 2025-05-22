@@ -18,11 +18,19 @@ import { CashflowType } from '@app/enums/cashflow-type';
 import { ArService } from '@app/modules/ar/services/ar.service';
 import { ArSort, SortOrder } from '@app/enums/sort-order';
 import { ArStatus } from '@app/enums/ar-status';
-import { CashflowFrom } from '@app/modules/cashflow/models/cashflow.entity';
+import {
+  Cashflow,
+  CashflowFrom,
+} from '@app/modules/cashflow/models/cashflow.entity';
 import { ProductUnitService } from '@app/modules/product-unit/services/product-unit.service';
 interface StockBookReportQuery {
   startDate: Date;
   endDate: Date;
+}
+interface CostReportQuery {
+  startDate: Date;
+  endDate: Date;
+  from?: 'in' | 'out';
 }
 interface CustomerProductMutationReportQuery {
   startDate: Date;
@@ -172,32 +180,68 @@ export class ReportService {
   async cashflowReport({
     startDate,
     endDate,
-  }: StockBookReportQuery): Promise<CashflowReportResponse> {
+    from,
+  }: CostReportQuery): Promise<CashflowReportResponse> {
     const initialBalance = await this.cashflowService.getInitialBalance({
       endDate: startDate,
     });
-    const [cashflowsIn] = await this.cashflowService.getAllCashflows({
-      startDate,
-      endDate,
-      type: CashflowType.IN,
-    });
-    const sumCashflowIn = await this.cashflowService.getTotalSumAmount({
-      startDate,
-      endDate,
-      type: CashflowType.IN,
-    });
+    let cashflowsIn: Cashflow[] = [];
+    let cashflowsOut: Cashflow[] = [];
+    let sumCashflowIn = 0;
+    let sumCashflowOut = 0;
+    if (!from) {
+      cashflowsIn = (
+        await this.cashflowService.getAllCashflows({
+          startDate,
+          endDate,
+          type: CashflowType.IN,
+        })
+      )[0];
+      sumCashflowIn = await this.cashflowService.getTotalSumAmount({
+        startDate,
+        endDate,
+        type: CashflowType.IN,
+      });
 
-    const [cashflowsOut] = await this.cashflowService.getAllCashflows({
-      startDate,
-      endDate,
-      type: CashflowType.OUT,
-    });
-    const sumCashflowOut = await this.cashflowService.getTotalSumAmount({
-      startDate,
-      endDate,
-      type: CashflowType.OUT,
-    });
-
+      cashflowsOut = (
+        await this.cashflowService.getAllCashflows({
+          startDate,
+          endDate,
+          type: CashflowType.OUT,
+        })
+      )[0];
+      sumCashflowOut = await this.cashflowService.getTotalSumAmount({
+        startDate,
+        endDate,
+        type: CashflowType.OUT,
+      });
+    } else if (from === 'in') {
+      cashflowsIn = (
+        await this.cashflowService.getAllCashflows({
+          startDate,
+          endDate,
+          type: CashflowType.IN,
+        })
+      )[0];
+      sumCashflowIn = await this.cashflowService.getTotalSumAmount({
+        startDate,
+        endDate,
+        type: CashflowType.IN,
+      });
+    } else if (from === 'out') {
+      cashflowsOut = (
+        await this.cashflowService.getAllCashflows({
+          startDate,
+          endDate,
+          type: CashflowType.OUT,
+        })
+      )[0];
+      sumCashflowOut = await this.cashflowService.getTotalSumAmount({
+        startDate,
+        endDate,
+        type: CashflowType.OUT,
+      });
+    }
     const allCashflows = [...cashflowsIn, ...cashflowsOut];
     allCashflows.sort(
       (a, b) => a.created_at.getTime() - b.created_at.getTime(),
@@ -211,6 +255,7 @@ export class ReportService {
             date: value.created_at,
             type: value.type,
             amount: value.amount,
+            desc: value.from,
           };
         }),
       ],
@@ -278,11 +323,9 @@ export class ReportService {
       type: CashflowType.IN,
       from: CashflowFrom.INPUT,
     });
-    const earningFromPayment = await this.cashflowService.getTotalCashflow({
+    const earningFromAr = await this.arService.getTotalBills({
       startDate,
       endDate,
-      type: CashflowType.IN,
-      from: CashflowFrom.PAYMENT,
     });
 
     const spendings = await this.cashflowService.getAllCashflows({
@@ -293,7 +336,7 @@ export class ReportService {
     return {
       earning: {
         input: parseFloat(earningFromInput.total),
-        payment: parseFloat(earningFromPayment.total),
+        payment: parseFloat(earningFromAr.total),
       },
       spending: spendings[0].map((cashflow) => ({
         description: cashflow.descriptions,

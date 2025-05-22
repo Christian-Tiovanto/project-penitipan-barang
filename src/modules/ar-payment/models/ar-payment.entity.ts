@@ -1,6 +1,6 @@
 import { Ar } from '@app/modules/ar/models/ar.entity';
-import { CustomerPayment } from '@app/modules/customer-payment/models/customer-payment.entity';
 import { Customer } from '@app/modules/customer/models/customer.entity';
+import { PaymentMethod } from '@app/modules/payment-method/models/payment-method.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   Column,
@@ -16,7 +16,7 @@ export interface IArPayment {
   id: number;
   ar: number;
   arId: number;
-  customer_payment: CustomerPayment;
+  customer_payment: PaymentMethod;
   customer_paymentId: number;
   payment_method_name: string;
   customer: number;
@@ -42,8 +42,8 @@ export class ArPayment implements IArPayment {
   arId: number;
 
   @JoinColumn({ name: 'customer_paymentId' })
-  @ManyToOne(() => CustomerPayment, (customerPayment) => customerPayment)
-  customer_payment: CustomerPayment;
+  @ManyToOne(() => PaymentMethod, (customerPayment) => customerPayment)
+  customer_payment: PaymentMethod;
 
   @ApiProperty({ example: 'Cash' })
   @Column({ type: 'varchar' })
