@@ -1,4 +1,5 @@
 export enum ArStatus {
-    PENDING = 'pending',
-    COMPLETED = 'completed',
+  PENDING = 'pending',
+  PARTIAL = 'partial',
+  COMPLETED = 'completed',
 }

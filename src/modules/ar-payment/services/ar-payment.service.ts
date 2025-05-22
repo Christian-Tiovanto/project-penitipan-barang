@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -19,6 +18,7 @@ import { ArStatus } from '@app/enums/ar-status';
 import { InvoiceService } from '@app/modules/invoice/services/invoice.service';
 import { InvoiceStatus } from '@app/enums/invoice-status';
 import { CashflowFrom } from '@app/modules/cashflow/models/cashflow.entity';
+import { PaymentMethodService } from '@app/modules/payment-method/services/payment-method.service';
 interface GetAllQuery {
   pageNo: number;
   pageSize: number;
@@ -29,6 +29,7 @@ export class ArPaymentService {
     @InjectRepository(ArPayment)
     private readonly arPaymentRepository: Repository<ArPayment>,
     private readonly customerPaymentService: CustomerPaymentService,
+    private readonly paymentMethodService: PaymentMethodService,
     private readonly cashflowService: CashflowService,
     private readonly arService: ArService,
     private readonly invoiceService: InvoiceService,
@@ -119,16 +120,11 @@ export class ArPaymentService {
     const toUpdateInvoice: number[] = [];
     for (const data of createBulkArPaymentDto.data) {
       const ar = await this.arService.findArById(data.arId);
-      const customerPayment =
-        await this.customerPaymentService.findCustomerPaymentByCustIdNPaymentId(
-          ar.customerId,
-          payment_methodId,
-        );
-      if (!customerPayment.status)
-        throw new ForbiddenException('Customer Payment Method is not active');
-
+      const paymentMethod =
+        await this.paymentMethodService.findPaymentMethodById(payment_methodId);
       ar.to_paid -= data.total_paid;
       ar.total_paid += data.total_paid;
+      ar.status = ArStatus.PARTIAL;
       if (ar.to_paid < 0) {
         throw new BadRequestException(
           `AR ${ar.ar_no} To paid only ${Number(ar.to_paid + data.total_paid).toLocaleString('id-Id')}`,
@@ -142,11 +138,11 @@ export class ArPaymentService {
       const createArPaymentDto: CreateArPaymentDto = {
         arId: data.arId,
         total_paid: data.total_paid,
-        customer_paymentId: customerPayment.id,
+        customer_paymentId: paymentMethod.id,
         transfer_date,
         reference_no,
         customerId: ar.customerId,
-        payment_method_name: customerPayment.payment_method.name,
+        payment_method_name: paymentMethod.name,
       };
       const createCashflowDto: CreateCashflowDto = {
         type: CashflowType.IN,

@@ -1,4 +1,5 @@
 import {
+  DateRangeQuery,
   EndDateQuery,
   OptionalDateRangeQueryWithPagination,
 } from '@app/commons/queries/date-range.query';
@@ -12,6 +13,11 @@ export class StockReportQuery extends EndDateQuery {
   @ApiProperty({ example: '1', required: false })
   @JoiSchema(Joi.string().optional())
   customer: string;
+}
+export class CostReportQuery extends DateRangeQuery {
+  @ApiProperty({ example: '1', required: false })
+  @JoiSchema(Joi.string().valid('in', 'out').optional())
+  from: 'in' | 'out';
 }
 
 export class StockInvoiceReportQuery {

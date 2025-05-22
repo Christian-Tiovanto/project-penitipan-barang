@@ -14,6 +14,7 @@ import { ApiTag } from '@app/enums/api-tags';
 import {
   AgingReportQuery,
   ArPaidReportQuery,
+  CostReportQuery,
   StockInvoiceReportQuery,
   StockReportQuery,
 } from '../classes/report.query';
@@ -51,10 +52,13 @@ export class ReportController {
 
   @PermissionsMetatada(ReportPermission.LIST)
   @Get('cashflow-report')
-  async cashflowReport(@Query() { start_date, end_date }: DateRangeQuery) {
+  async cashflowReport(
+    @Query() { start_date, end_date, from }: CostReportQuery,
+  ) {
     return await this.reportService.cashflowReport({
       startDate: start_date,
       endDate: end_date,
+      from,
     });
   }
 
