@@ -255,7 +255,7 @@ export class ReportService {
             date: value.created_at,
             type: value.type,
             amount: value.amount,
-            desc: value.from,
+            desc: value.descriptions,
           };
         }),
       ],
