@@ -197,6 +197,7 @@ export class CashflowService {
     const cashflow: { total: string } = await queryBuilder.getRawOne();
     return parseFloat(cashflow?.total || '0');
   }
+
   async getTotalSumAmount({ startDate, endDate, type }: GetAllCashflowQuery) {
     const queryBuilder = this.cashflowRepository
       .createQueryBuilder('cashflow')

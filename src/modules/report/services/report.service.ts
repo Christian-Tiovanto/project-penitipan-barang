@@ -182,9 +182,10 @@ export class ReportService {
     endDate,
     from,
   }: CostReportQuery): Promise<CashflowReportResponse> {
-    const initialBalance = await this.cashflowService.getInitialBalance({
-      endDate: startDate,
-    });
+    // const initialBalance = await this.cashflowService.getInitialBalance({
+    //   endDate: startDate,
+    // });
+    const initialBalance = 0;
     let cashflowsIn: Cashflow[] = [];
     let cashflowsOut: Cashflow[] = [];
     let sumCashflowIn = 0;
