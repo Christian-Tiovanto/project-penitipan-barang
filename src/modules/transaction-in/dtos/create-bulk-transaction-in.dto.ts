@@ -60,4 +60,8 @@ export class CreateBulkTransactionInDto
   @ApiProperty({ example: '2025-04-29T00:00:00Z' })
   @JoiSchema(Joi.date().required())
   transaction_date: Date;
+
+  @ApiProperty({ example: 'desc' })
+  @JoiSchema(Joi.string().optional().allow(null))
+  desc: string;
 }

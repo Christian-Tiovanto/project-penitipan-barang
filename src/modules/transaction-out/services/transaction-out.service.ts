@@ -302,6 +302,7 @@ export class TransactionOutService {
         const transinHeaderId =
           createTransactionOutWithSpbDto.transaction_in_headerId;
         const transDate = createTransactionOutWithSpbDto.transaction_date;
+        const spbDesc = createTransactionOutWithSpbDto.desc;
 
         const detailTransIn =
           await this.transactionInHeaderService.findTransactionInHeaderById(
@@ -546,6 +547,7 @@ export class TransactionOutService {
         createSpb.invoiceId = invoice.id;
         createSpb.customerId = customerId;
         createSpb.no_plat = noPlat;
+        createSpb.desc = spbDesc;
         createSpb.created_at = convertToUTC(transDate);
         createSpb.updated_at = convertToUTC(transDate);
 
@@ -592,6 +594,7 @@ export class TransactionOutService {
         const noPlat = createTransactionOutFifoWithSpbDto.no_plat;
         const clockOut = createTransactionOutFifoWithSpbDto.clock_out;
         const transDate = createTransactionOutFifoWithSpbDto.transaction_date;
+        const spbDesc = createTransactionOutFifoWithSpbDto.desc;
         // const transinHeaderId =
         //   createTransactionOutWithSpbDto.transaction_in_headerId;
 
@@ -841,6 +844,7 @@ export class TransactionOutService {
         createSpb.invoiceId = invoice.id;
         createSpb.customerId = customerId;
         createSpb.no_plat = noPlat;
+        createSpb.desc = spbDesc;
         createSpb.created_at = convertToUTC(transDate);
         createSpb.updated_at = convertToUTC(transDate);
 
