@@ -22,6 +22,7 @@ export interface ISpb {
   invoiceId: number;
   no_plat: string;
   clock_out: Date;
+  desc: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -54,6 +55,10 @@ export class Spb implements ISpb {
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })
   @Column({ type: 'datetime' })
   clock_out: Date;
+
+  @ApiProperty({ example: 'desc' })
+  @Column({ type: 'varchar', nullable: true })
+  desc: string;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })
   @CreateDateColumn()

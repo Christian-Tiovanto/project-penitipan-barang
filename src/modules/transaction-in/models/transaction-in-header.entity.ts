@@ -17,6 +17,7 @@ export interface ITransactionInHeader {
   customerId: number;
   created_at: Date;
   updated_at: Date;
+  desc: string;
 }
 
 @Entity('transaction_in_header')
@@ -44,4 +45,7 @@ export class TransactionInHeader implements ITransactionInHeader {
 
   @Column()
   customerId: number;
+
+  @Column({ type: 'varchar', nullable: true })
+  desc: string;
 }

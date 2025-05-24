@@ -424,6 +424,32 @@ export class ReportService {
     });
   }
 
+  async arMixedReport({
+    sort,
+    order,
+    startDate,
+    endDate,
+    pageNo,
+    pageSize,
+    compact,
+    customer,
+    status,
+    with_payment,
+  }: ArPaidReportQuery) {
+    return await this.arService.arMixedReport({
+      pageNo,
+      pageSize,
+      startDate,
+      endDate,
+      sort,
+      order,
+      compact,
+      customer,
+      with_payment,
+      status,
+    });
+  }
+
   async customerProductMutationReport(
     customerId: number,
     { startDate, endDate }: CustomerProductMutationReportQuery,

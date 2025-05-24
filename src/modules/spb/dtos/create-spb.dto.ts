@@ -2,6 +2,7 @@ import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
 import * as Joi from 'joi';
 import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
 import { ISpb } from '../models/spb.entity';
+import { EMPTY } from 'rxjs';
 
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateSpbDto
@@ -24,6 +25,8 @@ export class CreateSpbDto
   // @JoiSchema(Joi.date().required())
   clock_out: Date;
 
+  desc: string;
+
   created_at: Date;
   updated_at: Date;
 }
@@ -42,4 +45,8 @@ export class TransactionOutSpbDto extends OmitType(CreateSpbDto, [
   @ApiProperty({ example: '2025-03-22T15:30:00.000Z' })
   @JoiSchema(Joi.date().required())
   clock_out: Date;
+
+  @ApiProperty({ example: 'desc' })
+  @JoiSchema(Joi.string().optional())
+  desc: string;
 }

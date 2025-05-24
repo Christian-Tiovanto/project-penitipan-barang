@@ -105,7 +105,7 @@ export class TransactionInService {
   async createBulkTransactionIn(
     createBulkTransactionInDto: CreateBulkTransactionInDto,
   ): Promise<TransactionIn[]> {
-    const { customerId } = createBulkTransactionInDto;
+    const { customerId, desc } = createBulkTransactionInDto;
     let { transaction_date } = createBulkTransactionInDto;
     transaction_date = convertToUTC(transaction_date); //convert to utc
     const customer = await this.customerService.findCustomerById(customerId);
@@ -116,6 +116,7 @@ export class TransactionInService {
             customer,
             entityManager,
             transaction_date,
+            desc,
           );
         const {
           transactionsToCreate,

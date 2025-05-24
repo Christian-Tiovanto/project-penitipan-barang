@@ -34,11 +34,13 @@ export class TransactionInHeaderService {
     customer: Customer,
     entityManager: EntityManager,
     transactionDate: Date,
+    desc: string,
   ): Promise<TransactionInHeader> {
     const transactionInHeader = entityManager.create(TransactionInHeader, {
       customer: {
         id: customer.id,
       },
+      desc,
       created_at: transactionDate,
       updated_at: transactionDate,
     });
