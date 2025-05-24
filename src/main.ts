@@ -2,11 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { UserSeeder } from './seeder/user.seeder';
+import { SecurityPinSeeder } from './seeder/security-pin.seeder';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const seeder = app.get(UserSeeder);
   await seeder.run();
+  const securityPinseeder = app.get(SecurityPinSeeder);
+  await securityPinseeder.run();
 
   // const environment = process.env.NODE_ENV || 'DEVELOPMENT';
   // const domainUrl = process.env.DOMAIN_URL || 'http://localhost:5173';

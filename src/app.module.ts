@@ -36,12 +36,16 @@ import { InvoiceModule } from './modules/invoice/invoice.module';
 import { UserSeeder } from './seeder/user.seeder';
 import { TransactionInHeader } from './modules/transaction-in/models/transaction-in-header.entity';
 import { UserRole } from './modules/user/models/user-role';
+import { AppSettingsModule } from './modules/app-settings/app-setting.module';
+import { SecurityPinSeeder } from './seeder/security-pin.seeder';
+import { AppSetting } from './modules/app-settings/models/app-settings.entity';
 
 @Module({
   providers: [
     { provide: APP_PIPE, useClass: DataValidationPipe },
     { provide: APP_FILTER, useClass: ExceptionHandlerFilter },
     UserSeeder,
+    SecurityPinSeeder,
   ],
   imports: [
     ConfigModule.forRoot(),
@@ -69,6 +73,7 @@ import { UserRole } from './modules/user/models/user-role';
         Invoice,
         TransactionInHeader,
         UserRole,
+        AppSetting,
       ],
       synchronize: true,
       logger: 'advanced-console',
@@ -92,6 +97,7 @@ import { UserRole } from './modules/user/models/user-role';
     ReportModule,
     SpbModule,
     InvoiceModule,
+    AppSettingsModule,
   ],
 })
 export class AppModule {}
