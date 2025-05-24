@@ -1,8 +1,10 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Query,
   UseGuards,
   UseInterceptors,
@@ -25,6 +27,7 @@ import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { IntermediateGuard } from '@app/guards/intermediate.guard';
 import { PermissionsMetatada } from '@app/decorators/permission.decorator';
 import { TransactionInPermission } from '@app/enums/permission';
+import { UpdateTransactionInHeaderDto } from '../dtos/update-trans-in-header.dto';
 
 @ApiTags(ApiTag.TRANSACTION_IN_HEADER)
 @Controller('api/v1/transaction-in-header')
@@ -102,6 +105,23 @@ export class TransactionInHeaderController {
   ): Promise<TransactionInHeader[]> {
     return await this.transactionInHeaderService.getAllTransactionInHeadersByCustomerId(
       customerId,
+    );
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update Trans In Header',
+  })
+  @PermissionsMetatada(TransactionInPermission.EDIT)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  @Patch(':id')
+  async updateTransInHeader(
+    @Param('id', ParseIntPipe) transInHeaderId: number,
+    @Body() updateTransInHeaderDto: UpdateTransactionInHeaderDto,
+  ): Promise<TransactionInHeader> {
+    return await this.transactionInHeaderService.updateTransactionInHeader(
+      transInHeaderId,
+      updateTransInHeaderDto,
     );
   }
 }

@@ -446,7 +446,7 @@ export class TransactionInService {
       );
     }
     let transactionInToUpdate: TransactionIn[] = [];
-    console.log(updateTransactionInDto.is_charge);
+
     if (
       updateTransactionInDto.customerId ||
       updateTransactionInDto.is_charge !== undefined
