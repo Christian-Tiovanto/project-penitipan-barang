@@ -26,24 +26,24 @@ export class CreateUserDto
   @JoiSchema(Joi.string().min(6).max(24).required())
   password: string;
 
-  @ApiProperty({
-    example: '12345',
-    description: 'Password minimal 5 character and max 6 characters',
-  })
-  @JoiSchema(
-    Joi.string()
-      .pattern(/^\d{5}$/)
-      .min(5)
-      .max(5)
-      .required()
-      .messages({
-        'string.pattern.base': 'PIN must be exactly 5 digits',
-        'string.min': 'PIN must be 5 characters long',
-        'string.max': 'PIN must be 5 characters long',
-        'string.empty': 'PIN cannot be empty',
-      }),
-  )
-  pin: string;
+  // @ApiProperty({
+  //   example: '12345',
+  //   description: 'Password minimal 5 character and max 6 characters',
+  // })
+  // @JoiSchema(
+  //   Joi.string()
+  //     .pattern(/^\d{5}$/)
+  //     .min(5)
+  //     .max(5)
+  //     .required()
+  //     .messages({
+  //       'string.pattern.base': 'PIN must be exactly 5 digits',
+  //       'string.min': 'PIN must be 5 characters long',
+  //       'string.max': 'PIN must be 5 characters long',
+  //       'string.empty': 'PIN cannot be empty',
+  //     }),
+  // )
+  // pin: string;
 
   // @ApiProperty({ example: 'Jl. Merak Jingga' })
   // @JoiSchema(Joi.string().optional())

@@ -140,9 +140,11 @@ export class UserService {
     if (search) {
       queryBuilder.andWhere(
         new Brackets((qb) => {
-          qb.where('email LIKE :search', { search: `%${search}%` })
-            .orWhere('fullname LIKE :search', { search: `%${search}%` })
-            .orWhere('pin LIKE :search', { search: `%${search}%` });
+          qb.where('email LIKE :search', { search: `%${search}%` }).orWhere(
+            'fullname LIKE :search',
+            { search: `%${search}%` },
+          );
+          // .orWhere('pin LIKE :search', { search: `%${search}%` });
         }),
       );
     }
@@ -154,7 +156,7 @@ export class UserService {
           id: user.id,
           email: user.email,
           fullname: user.fullname,
-          pin: user.pin,
+          // pin: user.pin,
         };
       },
     );

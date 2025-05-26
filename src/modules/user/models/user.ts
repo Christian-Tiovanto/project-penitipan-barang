@@ -35,11 +35,11 @@ export class User implements IUser {
   })
   password: string;
 
-  @Column({
-    type: 'varchar',
-    // select: false
-  })
-  pin: string;
+  // @Column({
+  //   type: 'varchar',
+  //   // select: false
+  // })
+  // pin: string;
 
   @Column({ type: 'boolean', default: false })
   is_deleted: boolean;
