@@ -7,7 +7,7 @@ import { AuthenticateGuard } from '@app/guards/authenticate.guard';
 import { AuthorizeGuard } from '@app/guards/authorize.guard';
 import { IntermediateGuard } from '@app/guards/intermediate.guard';
 import { PermissionsMetatada } from '@app/decorators/permission.decorator';
-import { ChargePermission } from '@app/enums/permission';
+import { AppSettingsPermission } from '@app/enums/permission';
 import { AppSetting } from '../models/app-settings.entity';
 
 @ApiTags(ApiTag.APP_SETTINGS)
@@ -19,7 +19,7 @@ export class AppSettingController {
   @ApiOperation({
     summary: 'Get Security Pin',
   })
-  @PermissionsMetatada(ChargePermission.VIEW)
+  @PermissionsMetatada(AppSettingsPermission.VIEW)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get('security-pin')
   async getSecurityPin(): Promise<AppSetting> {
@@ -30,7 +30,7 @@ export class AppSettingController {
   @ApiOperation({
     summary: 'Update Pin by Id',
   })
-  @PermissionsMetatada(ChargePermission.EDIT)
+  @PermissionsMetatada(AppSettingsPermission.EDIT)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Patch('security-pin')
   async updateCharge(@Body() updateChargeDto: UpdateSecurityPinDto) {

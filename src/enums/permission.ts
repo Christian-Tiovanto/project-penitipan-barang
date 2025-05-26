@@ -38,6 +38,14 @@ export enum ChargePermission {
   DELETE = 'charge.delete',
 }
 
+export enum AppSettingsPermission {
+  CREATE = 'app-settings.create',
+  LIST = 'app-settings.list',
+  VIEW = 'app-settings.view',
+  EDIT = 'app-settings.edit',
+  DELETE = 'app-settings.delete',
+}
+
 export enum CustomerPermission {
   CREATE = 'customer.create',
   LIST = 'customer.list',
