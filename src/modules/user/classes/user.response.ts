@@ -12,6 +12,6 @@ export class GetUserResponse {
   @ApiProperty({ example: 'test@gmail.com' })
   email: string;
 
-  @ApiProperty({ example: '54321' })
-  pin: string;
+  // @ApiProperty({ example: '54321' })
+  // pin: string;
 }

@@ -40,6 +40,7 @@ export class TransactionInHeader implements ITransactionInHeader {
   @OneToMany(
     () => TransactionIn,
     (transaction_in) => transaction_in.transaction_in_header,
+    { cascade: ['update'] },
   )
   transaction_in: TransactionIn[];
 

@@ -8,7 +8,7 @@ export enum UserSort {
   ID = 'id',
   EMAIL = 'email',
   FULLNAME = 'fullname',
-  PIN = 'pin',
+  // PIN = 'pin',
 }
 
 export class GetAllUserQuery extends OptionalDateRangeQueryWithPagination {

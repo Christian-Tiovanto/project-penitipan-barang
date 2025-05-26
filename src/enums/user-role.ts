@@ -1,4 +1,5 @@
 import {
+  AppSettingsPermission,
   ArPaymentPermission,
   CashflowPermission,
   ChargePermission,
@@ -23,7 +24,6 @@ export enum UserRoleEnum {
   CASHFLOW = 'cashflow',
   CHARGE = 'charge',
   CUSTOMER = 'customer',
-  CUSTOMER_PAYMENT = 'customer_payment',
   INVOICE = 'invoice',
   PAYMENT_METHOD = 'payment_method',
   PRODUCT = 'product',
@@ -52,9 +52,6 @@ export const RoleWithPermission = Object.freeze({
   },
   [UserRoleEnum.CUSTOMER]: {
     ...permissionToObject(Object.values(CustomerPermission)),
-  },
-  [UserRoleEnum.CUSTOMER_PAYMENT]: {
-    ...permissionToObject(Object.values(CustomerPaymentPermission)),
   },
   [UserRoleEnum.INVOICE]: {
     ...permissionToObject(Object.values(InvoicePermission)),
@@ -107,6 +104,7 @@ export const RoleWithPermission = Object.freeze({
     ...permissionToObject(Object.values(TransactionOutPermission)),
   },
   [UserRoleEnum.ADMIN]: {
+    ...permissionToObject(Object.values(AppSettingsPermission)),
     ...permissionToObject(Object.values(ArPaymentPermission)),
     ...permissionToObject(Object.values(CashflowPermission)),
     ...permissionToObject(Object.values(ChargePermission)),

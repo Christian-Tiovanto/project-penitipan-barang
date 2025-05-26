@@ -14,6 +14,8 @@ import {
   SortOrderQueryBuilder,
   TransactionInHeaderSort,
 } from '@app/enums/sort-order';
+import { UpdateTransactionInHeaderDto } from '../dtos/update-trans-in-header.dto';
+import { CustomerService } from '@app/modules/customer/services/customer.service';
 interface GetAllTransactionInHeaderQuery {
   pageNo: number;
   pageSize: number;
@@ -28,6 +30,7 @@ export class TransactionInHeaderService {
   constructor(
     @InjectRepository(TransactionInHeader)
     private transactionInHeaderRepository: Repository<TransactionInHeader>,
+    private readonly customerService: CustomerService,
   ) {}
 
   async createTransactionInHeader(
@@ -137,5 +140,30 @@ export class TransactionInHeaderService {
       await this.findTransactionInHeaderById(transactionHeaderId);
     transactionInHeader.customer.id = customerId;
     await entityManager.save(transactionInHeader);
+  }
+
+  async updateTransactionInHeader(
+    transactionHeaderId: number,
+    updateTransInHeaderDto: UpdateTransactionInHeaderDto,
+  ) {
+    const transactionInHeader =
+      await this.findTransactionInHeaderById(transactionHeaderId);
+    Object.assign(transactionInHeader, updateTransInHeaderDto);
+    if (updateTransInHeaderDto.customerId) {
+      await this.customerService.findCustomerById(
+        updateTransInHeaderDto.customerId,
+      );
+      transactionInHeader.customer.id = updateTransInHeaderDto.customerId;
+      for (const transactionIn of transactionInHeader.transaction_in) {
+        transactionIn.customerId = updateTransInHeaderDto.customerId;
+      }
+    }
+    const transInHeader =
+      await this.transactionInHeaderRepository.manager.transaction(
+        async (entityManager: EntityManager) => {
+          return await entityManager.save(transactionInHeader);
+        },
+      );
+    return transInHeader;
   }
 }

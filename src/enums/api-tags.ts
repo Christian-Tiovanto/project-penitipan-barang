@@ -19,4 +19,5 @@ export enum ApiTag {
   REPORT = 'report',
   SPB = 'spb',
   INVOICE = 'invoice',
+  APP_SETTINGS = 'app-settings',
 }
