@@ -38,7 +38,7 @@ jobs:
       - name: Set tag version
         id: set-tag
         run: |
-          TAG_VERSION="${GITHUB_REF#refs/tags/}"
+          TAG_VERSION=${GITHUB_REF_NAME#v}
           echo "version=${TAG_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Deploy to EC2
