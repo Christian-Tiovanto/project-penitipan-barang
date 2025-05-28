@@ -65,6 +65,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ECR_REGISTRY: ${{ needs.tag-image.outputs.ecr-registry }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
+      CONTAINER_NAME: penitipan-barang-be
+      IMAGE_TAG: ${{ startsWith(github.ref_name, 'v') && substring(github.ref_name, 1) || github.ref_name }}
+
     steps:
       - name: Deploy to EC2 Dev over SSH
         uses: appleboy/ssh-action@v1.0.0
