@@ -23,14 +23,13 @@ jobs:
       ecr-registry: ${{ steps.login-ecr.outputs.registry }}
 
     steps:
-      - name: Validate running ref type
-        run: |
-          REF_TYPE=${{ github.ref_type }}
-          if [[ "$REF_TYPE" != "tag" ]]; then
-            echo "Workflow is not run on tag."
-            exit 1
-          fi
-
+      # - name: Validate running ref type
+      #   run: |
+      #     REF_TYPE=${{ github.ref_type }}
+      #     if [[ "$REF_TYPE" != "tag" ]]; then
+      #       echo "Workflow is not run on tag."
+      #       exit 1
+      #     fi
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -43,7 +42,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-            - name: Check ECR image existence
+      - name: Check ECR image existence
         run: |
           TAG_VERSION=${GITHUB_REF_NAME#v}
           IMAGE_DESC=$(aws ecr describe-images \
@@ -59,7 +58,6 @@ jobs:
             exit 1
           fi
           echo "✅ ECR image exists: $IMAGE_DESC"
-
 
   trigger-deploy-dev:
     if: ${{ inputs.environment == 'dev' }}
