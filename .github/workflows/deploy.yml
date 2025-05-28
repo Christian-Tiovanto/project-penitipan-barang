@@ -31,14 +31,22 @@ jobs:
             exit 1
           fi
 
-      - name: Check image tag existance
+      - name: Check ECR image existence
         run: |
           TAG_VERSION=${GITHUB_REF_NAME#v}
-          MANIFEST=$(docker manifest inspect "ghcr.io/${{ github.repository_owner }}/obsidia-backend:$TAG_VERSION")
-          if [[ -z "${MANIFEST}" ]]; then
-           echo "Cant read manifest on specified version. Assume image does not exists"
+          IMAGE_DESC=$(aws ecr describe-images \
+            --repository-name "$ECR_REPOSITORY_NAME" \
+            --image-ids imageTag="$TAG_VERSION" \
+            --query 'imageDetails[0].imageDigest' \
+            --output text \
+            --region "$AWS_REGION" \
+            2>/dev/null)
+
+          if [[ -z "$IMAGE_DESC" || "$IMAGE_DESC" == "None" ]]; then
+            echo "Image $ECR_REPOSITORY_NAME:$TAG_VERSION not found in ECR"
             exit 1
           fi
+          echo "✅ ECR image exists: $IMAGE_DESC"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -73,7 +81,7 @@ jobs:
             echo "Deployment started on EC2 instance: ${{ secrets.EC2_HOST }}"
 
             echo "Logging into Amazon ECR on EC2..."
-            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ needs.tag-image.outputs.ecr-registry }}
 
             echo "Pulling Docker image: $IMAGE_TO_PULL"
             docker pull "$IMAGE_TO_PULL"
@@ -95,15 +103,15 @@ jobs:
 
             echo "Deployment to EC2 successful!"
 
-  trigger-deploy-staging:
-    if: ${{ inputs.environment == 'staging' }}
-    needs: tag-image
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Deployments to staging enviroment
-        run: |
-          curl -X POST \
-            --fail-with-body \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer ${{ secrets.DIGITALOCEAN_API_TOKEN }}" \
-            "https://api.digitalocean.com/v2/apps/${{ vars.DIGITALOCEAN_APP_ID_STAGING }}/deployments"
+  # trigger-deploy-staging:
+  #   if: ${{ inputs.environment == 'staging' }}
+  #   needs: tag-image
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Trigger Deployments to staging enviroment
+  #       run: |
+  #         curl -X POST \
+  #           --fail-with-body \
+  #           -H "Content-Type: application/json" \
+  #           -H "Authorization: Bearer ${{ secrets.DIGITALOCEAN_API_TOKEN }}" \
+  #           "https://api.digitalocean.com/v2/apps/${{ vars.DIGITALOCEAN_APP_ID_STAGING }}/deployments"
