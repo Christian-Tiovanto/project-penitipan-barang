@@ -83,6 +83,7 @@ jobs:
             echo "Logging into Amazon ECR on EC2..."
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin "$ECR_REGISTRY"
 
+            echo "Loggin Successful"
             echo "Pulling Docker image: $IMAGE_TO_PULL"
             docker pull "$IMAGE_TO_PULL"
 
