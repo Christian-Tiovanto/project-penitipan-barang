@@ -1,37 +1,107 @@
-# name: Deploy via SSH
+name: Deploy to EC2 Instance via SSH
 
-# on:
-#   workflow_dispatch:
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select the environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
 
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
+env:
+  ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
+  CONTAINER_NAME: penitipan-barang-be
 
-#     steps:
-#       - name: Check out repository
-#         uses: actions/checkout@v4
+jobs:
+  tag-image:
+    runs-on: ubuntu-latest
 
-#       - name: Set up Node.js
-#         uses: actions/setup-node@v4
-#         with:
-#           node-version: 18
+    steps:
+      - name: Validate running ref type
+        run: |
+          REF_TYPE=${{ github.ref_type }}
+          if [[ "$REF_TYPE" != "tag" ]]; then
+            echo "Workflow is not run on tag."
+            exit 1
+          fi
 
-#       - name: Install dependencies
-#         run: npm install
+      - name: Check image tag existance
+        run: |
+          TAG_VERSION=${GITHUB_REF_NAME#v}
+          MANIFEST=$(docker manifest inspect "ghcr.io/${{ github.repository_owner }}/obsidia-backend:$TAG_VERSION")
+          if [[ -z "${MANIFEST}" ]]; then
+           echo "Cant read manifest on specified version. Assume image does not exists"
+            exit 1
+          fi
 
-#       - name: Setup SSH
-#         run: |
-#           mkdir -p ~/.ssh
-#           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-#           chmod 600 ~/.ssh/id_rsa
-#           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-#       - name: Deploy
-#         run: |
-#           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-#             cd ~/penitipan-barang/project-penitipan-barang-BE/
-#             git fetch
-#             git pull origin main
-#             docker-compose build app
-#             docker-compose up -d app
-#           EOF
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+  trigger-deploy-dev:
+    if: ${{ inputs.environment == 'dev' }}
+    needs: tag-image
+    runs-on: ubuntu-latest
+    env:
+      ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+    steps:
+      - name: Deploy to EC2 Dev over SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e # Exit immediately if a command exits with a non-zero status.
+
+            IMAGE_TAG=${GITHUB_REF_NAME#v}
+            IMAGE_TO_PULL="$ECR_REGISTRY/$ECR_REPOSITORY_NAME:$IMAGE_TAG"
+
+            echo "Deployment started on EC2 instance: ${{ secrets.EC2_HOST }}"
+
+            echo "Logging into Amazon ECR on EC2..."
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+
+            echo "Pulling Docker image: $IMAGE_TO_PULL"
+            docker pull "$IMAGE_TO_PULL"
+
+            echo "Stopping and removing existing container named '${{ env.CONTAINER_NAME }}' (if any)..."
+            if [ "$(docker ps -q -f name=${{ env.CONTAINER_NAME }})" ]; then
+                docker stop ${{ env.CONTAINER_NAME }}
+                docker rm ${{ env.CONTAINER_NAME }}
+                echo "Container '${{ env.CONTAINER_NAME }}' stopped and removed."
+            else
+                echo "No existing container named '${{ env.CONTAINER_NAME }}' found."
+            fi
+
+            echo "Running new Docker container from image: $IMAGE_TO_PULL"
+            docker run -d --name ${{ env.CONTAINER_NAME }} -p 8000:8000 "$IMAGE_TO_PULL" 
+
+            echo "Cleaning up old Docker images..."
+            docker image prune -a -f
+
+            echo "Deployment to EC2 successful!"
+
+  trigger-deploy-staging:
+    if: ${{ inputs.environment == 'staging' }}
+    needs: tag-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Deployments to staging enviroment
+        run: |
+          curl -X POST \
+            --fail-with-body \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.DIGITALOCEAN_API_TOKEN }}" \
+            "https://api.digitalocean.com/v2/apps/${{ vars.DIGITALOCEAN_APP_ID_STAGING }}/deployments"
