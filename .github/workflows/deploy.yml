@@ -81,7 +81,7 @@ jobs:
             echo "Deployment started on EC2 instance: ${{ secrets.EC2_HOST }}"
 
             echo "Logging into Amazon ECR on EC2..."
-            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ needs.tag-image.outputs.ecr-registry }}
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin "$ECR_REGISTRY"
 
             echo "Pulling Docker image: $IMAGE_TO_PULL"
             docker pull "$IMAGE_TO_PULL"
