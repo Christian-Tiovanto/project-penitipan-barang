@@ -1,36 +1,22 @@
-name: Deploy to EC2 Instance via SSH
+name: Deploy to EC2
 
 on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Select the environment to deploy to'
+        description: 'Environment to deploy to'
         required: true
         default: 'dev'
         type: choice
-        options:
-          - dev
-          - staging
+        options: [dev, staging]
 
 env:
-  ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
   CONTAINER_NAME: penitipan-barang-be
 
 jobs:
-  tag-image:
+  deploy:
     runs-on: ubuntu-latest
-    outputs:
-      ecr-registry: ${{ steps.login-ecr.outputs.registry }}
-
     steps:
-      - name: Validate running ref type
-        run: |
-          REF_TYPE=${{ github.ref_type }}
-          if [[ "$REF_TYPE" != "tag" ]]; then
-            echo "Workflow is not run on tag."
-            exit 1
-          fi
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -39,83 +25,48 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to Amazon ECR
-        id: login-ecr
+        id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Check ECR image existence
+      - name: Get ECR registry URI
+        id: ecr-registry
         run: |
-          TAG_VERSION=${GITHUB_REF_NAME#v}
-          IMAGE_DESC=$(aws ecr describe-images \
-            --repository-name "$ECR_REPOSITORY_NAME" \
-            --image-ids imageTag="$TAG_VERSION" \
-            --query 'imageDetails[0].imageDigest' \
-            --output text \
-            --region "$AWS_REGION" \
-            2>/dev/null)
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          REGISTRY="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          echo "registry=${REGISTRY}" >> $GITHUB_OUTPUT
 
-          if [[ -z "$IMAGE_DESC" || "$IMAGE_DESC" == "None" ]]; then
-            echo "Image $ECR_REPOSITORY_NAME:$TAG_VERSION not found in ECR"
-            exit 1
-          fi
-          echo "✅ ECR image exists: $IMAGE_DESC"
+      - name: Set tag version
+        id: set-tag
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/}"
+          echo "version=${TAG_VERSION}" >> $GITHUB_OUTPUT
 
-  trigger-deploy-dev:
-    if: ${{ inputs.environment == 'dev' }}
-    needs: tag-image
-    runs-on: ubuntu-latest
-    env:
-      ECR_REGISTRY: ${{ needs.tag-image.outputs.ecr-registry }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
-      CONTAINER_NAME: penitipan-barang-be
-
-    steps:
-      - name: Deploy to EC2 Dev over SSH
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            set -e # Exit immediately if a command exits with a non-zero status.
+            set -e
+            # Use expanded variables from GitHub runner
+            IMAGE_TO_PULL="${{ steps.ecr-registry.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }}:${{ steps.set-tag.outputs.version }}"
 
-            IMAGE_TO_PULL="$ECR_REGISTRY/$ECR_REPOSITORY_NAME:v0.0.6"
+            echo "Deploying: ${IMAGE_TO_PULL}"
 
-            echo "Deployment started on EC2 instance: ${{ secrets.EC2_HOST }}"
+            # ECR Login
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
+              docker login --username AWS --password-stdin "${{ steps.ecr-registry.outputs.registry }}"
 
-            echo "Logging into Amazon ECR on EC2..."
-            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+            # Update container
+            docker pull "${IMAGE_TO_PULL}"
+            docker stop ${{ env.CONTAINER_NAME }} || true
+            docker rm ${{ env.CONTAINER_NAME }} || true
+            docker run -d \
+              --name ${{ env.CONTAINER_NAME }} \
+              -p 8000:8000 \
+              "${IMAGE_TO_PULL}"
 
-            echo "Loggin Successful"
-            echo "Pulling Docker image: $IMAGE_TO_PULL"
-            docker pull "$IMAGE_TO_PULL"
-
-            echo "Stopping and removing existing container named '${{ env.CONTAINER_NAME }}' (if any)..."
-            if [ "$(docker ps -q -f name=${{ env.CONTAINER_NAME }})" ]; then
-                docker stop ${{ env.CONTAINER_NAME }}
-                docker rm ${{ env.CONTAINER_NAME }}
-                echo "Container '${{ env.CONTAINER_NAME }}' stopped and removed."
-            else
-                echo "No existing container named '${{ env.CONTAINER_NAME }}' found."
-            fi
-
-            echo "Running new Docker container from image: $IMAGE_TO_PULL"
-            docker run -d --name ${{ env.CONTAINER_NAME }} -p 8000:8000 "$IMAGE_TO_PULL" 
-
-            echo "Cleaning up old Docker images..."
+            # Cleanup
             docker image prune -a -f
-
-            echo "Deployment to EC2 successful!"
-
-  # trigger-deploy-staging:
-  #   if: ${{ inputs.environment == 'staging' }}
-  #   needs: tag-image
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Trigger Deployments to staging enviroment
-  #       run: |
-  #         curl -X POST \
-  #           --fail-with-body \
-  #           -H "Content-Type: application/json" \
-  #           -H "Authorization: Bearer ${{ secrets.DIGITALOCEAN_API_TOKEN }}" \
-  #           "https://api.digitalocean.com/v2/apps/${{ vars.DIGITALOCEAN_APP_ID_STAGING }}/deployments"
+            echo "Deployment successful!"
