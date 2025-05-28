@@ -23,13 +23,13 @@ jobs:
       ecr-registry: ${{ steps.login-ecr.outputs.registry }}
 
     steps:
-      # - name: Validate running ref type
-      #   run: |
-      #     REF_TYPE=${{ github.ref_type }}
-      #     if [[ "$REF_TYPE" != "tag" ]]; then
-      #       echo "Workflow is not run on tag."
-      #       exit 1
-      #     fi
+      - name: Validate running ref type
+        run: |
+          REF_TYPE=${{ github.ref_type }}
+          if [[ "$REF_TYPE" != "tag" ]]; then
+            echo "Workflow is not run on tag."
+            exit 1
+          fi
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
