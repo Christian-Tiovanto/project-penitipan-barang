@@ -19,6 +19,8 @@ env:
 jobs:
   tag-image:
     runs-on: ubuntu-latest
+    outputs:
+      ecr-registry: ${{ steps.login-ecr.outputs.registry }}
 
     steps:
       - name: Validate running ref type
@@ -54,7 +56,7 @@ jobs:
     needs: tag-image
     runs-on: ubuntu-latest
     env:
-      ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      ECR_REGISTRY: ${{ needs.tag-image.outputs.ecr-registry }}
     steps:
       - name: Deploy to EC2 Dev over SSH
         uses: appleboy/ssh-action@v1.0.0
