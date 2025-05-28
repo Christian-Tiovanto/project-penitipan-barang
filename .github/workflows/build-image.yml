@@ -1,0 +1,74 @@
+name: Build And Push Backend Docker Image
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-southeast-1
+  ECR_REPOSITORY_NAME: ${{ secrets.ECR_REPOSITORY_NAME }}
+  IMAGE_TAG: ${GITHUB_REF_NAME#v}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # runs only if this workflow is dispatched on 'tag', not 'branch'
+      - name: Validate running ref type
+        run: |
+          REF_TYPE=${{ github.ref_type }}
+          if [[ "$REF_TYPE" != "tag" ]]; then
+            echo "Workflow is not run on tag."
+            exit 1
+          fi
+          echo "Workflow is running of tag"
+
+      # Extract the tag name and validate it with regex
+      - name: Validate tag with regex
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta)(\.[0-9]+)?)?$ ]]; then
+            echo "Tag format is invalid. Exiting."
+            exit 1
+          fi
+
+      - name: Validate Git tag matches package.json version
+        id: validate_version
+        run: |
+          PACKAGE_VERSION=$(jq -r '.version' < package.json)
+          TAG_VERSION=${GITHUB_REF_NAME#v} 
+          if [[ "$PACKAGE_VERSION" != "$TAG_VERSION" ]]; then
+            echo "Tag version ($TAG_VERSION) does not match package.json version ($PACKAGE_VERSION)."
+            exit 1
+          fi
+          echo "Tag version matches package.json version."
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push Docker image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          FULL_IMAGE_NAME="$ECR_REGISTRY/$ECR_REPOSITORY_NAME:$IMAGE_TAG"
+          echo "Building Docker image: $FULL_IMAGE_NAME"
+
+          # Build the docker image
+          docker build -t "$FULL_IMAGE_NAME" .
+
+          echo "Pushing Docker image to ECR: $FULL_IMAGE_NAME"
+          # Push the docker image to ECR
+          docker push "$FULL_IMAGE_NAME"
+
+          # Set the output for use in the next job
+          echo "image_uri=$FULL_IMAGE_NAME" >> "$GITHUB_OUTPUT"
