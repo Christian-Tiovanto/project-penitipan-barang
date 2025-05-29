@@ -65,6 +65,7 @@ jobs:
             docker run -d \
               --name ${{ env.CONTAINER_NAME }} \
               -p 8000:8000 \
+              -e DB_PORT${{ secrets.DB_PORT }}
               -e DB_PASSWORD${{ secrets.DB_PASSWORD }}
               -e DB_NAME${{ secrets.DB_NAME }}
               -e DB_USER${{ secrets.DB_USER }}
