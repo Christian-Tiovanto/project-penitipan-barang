@@ -72,6 +72,8 @@ jobs:
               -e DB_HOST${{ secrets.EC2_HOST }}
               -e JWT_SECRET${{ secrets.JWT_SECRET }}
               -e USER_EMAIL${{ secrets.USER_EMAIL }}
+              -e USER_PASS${{ secrets.USER_PASS }}
+              -e USER_PIN${{ secrets.USER_PIN }}
               -e SECURITY_PIN${{ secrets.SECURITY_PIN }}
               "${IMAGE_TO_PULL}"
 
