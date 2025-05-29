@@ -65,6 +65,13 @@ jobs:
             docker run -d \
               --name ${{ env.CONTAINER_NAME }} \
               -p 8000:8000 \
+              -e DB_PASSWORD${{ secrets.DB_PASSWORD }}
+              -e DB_NAME${{ secrets.DB_NAME }}
+              -e DB_USER${{ secrets.DB_USER }}
+              -e DB_HOST${{ secrets.EC2_HOST }}
+              -e JWT_SECRET${{ secrets.JWT_SECRET }}
+              -e USER_EMAIL${{ secrets.USER_EMAIL }}
+              -e SECURITY_PIN${{ secrets.SECURITY_PIN }}
               "${IMAGE_TO_PULL}"
 
             # Cleanup
