@@ -64,6 +64,7 @@ jobs:
             docker rm ${{ env.CONTAINER_NAME }} || true
             docker run -d \
               --name ${{ env.CONTAINER_NAME }} \
+              --network penitipan-barang-net \
               -p 8000:8000 \
               -e DB_PORT=${{ secrets.DB_PORT }} \
               -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
