@@ -32,8 +32,10 @@
     "class-validator": "^0.14.1",
     "joi": "^17.13.3",
     "joi-class-decorators": "^1.1.2",
+    "knex": "^3.1.0",
     "mysql2": "^3.13.0",
     "passport-jwt": "^4.0.1",
+    "pg": "^8.16.0",
     "reflect-metadata": "^0.1.14",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.21"
@@ -52,6 +54,7 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.7",
     "@types/passport-jwt": "^4.0.1",
+    "@types/pg": "^8.15.4",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",

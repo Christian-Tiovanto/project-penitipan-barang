@@ -6,10 +6,10 @@ import { SecurityPinSeeder } from './seeder/security-pin.seeder';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const seeder = app.get(UserSeeder);
-  await seeder.run();
-  const securityPinseeder = app.get(SecurityPinSeeder);
-  await securityPinseeder.run();
+  // const seeder = app.get(UserSeeder);
+  // await seeder.run();
+  // const securityPinseeder = app.get(SecurityPinSeeder);
+  // await securityPinseeder.run();
 
   // const environment = process.env.NODE_ENV || 'DEVELOPMENT';
   // const domainUrl = process.env.DOMAIN_URL || 'http://localhost:5173';
@@ -50,5 +50,6 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, documentFactory);
   await app.listen(8000, '0.0.0.0'); // <-- PENTING BANGET!
+  console.log('App Listening on port 8000');
 }
 bootstrap();

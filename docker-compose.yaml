@@ -22,7 +22,7 @@ services:
 
   database:
     image: mysql:5.7.33
-    container_name: project-penitipan-barang
+    container_name: mysqlacid
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: ${DB_NAME}
