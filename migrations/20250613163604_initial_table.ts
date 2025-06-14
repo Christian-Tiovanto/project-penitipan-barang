@@ -32,7 +32,8 @@ export async function up(knex: Knex): Promise<void> {
     (
       id serial not null primary key,
       arId int, 
-      payment_method_name varchar(50), 
+      payment_method_name varchar(50),
+      customer_paymentId int, 
       customerId int, 
       total_paid int, 
       transfer_date timestamp with time zone,

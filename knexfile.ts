@@ -1,5 +1,7 @@
 import type { Knex } from 'knex';
+import * as dotenv from 'dotenv'; // Import dotenv
 
+dotenv.config({ path: '.env' });
 // Update with your config settings.
 
 const config: { [key: string]: Knex.Config } = {
@@ -10,6 +12,7 @@ const config: { [key: string]: Knex.Config } = {
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT),
     },
     pool: {
       min: 2,
