@@ -1,11 +1,12 @@
 import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
-import { IUser } from '../models/user';
+import { User } from '../models/user';
 import * as Joi from 'joi';
 import { ApiProperty } from '@nestjs/swagger';
 
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateUserDto
-  implements Omit<IUser, 'id' | 'is_deleted' | 'user_role'>
+  implements
+    Omit<User, 'id' | 'is_deleted' | 'user_role' | 'created_at' | 'updated_at'>
 {
   // @ApiProperty({ example: 1 })
   // @JoiSchema(Joi.number().required())

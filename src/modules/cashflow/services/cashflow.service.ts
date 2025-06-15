@@ -91,9 +91,9 @@ export class CashflowService {
     if (createCashflowDto.amount < 1) {
       throw new BadRequestException("Amount can't be less than 0");
     }
-    if (createCashflowDto.created_byId) {
-      await this.userService.findUserById(createCashflowDto.created_byId);
-    }
+    // if (createCashflowDto.created_byId) {
+    //   await this.userService.findUserById(createCashflowDto.created_byId);
+    // }
     const latestCashflow = await this.findLatestCashFlow();
     const latestTotalAmount = latestCashflow?.total_amount || 0;
     createCashflowDto.from = CashflowFrom.INPUT;

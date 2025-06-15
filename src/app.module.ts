@@ -28,12 +28,12 @@ import { DatabaseModule } from './modules/database/database.module';
     { provide: APP_PIPE, useClass: DataValidationPipe },
     { provide: APP_FILTER, useClass: ExceptionHandlerFilter },
     // UserSeeder,
-    // SecurityPinSeeder,
+    SecurityPinSeeder,
   ],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
-    // UserModule,
+    UserModule,
     // AuthModule,
     // ProductModule,
     // ProductUnitModule,
@@ -48,7 +48,7 @@ import { DatabaseModule } from './modules/database/database.module';
     // ReportModule,
     // SpbModule,
     // InvoiceModule,
-    // AppSettingsModule,
+    AppSettingsModule,
   ],
 })
 export class AppModule {}

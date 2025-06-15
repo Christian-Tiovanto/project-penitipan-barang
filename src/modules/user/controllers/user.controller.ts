@@ -37,30 +37,30 @@ import { AuthorizeGuard } from '@app/guards/authorize.guard';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Update User Password',
-  })
-  // @PermissionsMetatada(UserPermission.EDIT)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Patch(':id/update-password')
-  async updatePassword(
-    @Param('id', ParseIntPipe) userId: number,
-    @Body() updatePasswordDto: UpdatePasswordDto,
-  ) {
-    return await this.userService.updateUserPassword(userId, updatePasswordDto);
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Update User Password',
+  // })
+  // // @PermissionsMetatada(UserPermission.EDIT)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Patch(':id/update-password')
+  // async updatePassword(
+  //   @Param('id', ParseIntPipe) userId: number,
+  //   @Body() updatePasswordDto: UpdatePasswordDto,
+  // ) {
+  //   return await this.userService.updateUserPassword(userId, updatePasswordDto);
+  // }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get User by Id',
-  })
-  // @PermissionsMetatada(UserPermission.VIEW)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Get(':id')
-  async getUserById(@Param('id', ParseIntPipe) userId: number) {
-    return await this.userService.getUserById(userId);
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get User by Id',
+  // })
+  // // @PermissionsMetatada(UserPermission.VIEW)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Get(':id')
+  // async getUserById(@Param('id', ParseIntPipe) userId: number) {
+  //   return await this.userService.getUserById(userId);
+  // }
 
   // @ApiBearerAuth()
   // @ApiOperation({
@@ -86,69 +86,69 @@ export class UserController {
   //   };
   // }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get All User',
-  })
-  @ApiOkResponse({ type: GetUserResponse })
-  @UseInterceptors(OffsetPaginationInterceptor)
-  @PermissionsMetatada(UserPermission.LIST)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Get()
-  async getAllUser(
-    @Query()
-    {
-      page_no,
-      page_size,
-      start_date,
-      end_date,
-      sort,
-      order,
-      search,
-    }: GetAllUserQuery,
-  ): Promise<OffsetPagination<GetUserResponse>> {
-    const pageSize = parseInt(page_size) || 10;
-    const pageNo = parseInt(page_no) || 1;
-    sort = !sort ? UserSort.ID : sort;
-    order = !order ? SortOrder.ASC : order;
-    const users = await this.userService.getAllUser({
-      pageNo,
-      pageSize,
-      sort,
-      order,
-      startDate: start_date,
-      endDate: end_date,
-      search,
-    });
-    return {
-      data: users[0],
-      totalCount: users[1],
-      filteredCount: users[1],
-    };
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get All User',
+  // })
+  // @ApiOkResponse({ type: GetUserResponse })
+  // @UseInterceptors(OffsetPaginationInterceptor)
+  // @PermissionsMetatada(UserPermission.LIST)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Get()
+  // async getAllUser(
+  //   @Query()
+  //   {
+  //     page_no,
+  //     page_size,
+  //     start_date,
+  //     end_date,
+  //     sort,
+  //     order,
+  //     search,
+  //   }: GetAllUserQuery,
+  // ): Promise<OffsetPagination<GetUserResponse>> {
+  //   const pageSize = parseInt(page_size) || 10;
+  //   const pageNo = parseInt(page_no) || 1;
+  //   sort = !sort ? UserSort.ID : sort;
+  //   order = !order ? SortOrder.ASC : order;
+  //   const users = await this.userService.getAllUser({
+  //     pageNo,
+  //     pageSize,
+  //     sort,
+  //     order,
+  //     startDate: start_date,
+  //     endDate: end_date,
+  //     search,
+  //   });
+  //   return {
+  //     data: users[0],
+  //     totalCount: users[1],
+  //     filteredCount: users[1],
+  //   };
+  // }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Update User by id',
-  })
-  // @PermissionsMetatada(UserPermission.EDIT)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Patch(':id')
-  async updateUserById(
-    @Param('id', ParseIntPipe) userId: number,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
-    return await this.userService.updateUserById(userId, updateUserDto);
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Update User by id',
+  // })
+  // // @PermissionsMetatada(UserPermission.EDIT)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Patch(':id')
+  // async updateUserById(
+  //   @Param('id', ParseIntPipe) userId: number,
+  //   @Body() updateUserDto: UpdateUserDto,
+  // ) {
+  //   return await this.userService.updateUserById(userId, updateUserDto);
+  // }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Delete User by id',
-  })
-  @PermissionsMetatada(UserPermission.DELETE)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, SuperAdminGuard)
-  @Delete(':id')
-  async deleteUserById(@Param('id', ParseIntPipe) userId: number) {
-    return await this.userService.deleteUserById(userId);
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Delete User by id',
+  // })
+  // @PermissionsMetatada(UserPermission.DELETE)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, SuperAdminGuard)
+  // @Delete(':id')
+  // async deleteUserById(@Param('id', ParseIntPipe) userId: number) {
+  //   return await this.userService.deleteUserById(userId);
+  // }
 }

@@ -1,10 +1,10 @@
 import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
-import { IUser } from '../models/user';
+import { User } from '../models/user';
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 
 @JoiSchemaOptions({ allowUnknown: false })
-export class UpdatePasswordDto implements Pick<IUser, 'password'> {
+export class UpdatePasswordDto implements Pick<User, 'password'> {
   @ApiProperty({
     example: '123456',
     description: 'Password minimal 6 character and max 24 characters',

@@ -2,7 +2,7 @@ import { Module, Global } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as pg from 'pg';
 
-const DATABASE_POOL = 'DATABASE_POOL';
+export const DATABASE_POOL = 'DATABASE_POOL';
 
 @Global() // Make the module globally available
 @Module({

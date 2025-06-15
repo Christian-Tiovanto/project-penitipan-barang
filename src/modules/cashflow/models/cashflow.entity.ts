@@ -34,7 +34,7 @@ export class Cashflow implements ICashflow {
   id: number;
 
   @JoinColumn({ name: 'created_byId' })
-  @ManyToOne(() => User, (user) => user)
+  // @ManyToOne(() => User, (user) => user)
   created_by: number;
 
   @ApiProperty({ example: CashflowType.IN })

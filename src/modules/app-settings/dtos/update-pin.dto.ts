@@ -1,14 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
-import { IAppSettings } from '../models/app-settings.entity';
+import { AppSetting } from '../models/app-settings.entity';
 
 @JoiSchemaOptions({
   allowUnknown: false,
 })
-export class UpdateSecurityPinDto
-  implements Pick<IAppSettings, 'setting_value'>
-{
+export class UpdateSecurityPinDto implements Pick<AppSetting, 'setting_value'> {
   @ApiProperty({
     example: '12345',
     description: 'Password minimal 5 character and max 6 characters',

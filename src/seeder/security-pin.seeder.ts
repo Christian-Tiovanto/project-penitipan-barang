@@ -1,13 +1,16 @@
 // src/seeder/user.seeder.ts
-import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { Inject, Injectable } from '@nestjs/common';
 import { AppSettingsService } from '@app/modules/app-settings/services/app-settings.service';
 import { AppSetting } from '@app/modules/app-settings/models/app-settings.entity';
+import { DATABASE_POOL } from '@app/modules/database/database.module';
+import { Pool } from 'pg';
+import { DATABASE } from '@app/enums/database-table';
+import { AppSettingsColumn } from '@app/enums/table-column';
 
 @Injectable()
 export class SecurityPinSeeder {
   constructor(
-    private dataSource: DataSource,
+    @Inject(DATABASE_POOL) private readonly pool: Pool,
     private appSettingsService: AppSettingsService,
   ) {}
 
@@ -17,17 +20,11 @@ export class SecurityPinSeeder {
     if (existing) {
       return;
     }
+    const sql = `
+    INSERT INTO ${DATABASE.APP_SETTINGS} (${(AppSettingsColumn.SETTING_NAME, AppSettingsColumn.SETTING_VALUE)}) values ($1, $2) 
+`;
+    const values = ['security_pin', securityPin];
 
-    return await this.dataSource.transaction(async (manager) => {
-      // Use manager to get repository-scoped services
-      const securityPinSetting = await manager.save(
-        manager.create(AppSetting, {
-          setting_name: 'security_pin',
-          setting_value: securityPin,
-        }),
-      );
-
-      return securityPinSetting;
-    });
+    await this.pool.query<AppSetting>(sql, values);
   }
 }

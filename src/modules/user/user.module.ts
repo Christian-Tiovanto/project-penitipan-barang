@@ -9,7 +9,7 @@ import { UserRoleController } from './controllers/user-role.controller';
 
 @Global()
 @Module({
-  imports: [TypeOrmModule.forFeature([User, UserRole])],
+  imports: [],
   providers: [UserService, UserRoleService],
   controllers: [UserController, UserRoleController],
   exports: [UserService, UserRoleService],
