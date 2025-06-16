@@ -27,7 +27,7 @@ import { UserRoleEnum } from '@app/enums/user-role';
 import { DATABASE_POOL } from '@app/modules/database/database.module';
 import { Pool } from 'pg';
 import { DATABASE } from '@app/enums/database-table';
-import { UsersColumn } from '@app/enums/table-column';
+import { UserRolesColumn, UsersColumn } from '@app/enums/table-column';
 
 interface GetAllUserQuery {
   pageNo: number;
@@ -48,6 +48,12 @@ export class UserService {
   ): Promise<Omit<User, 'password'>> {
     let createdUser: User;
     try {
+      const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10);
+      createUserDto['password'] = await bcrypt.hash(
+        createUserDto.password,
+        saltRounds,
+      );
+
       const columns = Object.keys(createUserDto).filter(
         (key) => createUserDto[key] != null, // `!= null` checks for both undefined and null
       );
@@ -82,7 +88,8 @@ export class UserService {
 
   async getUserByEmail(email: string) {
     const sql = `
-    SELECT ${(UsersColumn.ID, UsersColumn.FULLNAME, UsersColumn.PASSWORD)} FROM ${DATABASE.USERS} 
+    SELECT ${[UsersColumn.ID, UsersColumn.FULLNAME, UsersColumn.PASSWORD].join(',')} 
+    FROM ${DATABASE.USERS} 
     WHERE ${UsersColumn.EMAIL} = $1 and ${UsersColumn.IS_DELETED} = false 
     `;
 
@@ -90,100 +97,87 @@ export class UserService {
     return rows[0];
   }
 
-  // async getUserById(id: number) {
-  //   const user = await this.userRepository.findOne({
-  //     where: { id, is_deleted: false },
-  //     relations: ['user_role'],
-  //   });
-  //   return user;
-  // }
+  async getUserById(id: number) {
+    const sql = `
+    SELECT ${(UsersColumn.ID, UsersColumn.FULLNAME, UsersColumn.PASSWORD)} 
+    FROM ${DATABASE.USERS}  
+    LEFT JOIN ${DATABASE.USER_ROLES} on ${UsersColumn.ID} = ${UserRolesColumn.USER_ID} 
+    WHERE ${UsersColumn.ID} = $1 and ${UsersColumn.IS_DELETED} = false 
+    `;
 
-  // async getAllUser({ pageNo, pageSize }: GetAllUserQuery) {
-  //   const skip = (pageNo - 1) * pageSize;
-  //   const users = await this.userRepository.findAndCount({
-  //     skip,
-  //     take: pageSize,
-  //     where: {
-  //       is_deleted: false,
-  //     },
-  //   });
-  //   return users;
-  // }
+    const { rows } = await this.pool.query<User>(sql, [id]);
+    return rows[0];
+  }
 
-  // async getAllUser({
-  //   pageNo,
-  //   pageSize,
-  //   sort,
-  //   order,
-  //   startDate,
-  //   endDate,
-  //   search,
-  // }: GetAllUserQuery): Promise<[GetUserResponse[], number]> {
-  //   const skip = (pageNo - 1) * pageSize;
+  async getAllUser({
+    pageNo,
+    pageSize,
+    sort,
+    order,
+    startDate,
+    endDate,
+    search,
+  }: GetAllUserQuery): Promise<any> {
+    const clauses = [];
+    const values = [];
+    let sqlQueryIdx = 1;
+    const sortBy: string = `u.${sort}`;
+    const skip = (pageNo - 1) * pageSize;
 
-  //   const sortBy: string = `user.${sort}`;
-  //   // if (
-  //   //   sort === UserSort.EMAIL ||
-  //   //   sort === UserSort.FULLNAME ||
-  //   //   sort === UserSort.PIN ||
-  //   //   sort === UserSort.ROLE
-  //   // ) {
-  //   //   sortBy = `${sort}.name`;
-  //   // }
-  //   const queryBuilder = this.userRepository
-  //     .createQueryBuilder('user')
-  //     // .leftJoinAndSelect('user.customer', 'customer')
-  //     .leftJoinAndSelect('user.user_role', 'user_role')
-  //     .skip(skip)
-  //     .take(pageSize)
-  //     .select(['user'])
-  //     .andWhere('is_deleted = :isDeleted', { isDeleted: false })
-  //     .andWhere(
-  //       new Brackets((qb) => {
-  //         qb.where('user_role.role IS NULL').orWhere(
-  //           'user_role.role != :superadminRole',
-  //           {
-  //             superadminRole: UserRoleEnum.SUPERADMIN,
-  //           },
-  //         );
-  //       }),
-  //     )
-  //     .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
+    if (startDate) {
+      clauses.push(`u.created_at >= $${sqlQueryIdx}`);
+      values.push(startDate);
+      sqlQueryIdx += 1;
+    }
+    if (endDate) {
+      clauses.push(`u.created_at < $${sqlQueryIdx}`);
+      values.push(endDate);
+      sqlQueryIdx += 1;
+    }
 
-  //   //Conditionally add filters
-  //   if (startDate) {
-  //     queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
-  //   }
+    if (search) {
+      clauses.push(
+        `(u.email LIKE = $${sqlQueryIdx} or u.fullname LIKE $${sqlQueryIdx + 1})`,
+      );
+      values.push(`%${search}%`);
+      sqlQueryIdx += 2;
+    }
+    const sql = `
+    SELECT  u.*
+    FROM ${DATABASE.USERS} u
+    LEFT JOIN ${DATABASE.USER_ROLES} ur on u.${UsersColumn.ID} = ur.${UserRolesColumn.USER_ID} 
+    WHERE ${UsersColumn.IS_DELETED} = false AND (ur.${UserRolesColumn.ROLE} is null OR ur.${UserRolesColumn.ROLE} != '${UserRoleEnum.SUPERADMIN}') 
+    ${clauses.length ? `AND ${clauses.join(' AND ')}` : '1=1'}
+    ORDER BY ${sortBy} ${order}
+    LIMIT ${pageSize} 
+    OFFSET ${skip};
+    `;
+    const countSql = `
+    SELECT count(*) as total_count
+    FROM ${DATABASE.USERS} u
+    LEFT JOIN ${DATABASE.USER_ROLES} ur on u.${UsersColumn.ID} = ur.${UserRolesColumn.USER_ID} 
+    WHERE ${UsersColumn.IS_DELETED} = false AND (ur.${UserRolesColumn.ROLE} is null OR ur.${UserRolesColumn.ROLE} != '${UserRoleEnum.SUPERADMIN}') 
+    ${clauses.length ? `AND ${clauses.join(' AND ')}` : '1=1'}
+    LIMIT ${pageSize} 
+    OFFSET ${skip};
+    `;
+    const users: User[] = [];
+    let totalCount = 0;
+    try {
+      const { rows } = await this.pool.query<User>(sql, values);
+      totalCount += parseInt(
+        (await this.pool.query<{ total_count: string }>(countSql, values))
+          .rows[0].total_count,
+      );
+      users.push(...rows);
+    } catch (error) {
+      console.log('error');
+      console.log(error);
+      throw error;
+    }
 
-  //   if (endDate) {
-  //     queryBuilder.andWhere({ created_at: LessThan(endDate) });
-  //   }
-
-  //   if (search) {
-  //     queryBuilder.andWhere(
-  //       new Brackets((qb) => {
-  //         qb.where('email LIKE :search', { search: `%${search}%` }).orWhere(
-  //           'fullname LIKE :search',
-  //           { search: `%${search}%` },
-  //         );
-  //         // .orWhere('pin LIKE :search', { search: `%${search}%` });
-  //       }),
-  //     );
-  //   }
-
-  //   const [users, count] = await queryBuilder.getManyAndCount();
-  //   const userResponse: GetUserResponse[] = users.map(
-  //     (user: GetUserResponse) => {
-  //       return {
-  //         id: user.id,
-  //         email: user.email,
-  //         fullname: user.fullname,
-  //         // pin: user.pin,
-  //       };
-  //     },
-  //   );
-  //   return [userResponse, count];
-  // }
+    return [users, totalCount];
+  }
 
   // async findUserById(id: number) {
   //   const user = await this.userRepository.findOne({

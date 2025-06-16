@@ -21,7 +21,7 @@ export class SecurityPinSeeder {
       return;
     }
     const sql = `
-    INSERT INTO ${DATABASE.APP_SETTINGS} (${(AppSettingsColumn.SETTING_NAME, AppSettingsColumn.SETTING_VALUE)}) values ($1, $2) 
+    INSERT INTO ${DATABASE.APP_SETTINGS} (${AppSettingsColumn.SETTING_NAME}, ${AppSettingsColumn.SETTING_VALUE}) values ($1, $2) 
 `;
     const values = ['security_pin', securityPin];
 

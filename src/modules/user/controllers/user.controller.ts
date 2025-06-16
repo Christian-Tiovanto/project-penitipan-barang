@@ -86,46 +86,46 @@ export class UserController {
   //   };
   // }
 
-  // @ApiBearerAuth()
-  // @ApiOperation({
-  //   summary: 'Get All User',
-  // })
-  // @ApiOkResponse({ type: GetUserResponse })
-  // @UseInterceptors(OffsetPaginationInterceptor)
-  // @PermissionsMetatada(UserPermission.LIST)
-  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  // @Get()
-  // async getAllUser(
-  //   @Query()
-  //   {
-  //     page_no,
-  //     page_size,
-  //     start_date,
-  //     end_date,
-  //     sort,
-  //     order,
-  //     search,
-  //   }: GetAllUserQuery,
-  // ): Promise<OffsetPagination<GetUserResponse>> {
-  //   const pageSize = parseInt(page_size) || 10;
-  //   const pageNo = parseInt(page_no) || 1;
-  //   sort = !sort ? UserSort.ID : sort;
-  //   order = !order ? SortOrder.ASC : order;
-  //   const users = await this.userService.getAllUser({
-  //     pageNo,
-  //     pageSize,
-  //     sort,
-  //     order,
-  //     startDate: start_date,
-  //     endDate: end_date,
-  //     search,
-  //   });
-  //   return {
-  //     data: users[0],
-  //     totalCount: users[1],
-  //     filteredCount: users[1],
-  //   };
-  // }
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All User',
+  })
+  @ApiOkResponse({ type: GetUserResponse })
+  @UseInterceptors(OffsetPaginationInterceptor)
+  @PermissionsMetatada(UserPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  @Get()
+  async getAllUser(
+    @Query()
+    {
+      page_no,
+      page_size,
+      start_date,
+      end_date,
+      sort,
+      order,
+      search,
+    }: GetAllUserQuery,
+  ): Promise<OffsetPagination<GetUserResponse>> {
+    const pageSize = parseInt(page_size) || 10;
+    const pageNo = parseInt(page_no) || 1;
+    sort = !sort ? UserSort.ID : sort;
+    order = !order ? SortOrder.ASC : order;
+    const users = await this.userService.getAllUser({
+      pageNo,
+      pageSize,
+      sort,
+      order,
+      startDate: start_date,
+      endDate: end_date,
+      search,
+    });
+    return {
+      data: users[0],
+      totalCount: users[1],
+      filteredCount: users[1],
+    };
+  }
 
   // @ApiBearerAuth()
   // @ApiOperation({

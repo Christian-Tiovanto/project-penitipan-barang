@@ -15,6 +15,7 @@ import { DeleteUserRoleDto } from '../dtos/delete-user-role.dto';
 import { DATABASE_POOL } from '@app/modules/database/database.module';
 import { Pool } from 'pg';
 import { DATABASE } from '@app/enums/database-table';
+import { UserRolesColumn } from '@app/enums/table-column';
 
 @Injectable()
 export class UserRoleService {
@@ -78,13 +79,16 @@ export class UserRoleService {
   //   }
   //   return userRole;
   // }
-  // async getUserRoleByUserIdNRole(userId: number, role: UserRoleEnum) {
-  //   const userRole = await this.userRoleRepository.findOne({
-  //     where: { userId, role },
-  //   });
+  async getUserRoleByUserIdNRole(userId: number, role: UserRoleEnum) {
+    const sql = `
+        SELECT * FROM ${DATABASE.USER_ROLES} 
+        WHERE ${UserRolesColumn.USER_ID} = $1 AND ${UserRolesColumn.ROLE} = $2 
+        `;
 
-  //   return userRole;
-  // }
+    const { rows } = await this.pool.query<UserRole>(sql, [userId, role]);
+
+    return rows[0];
+  }
   // async deleteUserRoleByUserId(deleteUserRoleDto: DeleteUserRoleDto) {
   //   const user = await this.findUserRoleByUserIdNRole(
   //     deleteUserRoleDto.userId,

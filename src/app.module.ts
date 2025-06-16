@@ -27,14 +27,14 @@ import { DatabaseModule } from './modules/database/database.module';
   providers: [
     { provide: APP_PIPE, useClass: DataValidationPipe },
     { provide: APP_FILTER, useClass: ExceptionHandlerFilter },
-    // UserSeeder,
+    UserSeeder,
     SecurityPinSeeder,
   ],
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
     UserModule,
-    // AuthModule,
+    AuthModule,
     // ProductModule,
     // ProductUnitModule,
     // CustomerModule,

@@ -6,8 +6,8 @@ import { SecurityPinSeeder } from './seeder/security-pin.seeder';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  // const seeder = app.get(UserSeeder);
-  // await seeder.run();
+  const seeder = app.get(UserSeeder);
+  await seeder.run();
   const securityPinseeder = app.get(SecurityPinSeeder);
   await securityPinseeder.run();
 
