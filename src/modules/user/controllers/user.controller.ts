@@ -111,7 +111,7 @@ export class UserController {
     const pageNo = parseInt(page_no) || 1;
     sort = !sort ? UserSort.ID : sort;
     order = !order ? SortOrder.ASC : order;
-    const users = await this.userService.getAllUser({
+    const users = await this.userService.getAllUsers({
       pageNo,
       pageSize,
       sort,

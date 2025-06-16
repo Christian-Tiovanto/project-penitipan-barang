@@ -3,6 +3,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -109,7 +110,7 @@ export class UserService {
     return rows[0];
   }
 
-  async getAllUser({
+  async getAllUsers({
     pageNo,
     pageSize,
     sort,
@@ -117,68 +118,87 @@ export class UserService {
     startDate,
     endDate,
     search,
-  }: GetAllUserQuery): Promise<any> {
-    const clauses = [];
-    const values = [];
-    let sqlQueryIdx = 1;
-    const sortBy: string = `u.${sort}`;
-    const skip = (pageNo - 1) * pageSize;
+  }: GetAllUserQuery): Promise<[User[], number]> {
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    // --- Define table aliases as constants ---
+    const userAlias = 'u';
+    const userRoleAlias = 'ur';
+
+    // --- Building WHERE clauses dynamically ---
+    const whereClauses = [
+      `${userAlias}.${UsersColumn.IS_DELETED} = false`,
+      `(${userRoleAlias}.${UserRolesColumn.ROLE} IS NULL OR ${userRoleAlias}.${UserRolesColumn.ROLE} != $${paramIndex++})`,
+    ];
+    values.push(UserRoleEnum.SUPERADMIN);
 
     if (startDate) {
-      clauses.push(`u.created_at >= $${sqlQueryIdx}`);
+      whereClauses.push(`${userAlias}.created_at >= $${paramIndex++}`);
       values.push(startDate);
-      sqlQueryIdx += 1;
     }
     if (endDate) {
-      clauses.push(`u.created_at < $${sqlQueryIdx}`);
+      whereClauses.push(`${userAlias}.created_at < $${paramIndex++}`);
       values.push(endDate);
-      sqlQueryIdx += 1;
     }
-
     if (search) {
-      clauses.push(
-        `(u.email LIKE = $${sqlQueryIdx} or u.fullname LIKE $${sqlQueryIdx + 1})`,
+      // Corrected: use ILIKE for case-insensitive search and use the same parameter for both fields
+      whereClauses.push(
+        `(${userAlias}.email ILIKE $${paramIndex} OR ${userAlias}.fullname ILIKE $${paramIndex})`,
       );
       values.push(`%${search}%`);
-      sqlQueryIdx += 2;
+      paramIndex++;
     }
+
+    const sortableColumns = ['fullname', 'email', 'created_at'];
+    const sortBy = sortableColumns.includes(sort)
+      ? `${userAlias}.${sort}`
+      : `${userAlias}.created_at`;
+
+    const sortOrder = order === SortOrder.ASC ? SortOrder.ASC : SortOrder.DESC;
+
+    const columnsToSelect = Object.values(UsersColumn)
+      .filter((col) => col !== UsersColumn.PASSWORD)
+      .map((col) => `${userAlias}.${col}`)
+      .join(', ');
+
     const sql = `
-    SELECT  u.*
-    FROM ${DATABASE.USERS} u
-    LEFT JOIN ${DATABASE.USER_ROLES} ur on u.${UsersColumn.ID} = ur.${UserRolesColumn.USER_ID} 
-    WHERE ${UsersColumn.IS_DELETED} = false AND (ur.${UserRolesColumn.ROLE} is null OR ur.${UserRolesColumn.ROLE} != '${UserRoleEnum.SUPERADMIN}') 
-    ${clauses.length ? `AND ${clauses.join(' AND ')}` : '1=1'}
-    ORDER BY ${sortBy} ${order}
-    LIMIT ${pageSize} 
-    OFFSET ${skip};
+      SELECT ${columnsToSelect}, COUNT(*) OVER() as total_count
+      FROM ${DATABASE.USERS} ${userAlias}
+      LEFT JOIN ${DATABASE.USER_ROLES} ${userRoleAlias} ON ${userAlias}.${UsersColumn.ID} = ${userRoleAlias}.${UserRolesColumn.USER_ID}
+      WHERE ${whereClauses.join(' AND ')}
+      ORDER BY ${sortBy} ${sortOrder}
+      LIMIT $${paramIndex++}
+      OFFSET $${paramIndex++}
     `;
-    const countSql = `
-    SELECT count(*) as total_count
-    FROM ${DATABASE.USERS} u
-    LEFT JOIN ${DATABASE.USER_ROLES} ur on u.${UsersColumn.ID} = ur.${UserRolesColumn.USER_ID} 
-    WHERE ${UsersColumn.IS_DELETED} = false AND (ur.${UserRolesColumn.ROLE} is null OR ur.${UserRolesColumn.ROLE} != '${UserRoleEnum.SUPERADMIN}') 
-    ${clauses.length ? `AND ${clauses.join(' AND ')}` : '1=1'}
-    LIMIT ${pageSize} 
-    OFFSET ${skip};
-    `;
-    const users: User[] = [];
-    let totalCount = 0;
+
+    values.push(pageSize, (pageNo - 1) * pageSize);
+
     try {
-      const { rows } = await this.pool.query<User>(sql, values);
-      totalCount += parseInt(
-        (await this.pool.query<{ total_count: string }>(countSql, values))
-          .rows[0].total_count,
+      const { rows } = await this.pool.query<{ total_count: string }>(
+        sql,
+        values,
       );
-      users.push(...rows);
+
+      if (rows.length === 0) {
+        return [[], 0];
+      }
+
+      const totalCount = parseInt(rows[0].total_count, 10);
+
+      // Remove the total_count property from the user objects before returning
+      const users = rows.map(({ total_count, ...user }) => user as User);
+
+      return [users, totalCount];
     } catch (error) {
-      console.log('error');
-      console.log(error);
-      throw error;
+      // Log the detailed error for debugging purposes
+      console.error('Failed to get all users:', error);
+      // Throw a generic error to the client
+      throw new InternalServerErrorException(
+        'An error occurred while fetching users.',
+      );
     }
-
-    return [users, totalCount];
   }
-
   // async findUserById(id: number) {
   //   const user = await this.userRepository.findOne({
   //     where: { id, is_deleted: false },
