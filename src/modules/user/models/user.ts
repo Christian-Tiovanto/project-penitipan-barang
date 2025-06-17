@@ -1,4 +1,3 @@
-import * as bcrypt from 'bcryptjs';
 import { UserRole } from './user-role';
 
 export interface User {
@@ -6,7 +5,7 @@ export interface User {
   email: string;
   fullname: string;
   password: string;
-  user_role: UserRole[];
+  user_role?: UserRole[];
   created_at: Date;
   updated_at: Date;
 }

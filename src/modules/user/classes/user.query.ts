@@ -1,4 +1,3 @@
-import { OptionalDateRangeQueryWithPagination } from '@app/commons/queries/date-range.query';
 import { SortOrder } from '@app/enums/sort-order';
 import { BasePaginationQuery } from '@app/interfaces/pagination.interface';
 import { ApiProperty } from '@nestjs/swagger';
@@ -11,7 +10,7 @@ export enum UserSort {
   // PIN = 'pin',
 }
 
-export class GetAllUserQuery extends OptionalDateRangeQueryWithPagination {
+export class GetAllUserQuery extends BasePaginationQuery {
   @ApiProperty({
     enum: UserSort,
     required: false,

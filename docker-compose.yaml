@@ -21,18 +21,19 @@ services:
     restart: unless-stopped
 
   database:
-    image: mysql:5.7.33
-    container_name: mysqlacid
+    image: postgres:13
+    container_name: penitipan-barang
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      TZ: Asia/Jakarta
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - '${DB_PORT}:3306'
-    # volumes:
-    #   - db_data:/var/lib/mysql
+      - '${DB_PORT}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    shm_size: '1g'
     restart: always
     tty: true
 
 volumes:
-  db_data:
+  postgres_data:
+    external: true
+    name: 2f23434d7c834499d555930fa04ecca726cb07ca2b8ed3202279d5a3ff431b62
