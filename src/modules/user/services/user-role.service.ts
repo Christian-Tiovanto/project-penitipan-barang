@@ -4,8 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
+import { QueryFailedError } from 'typeorm';
 import { ErrorCode } from '@app/enums/error-code';
 import { RegexPatterns } from '@app/enums/regex-pattern';
 import { CreateUserRoleDto } from '../dtos/create-user-role.dto copy';
@@ -67,18 +66,21 @@ export class UserRoleService {
 
     return rows;
   }
-  // async findUserRoleByUserIdNRole(userId: number, role: UserRoleEnum) {
-  //   const userRole = await this.userRoleRepository.findOne({
-  //     where: { userId, role },
-  //   });
+  async findUserRoleByUserIdNRole(userId: number, role: UserRoleEnum) {
+    const sql = `
+    SELECT id 
+    FROM ${DATABASE.USER_ROLES} 
+    WHERE ${UserRolesColumn.ID} = $1 and ${UserRolesColumn.ROLE} = $2 
+    `;
 
-  //   if (!userRole) {
-  //     throw new NotFoundException(
-  //       `No User Role found with id ${userId} and role ${role}`,
-  //     );
-  //   }
-  //   return userRole;
-  // }
+    const { rows } = await this.pool.query<UserRole>(sql, [userId, role]);
+    if (rows.length === 0)
+      throw new NotFoundException(
+        `UserRole with ${userId} and role ${role} not found`,
+      );
+
+    return rows[0];
+  }
   async getUserRoleByUserIdNRole(userId: number, role: UserRoleEnum) {
     const sql = `
         SELECT * FROM ${DATABASE.USER_ROLES} 
@@ -89,12 +91,19 @@ export class UserRoleService {
 
     return rows[0];
   }
-  // async deleteUserRoleByUserId(deleteUserRoleDto: DeleteUserRoleDto) {
-  //   const user = await this.findUserRoleByUserIdNRole(
-  //     deleteUserRoleDto.userId,
-  //     deleteUserRoleDto.role,
-  //   );
+  async deleteUserRoleByUserId(deleteUserRoleDto: DeleteUserRoleDto) {
+    const { userId, role } = deleteUserRoleDto;
+    const sql = `
+      DELETE FROM ${DATABASE.USER_ROLES} 
+      WHERE ${UserRolesColumn.USER_ID} = $1 AND ${UserRolesColumn.ROLE} = $2
+      RETURNING *
+      `;
 
-  //   await this.userRoleRepository.delete({ id: user.id });
-  // }
+    const { rows } = await this.pool.query(sql, [userId, role]);
+    console.log(rows);
+    if (rows.length === 0)
+      throw new NotFoundException(
+        `UserRole with ${userId} and role ${role} not found`,
+      );
+  }
 }

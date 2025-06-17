@@ -26,14 +26,14 @@ export class UserRoleController {
     return await this.userRoleService.createUserRole(createUserRoleDto);
   }
 
-  // @ApiBearerAuth()
-  // @ApiOperation({
-  //   summary: 'Delete User Role by userId and role',
-  // })
-  // @PermissionsMetatada(UserRolePermission.DELETE)
-  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  // @Delete()
-  // async deleteUserRoleByUserId(@Body() deleteUserRoleDto: DeleteUserRoleDto) {
-  //   return await this.userRoleService.deleteUserRoleByUserId(deleteUserRoleDto);
-  // }
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Delete User Role by userId and role',
+  })
+  @PermissionsMetatada(UserRolePermission.DELETE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  @Delete()
+  async deleteUserRoleByUserId(@Body() deleteUserRoleDto: DeleteUserRoleDto) {
+    return await this.userRoleService.deleteUserRoleByUserId(deleteUserRoleDto);
+  }
 }
