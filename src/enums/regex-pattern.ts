@@ -1,3 +1,3 @@
-export enum RegexPatterns {
-  DuplicateEntry = "Duplicate entry '(.+?)' for key",
-}
+export const RegexPatterns = {
+  DuplicateEntry: /\(([^)]+)\)=\(([^)]+)\)/,
+};

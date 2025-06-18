@@ -7,7 +7,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { User } from '../models/user';
-import { QueryFailedError } from 'typeorm';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { ErrorCode } from '@app/enums/error-code';
 import { RegexPatterns } from '@app/enums/regex-pattern';
@@ -21,6 +20,7 @@ import { DATABASE_POOL } from '@app/modules/database/database.module';
 import { Pool } from 'pg';
 import { DATABASE } from '@app/enums/database-table';
 import { UserRolesColumn, UsersColumn } from '@app/enums/table-column';
+import { isPgError } from '@app/utils/pg-error-check';
 
 interface GetAllUserQuery {
   pageNo: number;
@@ -40,39 +40,34 @@ export class UserService {
     createUserDto: CreateUserDto,
   ): Promise<Omit<User, 'password'>> {
     let createdUser: User;
-    try {
-      const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10);
-      createUserDto['password'] = await bcrypt.hash(
-        createUserDto.password,
-        saltRounds,
-      );
+    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10);
+    createUserDto['password'] = await bcrypt.hash(
+      createUserDto.password,
+      saltRounds,
+    );
 
-      const columns = Object.keys(createUserDto).filter(
-        (key) => createUserDto[key] != null, // `!= null` checks for both undefined and null
-      );
+    const columns = Object.keys(createUserDto).filter(
+      (key) => createUserDto[key] != null, // `!= null` checks for both undefined and null
+    );
 
-      const placeholders = columns
-        .map((_, index) => `$${index + 1}`)
-        .join(', ');
+    const placeholders = columns.map((_, index) => `$${index + 1}`).join(', ');
 
-      const values = columns.map((key) => createUserDto[key]);
-      const sql = `
-          INSERT INTO ${DATABASE.USERS} (${columns.join(', ')}) values (${placeholders})
-          RETURNING *
+    const values = columns.map((key) => createUserDto[key]);
+    const sql = `
+      INSERT INTO ${DATABASE.USERS} (${columns.join(', ')}) values (${placeholders})
+      RETURNING *
       `;
 
+    try {
       const { rows } = await this.pool.query<User>(sql, values);
 
       createdUser = rows[0];
     } catch (err) {
-      const queryError = err as QueryFailedError & {
-        driverError: { errno: ErrorCode; sqlMessage: string };
-      };
-      if (queryError.driverError.errno === ErrorCode.DUPLICATE_ENTRY) {
-        const duplicateValue = new RegExp(RegexPatterns.DuplicateEntry).exec(
-          queryError.driverError.sqlMessage,
+      if (isPgError(err) && err.code === ErrorCode.DUPLICATE_ENTRY) {
+        const duplicateValue = err.detail.match(RegexPatterns.DuplicateEntry);
+        throw new ConflictException(
+          `${duplicateValue[1]} with value ${duplicateValue[2]} already exist`,
         );
-        throw new ConflictException(`${duplicateValue[1]} value already exist`);
       }
     }
     delete createdUser.password;
@@ -103,7 +98,6 @@ export class UserService {
     GROUP BY ${DATABASE.USERS}.${UsersColumn.ID};
     `;
 
-    console.log(sql);
     const { rows } = await this.pool.query<User>(sql, [id]);
     return rows[0];
   }
