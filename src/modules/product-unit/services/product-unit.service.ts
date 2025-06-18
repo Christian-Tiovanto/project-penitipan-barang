@@ -1,6 +1,9 @@
 import {
   BadRequestException,
+  ConflictException,
+  Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,6 +15,13 @@ import { ProductUnitSort } from '../classes/product-unit.query';
 import { GetProductUnitResponse } from '../classes/product-unit.response';
 import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
 import { TransactionIn } from '@app/modules/transaction-in/models/transaction-in.entity';
+import { DATABASE_POOL } from '@app/modules/database/database.module';
+import { Pool } from 'pg';
+import { DATABASE } from '@app/enums/database-table';
+import { ProductsColumn, ProductUnitsColumn } from '@app/enums/table-column';
+import { isPgError } from '@app/utils/pg-error-check';
+import { ErrorCode } from '@app/enums/error-code';
+import { RegexPatterns } from '@app/enums/regex-pattern';
 interface GetAllProductUnitQuery {
   pageNo: number;
   pageSize: number;
@@ -23,110 +33,111 @@ interface GetAllProductUnitQuery {
 }
 @Injectable()
 export class ProductUnitService {
-  constructor(
-    @InjectRepository(ProductUnit)
-    private readonly productUnitRepository: Repository<ProductUnit>,
-    @InjectRepository(TransactionIn)
-    private readonly transactionInRepository: Repository<TransactionIn>,
-  ) {}
+  constructor(@Inject(DATABASE_POOL) private readonly pool: Pool) {}
 
   async getAllProductUnits(): Promise<ProductUnit[]> {
-    return await this.productUnitRepository.find();
-  }
+    const sql = `
+      SELECT *
+      FROM ${DATABASE.USERS}
 
-  // async getAllProductUnitsPagination({
-  //   pageNo,
-  //   pageSize,
-  // }: GetAllQuery): Promise<[ProductUnit[], number]> {
-  //   const skip = (pageNo - 1) * pageSize;
-  //   const products = await this.productUnitRepository.findAndCount({
-  //     skip,
-  //     take: pageSize,
-  //     relations: ['product'],
-  //   });
-  //   return products;
-  // }
+    `;
+    const { rows } = await this.pool.query<ProductUnit>(sql);
+    return rows;
+  }
 
   async getAllProductUnitsPagination({
     pageNo,
     pageSize,
     sort,
     order,
-    startDate,
-    endDate,
     search,
   }: GetAllProductUnitQuery): Promise<[GetProductUnitResponse[], number]> {
-    const skip = (pageNo - 1) * pageSize;
+    const values: any[] = [];
+    const productUnitAlias = 'pu';
+    const productAlias = 'p';
 
-    let sortBy: string = `product_units.${sort}`;
+    let sortBy: string = `${productUnitAlias}.${sort}`;
     if (sort === ProductUnitSort.PRODUCT) {
-      sortBy = `${sort}.name`;
-    }
-    const queryBuilder = this.productUnitRepository
-      .createQueryBuilder('product_units')
-      // .leftJoinAndSelect('transaction.customer', 'customer')
-      .leftJoinAndSelect('product_units.product', 'product')
-      .skip(skip)
-      .take(pageSize)
-      .select([
-        'product_units',
-        // 'customer.name',
-        // 'customer.id',
-        'product.name',
-        'product.id',
-      ])
-      .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
-
-    // Conditionally add filters
-    if (startDate) {
-      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+      sortBy = `${productAlias}.name`;
     }
 
-    if (endDate) {
-      queryBuilder.andWhere({ created_at: LessThan(endDate) });
-    }
+    let paramIndex = 1;
 
+    const whereConditions = [];
     if (search) {
-      queryBuilder.andWhere(
-        new Brackets((qb) => {
-          qb.where('product_units.name LIKE :search', { search: `%${search}%` })
-            .orWhere('product.name LIKE :search', { search: `%${search}%` })
-            .orWhere('conversion_to_kg LIKE :search', {
-              search: `%${search}%`,
-            });
-        }),
+      whereConditions.push(
+        `(${productUnitAlias}.${ProductUnitsColumn.NAME} ILIKE $${paramIndex} OR ${productUnitAlias}.${ProductUnitsColumn.CONVERSION_TO_KG} ILIKE $${paramIndex} or ${productAlias}.${ProductsColumn.NAME} ILIKE $${paramIndex})`,
+      );
+      values.push(`%${search}%`);
+      paramIndex++;
+    }
+
+    const whereClause =
+      whereConditions.length > 0
+        ? `WHERE ${whereConditions.join(' AND ')}`
+        : '';
+    const sortOrder = order === SortOrder.ASC ? SortOrder.ASC : SortOrder.DESC;
+
+    const productUnitColumnsToSelect = [
+      ProductUnitsColumn.ID,
+      ProductUnitsColumn.NAME,
+      ProductUnitsColumn.CONVERSION_TO_KG,
+    ]
+      .map((col) => `${productUnitAlias}.${col}`)
+      .join(', ');
+    const productColumnsToSelect = [ProductsColumn.ID, ProductsColumn.NAME]
+      .map((col) => `${productAlias}.${col}`)
+      .join(', ');
+
+    const sql = `
+          SELECT ${productUnitColumnsToSelect}, jsonb_agg( ${productColumnsToSelect} ) as product
+          FROM ${DATABASE.PRODUCT_UNITS} ${productUnitAlias}
+          LEFT JOIN ${DATABASE.PRODUCTS} ${productAlias} on ${productUnitAlias}.${ProductUnitsColumn.ID} = ${productAlias}.${ProductsColumn.ID}
+          ${whereClause}
+          GROUP BY ${productUnitAlias}.${ProductUnitsColumn.ID}
+          ORDER BY ${sortBy} ${sortOrder}
+          LIMIT $${paramIndex++}
+          OFFSET $${paramIndex++}
+        `;
+    const paginationCountSql = `
+          SELECT count(*) as total_count
+          FROM ${DATABASE.PRODUCT_UNITS} ${productUnitAlias}
+          ${whereClause}
+          `;
+
+    values.push(pageSize, (pageNo - 1) * pageSize);
+
+    try {
+      const { rows: productUnitRows } =
+        await this.pool.query<GetProductUnitResponse>(sql, values);
+      const { rows: totalCountRows } = await this.pool.query<{
+        total_count: string;
+      }>(paginationCountSql);
+
+      const totalCount = parseInt(totalCountRows[0].total_count, 10);
+
+      return [productUnitRows, totalCount];
+    } catch (error) {
+      console.error('Failed to get all users:', error);
+      throw new InternalServerErrorException(
+        'An error occurred while fetching users.',
       );
     }
-
-    const [productUnits, count] = await queryBuilder.getManyAndCount();
-    const productUnitResponse: GetProductUnitResponse[] = productUnits.map(
-      (productUnit: GetProductUnitResponse) => {
-        return {
-          id: productUnit.id,
-          product: {
-            id: productUnit.product.id,
-            name: productUnit.product.name,
-          },
-          name: productUnit.name,
-          conversion_to_kg: productUnit.conversion_to_kg,
-        };
-      },
-    );
-    return [productUnitResponse, count];
   }
 
   async getProductUnitById(productUnitId: number): Promise<ProductUnit> {
-    return await this.productUnitRepository.findOne({
-      where: { id: productUnitId },
-      relations: ['product'],
-    });
+    const sql = `
+      SELECT ${DATABASE.PRODUCT_UNITS}.*, ${DATABASE.PRODUCTS}.*
+      FROM ${DATABASE.PRODUCT_UNITS}
+      LEFT JOIN ${DATABASE.PRODUCTS} ON ${DATABASE.PRODUCTS}.${ProductsColumn.ID} = ${DATABASE.PRODUCT_UNITS}.${ProductUnitsColumn.PRODUCT_ID}
+      WHERE ${DATABASE.PRODUCT_UNITS}.${ProductUnitsColumn.ID} = $1
+    `;
+    const { rows } = await this.pool.query<ProductUnit>(sql, [productUnitId]);
+    return rows[0];
   }
 
   async findProductUnitById(productUnitId: number): Promise<ProductUnit> {
-    const productUnit = await this.productUnitRepository.findOne({
-      where: { id: productUnitId },
-      relations: ['product'],
-    });
+    const productUnit = await this.getProductUnitById(productUnitId);
 
     if (!productUnit) {
       throw new NotFoundException(`Product with id ${productUnitId} not found`);
@@ -137,64 +148,91 @@ export class ProductUnitService {
     productUnitId: number,
     productId: number,
   ): Promise<ProductUnit> {
-    const productUnit = await this.productUnitRepository.findOne({
-      where: { id: productUnitId, productId: productId },
-    });
-    if (!productUnit) {
+    const sql = `
+      SELECT *
+      FROM ${DATABASE.PRODUCT_UNITS}
+      WHERE ${DATABASE.PRODUCT_UNITS}.${ProductUnitsColumn.ID} = $1 AND ${DATABASE.PRODUCT_UNITS}.${ProductUnitsColumn.PRODUCT_ID} = $2
+    `;
+    const { rows } = await this.pool.query<ProductUnit>(sql, [
+      productUnitId,
+      productId,
+    ]);
+    if (rows.length === 0) {
       throw new NotFoundException(
         `Product Unit with id ${productUnitId} not found`,
       );
     }
-    return productUnit;
+    return rows[0];
   }
-  async getProductUnitProductId(productId: number): Promise<ProductUnit> {
-    const productUnit = await this.productUnitRepository.findOne({
-      where: { productId: productId },
-    });
-    return productUnit;
+  async getProductUnitProductId(
+    productId: number,
+  ): Promise<Pick<ProductUnit, 'id'>> {
+    const sql = `
+      SELECT ${ProductUnitsColumn.ID}
+      FROM ${DATABASE.PRODUCT_UNITS}
+      WHERE ${ProductUnitsColumn.PRODUCT_ID} = $1
+    `;
+    const { rows } = await this.pool.query<Pick<ProductUnit, 'id'>>(sql, [
+      productId,
+    ]);
+    return rows[0];
   }
 
   async createProductUnit(
-    createProductDto: CreateProductUnitDto,
+    createProductUnitDto: CreateProductUnitDto,
   ): Promise<ProductUnit> {
     const productUnit = await this.getProductUnitProductId(
-      createProductDto.productId,
+      createProductUnitDto.productId,
     );
     if (productUnit)
       throw new BadRequestException(
-        `Product ${createProductDto.productId} already has Product Unit`,
+        `Product ${createProductUnitDto.productId} already has Product Unit`,
       );
-    const newProductUnit = this.productUnitRepository.create(createProductDto);
-    return await this.productUnitRepository.save(newProductUnit);
+    const columns = Object.keys(createProductUnitDto);
+    const placeholders = columns.map((_, index) => `$${index + 1}`).join(', ');
+
+    const values = columns.map((key) => createProductUnitDto[key]);
+    const sql = `
+    INSERT INTO ${DATABASE.PRODUCT_UNITS} (${columns.join(', ')}) values (${placeholders})
+    RETURNING *
+            `;
+
+    const { rows } = await this.pool.query<ProductUnit>(sql, values);
+
+    return rows[0];
   }
 
-  async updateProductUnit(
-    productUnitId: number,
-    updateProductDto: UpdateProductUnitDto,
-  ): Promise<ProductUnit> {
-    const productUnit = await this.findProductUnitById(productUnitId);
-    const transactionInExist = await this.transactionInRepository.findOne({
-      where: { productId: productUnit.productId },
-    });
-    console.log(transactionInExist);
-    if (transactionInExist)
-      throw new BadRequestException(
-        "Can't Update Product Unit that already been used for Transaction In",
-      );
-    Object.assign(productUnit, updateProductDto);
+  // async updateProductUnit(
+  //   productUnitId: number,
+  //   updateProductDto: UpdateProductUnitDto,
+  // ): Promise<ProductUnit> {
+  //   const productUnit = await this.findProductUnitById(productUnitId);
+  //   const transactionInExist = await this.transactionInRepository.findOne({
+  //     where: { productId: productUnit.productId },
+  //   });
+  //   console.log(transactionInExist);
+  //   if (transactionInExist)
+  //     throw new BadRequestException(
+  //       "Can't Update Product Unit that already been used for Transaction In",
+  //     );
+  //   Object.assign(productUnit, updateProductDto);
 
-    return this.productUnitRepository.save(productUnit);
-  }
+  //   return this.productUnitRepository.save(productUnit);
+  // }
 
-  async deleteProductUnit(productUnitId: number): Promise<void> {
-    await this.findProductUnitById(productUnitId);
+  // async deleteProductUnit(productUnitId: number): Promise<void> {
+  //   await this.findProductUnitById(productUnitId);
 
-    await this.productUnitRepository.delete(productUnitId);
-  }
+  //   await this.productUnitRepository.delete(productUnitId);
+  // }
 
   async getProductUnitsByProductId(productId: number) {
-    return this.productUnitRepository.find({
-      where: { productId },
-    });
+    const sql = `
+    SELECT *
+    FROM ${DATABASE.PRODUCT_UNITS}
+    WHERE ${ProductUnitsColumn.PRODUCT_ID} = $1
+   `;
+    const { rows } = await this.pool.query(sql, [productId]);
+    return rows[0];
   }
 }

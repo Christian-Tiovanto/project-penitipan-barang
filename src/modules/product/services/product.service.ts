@@ -1,6 +1,9 @@
 import {
+  BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,6 +21,10 @@ import { InsufficientStockException } from '@app/exceptions/validation.exception
 import { ProductSort } from '../classes/product.query';
 import { SortOrder } from '@app/enums/sort-order';
 import { GetProductResponse } from '../classes/product.response';
+import { DATABASE_POOL } from '@app/modules/database/database.module';
+import { Pool } from 'pg';
+import { DATABASE } from '@app/enums/database-table';
+import { ProductsColumn, ProductUnitsColumn } from '@app/enums/table-column';
 
 interface GetAllProductQuery {
   pageNo: number;
@@ -30,106 +37,97 @@ interface GetAllProductQuery {
 }
 @Injectable()
 export class ProductService {
-  constructor(
-    @InjectRepository(Product)
-    private readonly productRepository: Repository<Product>,
-  ) {}
+  constructor(@Inject(DATABASE_POOL) private readonly pool: Pool) {}
 
   async getAllProducts(): Promise<Product[]> {
-    return await this.productRepository.find({
-      where: { is_deleted: false },
-      relations: ['product_unit'],
-    }); // Assuming using TypeORM
-  }
+    const sql = `
+    SELECT ${DATABASE.PRODUCTS}.*, ${DATABASE.PRODUCT_UNITS}.* 
+    FROM ${DATABASE.PRODUCTS}
+    LEFT JOIN ${DATABASE.PRODUCT_UNITS} ON ${DATABASE.PRODUCT_UNITS}.${ProductUnitsColumn.PRODUCT_ID} = ${DATABASE.PRODUCTS}.${ProductsColumn.ID}
+    WHERE ${DATABASE.PRODUCTS}.${ProductsColumn.IS_DELETED} = FALSE
+    `;
 
-  // async getAllProductsPagination({
-  //   pageNo,
-  //   pageSize,
-  // }: GetAllQuery): Promise<[Product[], number]> {
-  //   const skip = (pageNo - 1) * pageSize;
-  //   const products = await this.productRepository.findAndCount({
-  //     skip,
-  //     take: pageSize,
-  //     where: { is_deleted: false },
-  //   });
-  //   return products;
-  // }
+    const { rows } = await this.pool.query<Product>(sql);
+    return rows;
+  }
 
   async getAllProductsPagination({
     pageNo,
     pageSize,
-    sort,
-    order,
-    startDate,
-    endDate,
     search,
   }: GetAllProductQuery): Promise<[GetProductResponse[], number]> {
-    const skip = (pageNo - 1) * pageSize;
-
-    let sortBy: string = `product.${sort}`;
-    // if (
-    //   sort === UserSort.EMAIL ||
-    //   sort === UserSort.FULLNAME ||
-    //   sort === UserSort.PIN ||
-    //   sort === UserSort.ROLE
-    // ) {
-    //   sortBy = `${sort}.name`;
-    // }
-    const queryBuilder = this.productRepository
-      .createQueryBuilder('product')
-      // .leftJoinAndSelect('user.customer', 'customer')
-      // .leftJoinAndSelect('user.product', 'product')
-      .skip(skip)
-      .take(pageSize)
-      .select(['product'])
-      .andWhere('is_deleted = :isDeleted', { isDeleted: false });
-
-    //Conditionally add filters
-    if (startDate) {
-      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
-    }
-
-    if (endDate) {
-      queryBuilder.andWhere({ created_at: LessThan(endDate) });
-    }
+    const values: any[] = [];
+    const whereConditions = [];
+    let paramIndex = 1;
 
     if (search) {
-      queryBuilder.andWhere(
-        new Brackets((qb) => {
-          qb.where('name LIKE :search', { search: `%${search}%` })
-            .orWhere('price LIKE :search', { search: `%${search}%` })
-            .orWhere('qty LIKE :search', { search: `%${search}%` })
-            .orWhere('product.desc LIKE :search', { search: `%${search}%` });
-        }),
+      whereConditions.push(
+        `(${DATABASE.PRODUCTS}.${ProductsColumn.NAME} ILIKE $${paramIndex} OR ${DATABASE.PRODUCTS}.${ProductsColumn.PRICE} ILIKE $${paramIndex} or ${DATABASE.PRODUCTS}.${ProductsColumn.QTY} ILIKE $${paramIndex} or ${DATABASE.PRODUCTS}.${ProductsColumn.DESC} ILIKE $${paramIndex})`,
       );
+      values.push(`%${search}%`);
+      paramIndex++;
     }
 
-    const [products, count] = await queryBuilder.getManyAndCount();
-    const productResponse: GetProductResponse[] = products.map(
-      (product: GetProductResponse) => {
-        return {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          qty: product.qty,
-          desc: product.desc,
-        };
-      },
-    );
-    return [productResponse, count];
+    const whereClause =
+      whereConditions.length > 0
+        ? `WHERE ${whereConditions.join(' AND ')}`
+        : '';
+
+    const productColumnsToSelect = [
+      ProductsColumn.ID,
+      ProductsColumn.NAME,
+      ProductsColumn.PRICE,
+      ProductsColumn.QTY,
+      ProductsColumn.DESC,
+    ]
+      .map((col) => `${DATABASE.PRODUCTS}.${col}`)
+      .join(', ');
+
+    const getProductsSql = `
+              SELECT ${productColumnsToSelect}
+              FROM ${DATABASE.PRODUCTS}
+              ${whereClause}
+              LIMIT $${paramIndex++}
+              OFFSET $${paramIndex++}
+            `;
+    const paginationCountSql = `
+              SELECT count(*) as total_count
+              FROM ${DATABASE.PRODUCTS}
+              ${whereClause}
+              `;
+
+    values.push(pageSize, (pageNo - 1) * pageSize);
+
+    try {
+      const { rows: productUnitRows } =
+        await this.pool.query<GetProductResponse>(getProductsSql, values);
+      const { rows: totalCountRows } = await this.pool.query<{
+        total_count: string;
+      }>(paginationCountSql);
+
+      const totalCount = parseInt(totalCountRows[0].total_count, 10);
+
+      return [productUnitRows, totalCount];
+    } catch (error) {
+      console.error('Failed to get all users:', error);
+      throw new InternalServerErrorException(
+        'An error occurred while fetching users.',
+      );
+    }
   }
 
   async getProductById(productId: number): Promise<Product> {
-    return await this.productRepository.findOne({
-      where: { id: productId, is_deleted: false },
-    });
+    const sql = `
+      SELECT *
+      FROM ${DATABASE.PRODUCTS}
+      WHERE ${ProductsColumn.ID} = $1 AND ${ProductsColumn.IS_DELETED} = FALSE
+    `;
+    const { rows } = await this.pool.query<Product>(sql, [productId]);
+    return rows[0];
   }
 
   async findProductById(productId: number): Promise<Product> {
-    const product = await this.productRepository.findOne({
-      where: { id: productId, is_deleted: false },
-    });
-
+    const product = await this.getProductById(productId);
     if (!product) {
       throw new NotFoundException(`Product with id ${productId} not found`);
     }
@@ -141,13 +139,16 @@ export class ProductService {
     productId: number,
     requiredQty: number,
   ): Promise<Product> {
-    const product = await this.findProductById(productId);
-
-    await entityManager.findOne(Product, {
-      where: { id: productId },
-      lock: { mode: 'pessimistic_write' },
-    });
-
+    const sql = `
+    SELECT * FOR UPDATE
+    FROM ${DATABASE.PRODUCTS}
+    WHERE ${ProductsColumn.ID} = $1
+    `;
+    const { rows } = await this.pool.query<Product>(sql, [productId]);
+    if (rows.length === 0) {
+      throw new NotFoundException(`Product with id ${productId} not found`);
+    }
+    const product = rows[0];
     if (product.qty < requiredQty) {
       throw new InsufficientStockException(
         `Insufficient stock: ${product.name} required ${requiredQty}, but only ${product.qty} available in Stock`,
@@ -163,19 +164,54 @@ export class ProductService {
 
   async createProduct(createProductDto: CreateProductDto): Promise<Product> {
     createProductDto.initial_qty = createProductDto.qty;
-    const newProduct = this.productRepository.create(createProductDto);
-    return await this.productRepository.save(newProduct);
+    const columns = Object.keys(createProductDto);
+    const placeholders = columns.map((_, index) => `$${index + 1}`).join(', ');
+
+    const values = columns.map((key) => createProductDto[key]);
+    const sql = `
+    INSERT INTO ${DATABASE.PRODUCTS} (${columns.join(', ')}) values (${placeholders})
+    RETURNING *
+    `;
+    const { rows } = await this.pool.query<Product>(sql, values);
+
+    return rows[0];
   }
 
   async updateProduct(
     productId: number,
     updateProductDto: UpdateProductDto,
   ): Promise<Product> {
-    const product = await this.findProductById(productId);
+    const columnsToUpdate = [];
+    const values: (string | number | boolean)[] = [];
+    let paramIndex = 1;
 
-    Object.assign(product, updateProductDto);
+    for (const key of Object.keys(updateProductDto) as Array<
+      keyof UpdateProductDto
+    >) {
+      const value = updateProductDto[key];
 
-    return this.productRepository.save(product);
+      if (value !== undefined) {
+        columnsToUpdate.push(`${key} = $${paramIndex++}`);
+        values.push(value);
+      }
+    }
+    if (columnsToUpdate.length === 0) {
+      throw new BadRequestException('The provided fields cannot be updated.');
+    }
+    const sql = `
+    UPDATE ${DATABASE.PRODUCTS}
+    SET ${columnsToUpdate.join(',')}
+    WHERE ${ProductsColumn.ID} = $${paramIndex}
+    RETURNING *
+    `;
+    const { rows } = await this.pool.query<Product>(sql, [
+      ...values,
+      productId,
+    ]);
+    if (rows.length === 0) {
+      throw new NotFoundException(`Product with id ${productId} not found`);
+    }
+    return rows[0];
   }
 
   async addProductQtyWithEntityManager(
@@ -203,21 +239,21 @@ export class ProductService {
     return entityManager.save(product);
   }
 
-  async deleteProduct(productId: number): Promise<void> {
-    const product = await this.productRepository.findOne({
-      where: { id: productId },
-      relations: ['transaction_in'],
-    });
+  // async deleteProduct(productId: number): Promise<void> {
+  //   const product = await this.productRepository.findOne({
+  //     where: { id: productId },
+  //     relations: ['transaction_in'],
+  //   });
 
-    if (!product) {
-      throw new NotFoundException(`Product with id ${productId} not found`);
-    }
+  //   if (!product) {
+  //     throw new NotFoundException(`Product with id ${productId} not found`);
+  //   }
 
-    if (product.transaction_in.length != 0) {
-      throw new ConflictException(
-        "Can't delete a Product that already used for Transaction In",
-      );
-    }
-    await this.productRepository.update(productId, { is_deleted: true });
-  }
+  //   if (product.transaction_in.length != 0) {
+  //     throw new ConflictException(
+  //       "Can't delete a Product that already used for Transaction In",
+  //     );
+  //   }
+  //   await this.productRepository.update(productId, { is_deleted: true });
+  // }
 }

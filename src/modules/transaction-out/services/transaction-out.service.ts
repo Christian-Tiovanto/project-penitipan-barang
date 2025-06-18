@@ -280,7 +280,7 @@ export class TransactionOutService {
       .from(`(${groupedQuery.getQuery()})`, 'grouped')
       .setParameters(groupedQuery.getParameters()) // Important: Pass the parameters!
       .leftJoin(Customer, 'customer', 'customer.id = grouped.customerId')
-      .leftJoin(Product, 'product', 'product.id = grouped.productId')
+      // .leftJoin(Product, 'product', 'product.id = grouped.productId')
       .where('grouped.productId > 0')
       .groupBy('grouped.customerId, grouped.productId')
       .getRawMany();

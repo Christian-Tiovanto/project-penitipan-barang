@@ -87,15 +87,7 @@ export class ProductUnitController {
   @Get()
   async getAllProductUnitsPagination(
     @Query()
-    {
-      page_no,
-      page_size,
-      sort,
-      order,
-      start_date,
-      end_date,
-      search,
-    }: GetAllProductUnitQuery,
+    { page_no, page_size, sort, order, search }: GetAllProductUnitQuery,
   ): Promise<OffsetPagination<GetProductUnitResponse>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
@@ -107,8 +99,6 @@ export class ProductUnitController {
         pageSize,
         sort,
         order,
-        startDate: start_date,
-        endDate: end_date,
         search,
       });
     return {
@@ -118,18 +108,18 @@ export class ProductUnitController {
     };
   }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get Product Unit by Id',
-  })
-  @PermissionsMetatada(ProductUnitPermission.VIEW)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Get(':id')
-  async getProductUnitById(
-    @Param('id', ParseIntPipe) productUnitId: number,
-  ): Promise<ProductUnit> {
-    return await this.productUnitService.findProductUnitById(productUnitId);
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get Product Unit by Id',
+  // })
+  // @PermissionsMetatada(ProductUnitPermission.VIEW)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Get(':id')
+  // async getProductUnitById(
+  //   @Param('id', ParseIntPipe) productUnitId: number,
+  // ): Promise<ProductUnit> {
+  //   return await this.productUnitService.findProductUnitById(productUnitId);
+  // }
 
   @ApiBearerAuth()
   @ApiOperation({
@@ -142,44 +132,44 @@ export class ProductUnitController {
     return await this.productUnitService.createProductUnit(createProductDto);
   }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Update Product Unit by Id',
-  })
-  @PermissionsMetatada(ProductUnitPermission.EDIT)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Patch(':id')
-  async updateProductUnit(
-    @Param('id', ParseIntPipe) productUnitId: number,
-    @Body() updateProductDto: UpdateProductUnitDto,
-  ) {
-    return await this.productUnitService.updateProductUnit(
-      productUnitId,
-      updateProductDto,
-    );
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Update Product Unit by Id',
+  // })
+  // @PermissionsMetatada(ProductUnitPermission.EDIT)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Patch(':id')
+  // async updateProductUnit(
+  //   @Param('id', ParseIntPipe) productUnitId: number,
+  //   @Body() updateProductDto: UpdateProductUnitDto,
+  // ) {
+  //   return await this.productUnitService.updateProductUnit(
+  //     productUnitId,
+  //     updateProductDto,
+  //   );
+  // }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Delete Product Unit by Id',
-  })
-  @PermissionsMetatada(ProductUnitPermission.DELETE)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Delete(':id')
-  async deleteProductUnit(@Param('id', ParseIntPipe) productUnitId: number) {
-    return await this.productUnitService.deleteProductUnit(productUnitId);
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Delete Product Unit by Id',
+  // })
+  // @PermissionsMetatada(ProductUnitPermission.DELETE)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Delete(':id')
+  // async deleteProductUnit(@Param('id', ParseIntPipe) productUnitId: number) {
+  //   return await this.productUnitService.deleteProductUnit(productUnitId);
+  // }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get Product Unit by Product Id',
-  })
-  @PermissionsMetatada(ProductUnitPermission.VIEW)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Get('/by-product/:id')
-  async getProductUnitByProductId(
-    @Param('id', ParseIntPipe) productId: number,
-  ) {
-    return await this.productUnitService.getProductUnitsByProductId(productId);
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get Product Unit by Product Id',
+  // })
+  // @PermissionsMetatada(ProductUnitPermission.VIEW)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Get('/by-product/:id')
+  // async getProductUnitByProductId(
+  //   @Param('id', ParseIntPipe) productId: number,
+  // ) {
+  //   return await this.productUnitService.getProductUnitsByProductId(productId);
+  // }
 }

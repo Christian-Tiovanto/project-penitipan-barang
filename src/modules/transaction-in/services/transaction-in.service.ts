@@ -18,7 +18,7 @@ import { CreateTransactionInDto } from '../dtos/create-transaction-in.dto';
 import { UpdateTransactionInDto } from '../dtos/update-transaction-in.dto';
 import { ProductService } from '@app/modules/product/services/product.service';
 import { ProductUnitService } from '@app/modules/product-unit/services/product-unit.service';
-import { IProductUnit } from '@app/modules/product-unit/models/product-unit.entity';
+import { ProductUnit } from '@app/modules/product-unit/models/product-unit.entity';
 import { CustomerService } from '@app/modules/customer/services/customer.service';
 import { InsufficientStockException } from '@app/exceptions/validation.exception';
 import {
@@ -319,7 +319,7 @@ export class TransactionInService {
       .from(`(${groupedQuery.getQuery()})`, 'grouped')
       .setParameters(groupedQuery.getParameters()) // Important: Pass the parameters!
       .leftJoin(Customer, 'customer', 'customer.id = grouped.customerId')
-      .leftJoin(Product, 'product', 'product.id = grouped.productId')
+      // .leftJoin(Product, 'product', 'product.id = grouped.productId')
       .groupBy('grouped.customerId, grouped.productId')
       .getRawMany();
 
@@ -478,7 +478,7 @@ export class TransactionInService {
             : transactionIn.is_charge,
       }));
     }
-    let currentProductUnit: Pick<IProductUnit, 'conversion_to_kg' | 'name'> = {
+    let currentProductUnit: Pick<ProductUnit, 'conversion_to_kg' | 'name'> = {
       conversion_to_kg: transactionIn.conversion_to_kg,
       name: transactionIn.unit,
     };

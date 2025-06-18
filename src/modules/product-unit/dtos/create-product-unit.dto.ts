@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
-import { IProductUnit } from '../models/product-unit.entity';
+import { ProductUnit } from '../models/product-unit.entity';
 
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateProductUnitDto
-  implements Omit<IProductUnit, 'id' | 'created_at' | 'updated_at' | 'product'>
+  implements Omit<ProductUnit, 'id' | 'created_at' | 'updated_at' | 'product'>
 {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())

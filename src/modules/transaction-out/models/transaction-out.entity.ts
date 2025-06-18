@@ -46,7 +46,7 @@ export class TransactionOut implements ITransactionOut {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Product, (product) => product.transaction_out)
+  // @ManyToOne(() => Product, (product) => product.transaction_out)
   product: Product;
 
   @ApiProperty({ example: 1 })

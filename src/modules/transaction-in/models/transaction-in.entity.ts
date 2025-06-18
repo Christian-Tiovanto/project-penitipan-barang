@@ -42,7 +42,7 @@ export class TransactionIn implements ITransactionIn {
   @Column()
   customerId: number;
 
-  @ManyToOne(() => Product, (product) => product.transaction_in)
+  // @ManyToOne(() => Product, (product) => product.transaction_in)
   product: Product;
 
   @Column()
