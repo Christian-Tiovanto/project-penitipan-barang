@@ -91,8 +91,12 @@ export class UserService {
   }
 
   async getUserById(id: number) {
+    const userColumnToSelect = [UsersColumn.ID, UsersColumn.FULLNAME]
+      .map((column) => `${DATABASE.USERS}.${column}`)
+      .join(', ');
+
     const sql = `
-    SELECT ${DATABASE.USERS}.${UsersColumn.ID}, ${DATABASE.USERS}.${UsersColumn.FULLNAME}, jsonb_agg( ${DATABASE.USER_ROLES}.${UserRolesColumn.ROLE}) AS roles 
+    SELECT ${userColumnToSelect}, jsonb_agg( ${DATABASE.USER_ROLES}.${UserRolesColumn.ROLE}) AS roles 
     FROM ${DATABASE.USERS}  
     LEFT JOIN ${DATABASE.USER_ROLES} on ${DATABASE.USERS}.${UsersColumn.ID} = ${DATABASE.USER_ROLES}.${UserRolesColumn.USER_ID} 
     WHERE ${DATABASE.USERS}.${UsersColumn.ID} = $1 and ${UsersColumn.IS_DELETED} = false 
@@ -200,8 +204,16 @@ export class UserService {
   }
 
   async findUserByEmail(email: string) {
+    const userColumnToSelect = [
+      UsersColumn.ID,
+      UsersColumn.FULLNAME,
+      UsersColumn.PASSWORD,
+    ]
+      .map((column) => `${DATABASE.USERS}.${column}`)
+      .join(', ');
+
     const sql = `
-    SELECT ${UsersColumn.ID}, ${UsersColumn.FULLNAME}, ${UsersColumn.PASSWORD} 
+    SELECT ${userColumnToSelect} 
     FROM ${DATABASE.USERS} 
     WHERE ${UsersColumn.EMAIL} = $1 and ${UsersColumn.IS_DELETED} = false 
     `;
