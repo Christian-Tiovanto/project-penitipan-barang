@@ -7,7 +7,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { ArPayment } from '../models/ar-payment.entity';
 import { CreateArPaymentDto } from '../dtos/create-ar-payment.dto';
-import { CustomerPaymentService } from '@app/modules/customer-payment/services/customer-payment.service';
 import { CashflowService } from '@app/modules/cashflow/services/cashflow.service';
 import { CreateCashflowDto } from '@app/modules/cashflow/dtos/create-cashflow.dto';
 import { CashflowType } from '@app/enums/cashflow-type';
@@ -28,7 +27,6 @@ export class ArPaymentService {
   constructor(
     @InjectRepository(ArPayment)
     private readonly arPaymentRepository: Repository<ArPayment>,
-    private readonly customerPaymentService: CustomerPaymentService,
     private readonly paymentMethodService: PaymentMethodService,
     private readonly cashflowService: CashflowService,
     private readonly arService: ArService,
@@ -60,55 +58,6 @@ export class ArPaymentService {
     return arPayment;
   }
 
-  async createArPayment(
-    createArPaymentDto: CreateArPaymentDto,
-  ): Promise<ArPayment> {
-    const customerPayment =
-      await this.customerPaymentService.findCustomerPaymentById(
-        createArPaymentDto.customer_paymentId,
-      );
-    const ar = await this.arService.findArById(createArPaymentDto.arId);
-    ar.to_paid -= createArPaymentDto.total_paid;
-    ar.total_paid += createArPaymentDto.total_paid;
-    createArPaymentDto.payment_method_name =
-      customerPayment.payment_method.name;
-    if (ar.to_paid < 0) {
-      throw new BadRequestException(
-        `AR ${ar.ar_no} To paid only ${Number(ar.to_paid + createArPaymentDto.total_paid).toLocaleString('id-Id')}`,
-      );
-    }
-
-    const arPayment = await this.arPaymentRepository.manager.transaction(
-      async (entityManager: EntityManager) => {
-        const newArPayment = entityManager.create(
-          ArPayment,
-          createArPaymentDto,
-        );
-
-        if (ar.to_paid === 0) {
-          ar.status = ArStatus.COMPLETED;
-          await this.invoiceService.updateInvoiceStatusById(
-            ar.invoiceId,
-            InvoiceStatus.COMPLETED,
-            entityManager,
-          );
-        }
-        await this.arService.updateArWithEM(ar, entityManager);
-
-        const createCashflowDto: CreateCashflowDto = {
-          type: CashflowType.IN,
-          amount: createArPaymentDto.total_paid,
-          from: CashflowFrom.PAYMENT,
-        };
-        await this.cashflowService.createCashflowFromArPaymentWithEM(
-          entityManager,
-          createCashflowDto,
-        );
-        return entityManager.save(newArPayment);
-      },
-    );
-    return arPayment;
-  }
   async createBulkArPayment(
     createBulkArPaymentDto: CreateBulkArPaymentDto,
   ): Promise<ArPayment[]> {

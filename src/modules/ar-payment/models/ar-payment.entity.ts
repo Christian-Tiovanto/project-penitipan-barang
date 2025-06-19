@@ -42,7 +42,7 @@ export class ArPayment implements IArPayment {
   arId: number;
 
   @JoinColumn({ name: 'customer_paymentId' })
-  @ManyToOne(() => PaymentMethod, (customerPayment) => customerPayment)
+  // @ManyToOne(() => PaymentMethod, (customerPayment) => customerPayment)
   customer_payment: PaymentMethod;
 
   @ApiProperty({ example: 'Cash' })

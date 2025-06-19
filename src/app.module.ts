@@ -10,7 +10,6 @@ import { ProductUnitModule } from './modules/product-unit/product-unit.module';
 import { CustomerModule } from './modules/customer/customer.module';
 import { TransactionInModule } from './modules/transaction-in/transaction-in.module';
 import { PaymentMethodModule } from './modules/payment-method/payment-method.module';
-import { CustomerPaymentModule } from './modules/customer-payment/customer-payment.module';
 import { ArPaymentModule } from './modules/ar-payment/ar-payment.module';
 import { CashflowModule } from './modules/cashflow/cashflow.module';
 import { ChargeModule } from './modules/charge/charge.module';
@@ -39,7 +38,7 @@ import { DatabaseModule } from './modules/database/database.module';
     ProductUnitModule,
     CustomerModule,
     // TransactionInModule,
-    // PaymentMethodModule,
+    PaymentMethodModule,
     // CustomerPaymentModule,
     // ArPaymentModule,
     // CashflowModule,

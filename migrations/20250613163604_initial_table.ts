@@ -149,7 +149,7 @@ export async function up(knex: Knex): Promise<void> {
         invoiceId int,
         no_plat varchar(10) not null,
         clock_out timestamp with time zone not null,
-        "desc" varchar(255),
+        description varchar(255),
         updated_at timestamp with time zone default current_timestamp,
         created_at timestamp with time zone default current_timestamp
     );
@@ -159,7 +159,7 @@ export async function up(knex: Knex): Promise<void> {
         id serial not null primary key,
         customerId int not null,
         code varchar(55),
-        "desc" varchar(255),
+        description varchar(255),
         updated_at timestamp with time zone default current_timestamp,
         created_at timestamp with time zone default current_timestamp
     );

@@ -51,31 +51,6 @@ export class PaymentMethodController {
     return await this.paymentMethodService.getAllPaymentMethods();
   }
 
-  // @ApiBearerAuth()
-  // @ApiOperation({
-  //   summary: 'Get All Payment Method Pagination',
-  // })
-  // @UseInterceptors(OffsetPaginationInterceptor<PaymentMethod>)
-  // @UseGuards(AuthenticateGuard)
-  // @Get()
-  // async getAllPaymentMethodsPagination(
-  //   @Query() { page_no, page_size }: BasePaginationQuery,
-  // ): Promise<OffsetPagination<PaymentMethod>> {
-  //   const pageSize = parseInt(page_size) || 10;
-  //   const pageNo = parseInt(page_no) || 1;
-
-  //   const paymentMethods =
-  //     await this.paymentMethodService.getAllPaymentMethodsPagination({
-  //       pageNo,
-  //       pageSize,
-  //     });
-  //   return {
-  //     data: paymentMethods[0],
-  //     totalCount: paymentMethods[1],
-  //     filteredCount: paymentMethods[1],
-  //   };
-  // }
-
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get All Payment Method Pagination',
@@ -87,15 +62,7 @@ export class PaymentMethodController {
   @Get()
   async getAllPaymentMethodsPagination(
     @Query()
-    {
-      page_no,
-      page_size,
-      start_date,
-      end_date,
-      sort,
-      order,
-      search,
-    }: GetAllPaymentMethodQuery,
+    { page_no, page_size, sort, order, search }: GetAllPaymentMethodQuery,
   ): Promise<OffsetPagination<GetPaymentMethodResponse>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
@@ -107,8 +74,6 @@ export class PaymentMethodController {
         pageSize,
         sort,
         order,
-        startDate: start_date,
-        endDate: end_date,
         search,
       });
     return {

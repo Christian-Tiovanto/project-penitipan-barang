@@ -1,4 +1,3 @@
-import { OptionalDateRangeQueryWithPagination } from '@app/commons/queries/date-range.query';
 import { SortOrder } from '@app/enums/sort-order';
 import { BasePaginationQuery } from '@app/interfaces/pagination.interface';
 import { ApiProperty } from '@nestjs/swagger';
@@ -10,7 +9,7 @@ export enum PaymentMethodSort {
   NAME = 'name',
 }
 
-export class GetAllPaymentMethodQuery extends OptionalDateRangeQueryWithPagination {
+export class GetAllPaymentMethodQuery extends BasePaginationQuery {
   @ApiProperty({
     enum: PaymentMethodSort,
     required: false,

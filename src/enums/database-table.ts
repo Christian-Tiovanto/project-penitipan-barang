@@ -4,7 +4,6 @@ export enum DATABASE {
   AR_PAYMENT = 'ar_payment',
   CASHFLOWS = 'cashflows',
   CHARGES = 'charges',
-  CUSTOMER_PAYMENTS = 'customer_payments',
   CUSTOMERS = 'customers',
   INVOICES = 'invoices',
   PAYMENT_METHODS = 'payment_methods',

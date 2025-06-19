@@ -70,17 +70,6 @@ export class ArPaymentController {
 
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Create Acc Receivable Payment',
-  })
-  @PermissionsMetatada(ArPaymentPermission.CREATE)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Post()
-  async createArPayment(@Body() createArPaymentDto: CreateArPaymentDto) {
-    return await this.arPaymentService.createArPayment(createArPaymentDto);
-  }
-
-  @ApiBearerAuth()
-  @ApiOperation({
     summary: 'Create Bulk Acc Receivable Payment',
   })
   @PermissionsMetatada(ArPaymentPermission.CREATE)

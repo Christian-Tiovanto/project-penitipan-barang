@@ -86,7 +86,6 @@ export class CustomerService {
     `;
 
     values.push(pageSize, (pageNo - 1) * pageSize);
-    console.log(sql);
     const { rows: customerRows } = await this.pool.query<Customer>(sql, values);
     const { rows: totalCountRows } = await this.pool.query<{
       total_count: string;

@@ -1,16 +1,19 @@
 import {
-  ConflictException,
+  BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
 import { PaymentMethod } from '../models/payment-method.entity';
 import { CreatePaymentMethodDto } from '../dtos/create-payment-method.dto';
 import { UpdatePaymentMethodDto } from '../dtos/update-payment-method.dto';
 import { GetPaymentMethodResponse } from '../classes/payment-method.response';
-import { SortOrder, SortOrderQueryBuilder } from '@app/enums/sort-order';
+import { SortOrder } from '@app/enums/sort-order';
 import { PaymentMethodSort } from '../classes/payment-method.query';
+import { DATABASE_POOL } from '@app/modules/database/database.module';
+import { Pool } from 'pg';
+import { DATABASE } from '@app/enums/database-table';
+import { PaymentMethodsColumn } from '@app/enums/table-column';
 
 interface GetAllPaymentMethodQuery {
   pageNo: number;
@@ -24,94 +27,91 @@ interface GetAllPaymentMethodQuery {
 
 @Injectable()
 export class PaymentMethodService {
-  constructor(
-    @InjectRepository(PaymentMethod)
-    private readonly paymentMethodRepository: Repository<PaymentMethod>,
-  ) {}
+  constructor(@Inject(DATABASE_POOL) private readonly pool: Pool) {}
 
   async getAllPaymentMethods(): Promise<PaymentMethod[]> {
-    return await this.paymentMethodRepository.find();
+    const sql = `
+      SELECT *
+      FROM ${DATABASE.PAYMENT_METHODS}
+    `;
+    const { rows } = await this.pool.query<PaymentMethod>(sql);
+    return rows;
   }
-
-  // async getAllPaymentMethodsPagination({
-  //   pageNo,
-  //   pageSize,
-  // }: GetAllQuery): Promise<[PaymentMethod[], number]> {
-  //   const skip = (pageNo - 1) * pageSize;
-  //   const paymentMethods = await this.paymentMethodRepository.findAndCount({
-  //     skip,
-  //     take: pageSize,
-  //   });
-  //   return paymentMethods;
-  // }
 
   async getAllPaymentMethodsPagination({
     pageNo,
     pageSize,
     sort,
     order,
-    startDate,
-    endDate,
     search,
   }: GetAllPaymentMethodQuery): Promise<[GetPaymentMethodResponse[], number]> {
-    const skip = (pageNo - 1) * pageSize;
+    const values: any[] = [];
+    let paramIndex = 1;
 
-    let sortBy: string = `payment_methods.${sort}`;
-    // if (
-    //   sort === UserSort.EMAIL ||
-    //   sort === UserSort.FULLNAME ||
-    //   sort === UserSort.PIN ||
-    //   sort === UserSort.ROLE
-    // ) {
-    //   sortBy = `${sort}.name`;
-    // }
-    const queryBuilder = this.paymentMethodRepository
-      .createQueryBuilder('payment_methods')
-      // .leftJoinAndSelect('user.customer', 'customer')
-      // .leftJoinAndSelect('user.product', 'product')
-      .skip(skip)
-      .take(pageSize)
-      .select(['payment_methods'])
-      .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
-
-    //Conditionally add filters
-    if (startDate) {
-      queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
-    }
-
-    if (endDate) {
-      queryBuilder.andWhere({ created_at: LessThan(endDate) });
-    }
+    const whereConditions = [];
 
     if (search) {
-      queryBuilder.andWhere(
-        new Brackets((qb) => {
-          qb.where('name LIKE :search', { search: `%${search}%` });
-        }),
+      whereConditions.push(
+        `(${DATABASE.PAYMENT_METHODS}.${PaymentMethodsColumn.NAME} ILIKE $${paramIndex})`,
       );
+      values.push(`%${search}%`);
+      paramIndex++;
     }
 
-    const [paymentMethods, count] = await queryBuilder.getManyAndCount();
-    const paymentMethodResponse: GetPaymentMethodResponse[] =
-      paymentMethods.map((paymentMethod: GetPaymentMethodResponse) => {
-        return {
-          id: paymentMethod.id,
-          name: paymentMethod.name,
-        };
-      });
-    return [paymentMethodResponse, count];
+    const sortOrder = order === SortOrder.ASC ? SortOrder.ASC : SortOrder.DESC;
+
+    const columnsToSelect = [
+      PaymentMethodsColumn.ID,
+      PaymentMethodsColumn.NAME,
+    ].join(', ');
+
+    const whereClause =
+      whereConditions.length > 0
+        ? `WHERE ${whereConditions.join(' AND ')}`
+        : '';
+
+    const sql = `
+         SELECT ${columnsToSelect}
+         FROM ${DATABASE.PAYMENT_METHODS}
+         ${whereClause}
+         ORDER BY ${sort} ${sortOrder}
+         LIMIT $${paramIndex++}
+         OFFSET $${paramIndex++}
+       `;
+    const paginationCountSql = `
+         SELECT count(*) as total_count
+         FROM ${DATABASE.PAYMENT_METHODS}
+         ${whereClause}
+       `;
+
+    values.push(pageSize, (pageNo - 1) * pageSize);
+    const { rows: customerRows } = await this.pool.query<PaymentMethod>(
+      sql,
+      values,
+    );
+    const { rows: totalCountRows } = await this.pool.query<{
+      total_count: string;
+    }>(paginationCountSql, whereConditions.length != 0 ? [values[0]] : []);
+
+    const totalCount = parseInt(totalCountRows[0].total_count, 10);
+
+    return [customerRows, totalCount];
   }
 
   async getPaymentMethodById(paymentMethodId: number): Promise<PaymentMethod> {
-    return await this.paymentMethodRepository.findOne({
-      where: { id: paymentMethodId },
-    });
+    const sql = `
+      SELECT *
+      FROM ${DATABASE.PAYMENT_METHODS}
+      WHERE ${PaymentMethodsColumn.ID} = $1
+    `;
+    const { rows } = await this.pool.query<PaymentMethod>(sql, [
+      paymentMethodId,
+    ]);
+    return rows[0];
   }
 
   async findPaymentMethodById(paymentMethodId: number): Promise<PaymentMethod> {
-    const paymentMethod = await this.paymentMethodRepository.findOne({
-      where: { id: paymentMethodId },
-    });
+    const paymentMethod = await this.getPaymentMethodById(paymentMethodId);
 
     if (!paymentMethod) {
       throw new NotFoundException(
@@ -124,40 +124,69 @@ export class PaymentMethodService {
   async createPaymentMethod(
     createPaymentMethodDto: CreatePaymentMethodDto,
   ): Promise<PaymentMethod> {
-    const newPaymentMethod = this.paymentMethodRepository.create(
-      createPaymentMethodDto,
-    );
-    return await this.paymentMethodRepository.save(newPaymentMethod);
+    const columns = Object.keys(createPaymentMethodDto);
+    const placeholders = columns.map((_, index) => `$${index + 1}`).join(', ');
+
+    const values = columns.map((key) => createPaymentMethodDto[key]);
+    const sql = `
+    INSERT INTO ${DATABASE.PAYMENT_METHODS} (${columns.join(', ')}) values (${placeholders})
+    RETURNING *
+    `;
+
+    const { rows } = await this.pool.query<PaymentMethod>(sql, values);
+    return rows[0];
   }
 
   async updatePaymentMethod(
     paymentMethodId: number,
     updatePaymentMethodDto: UpdatePaymentMethodDto,
   ): Promise<PaymentMethod> {
-    const paymentMethod = await this.findPaymentMethodById(paymentMethodId);
+    const columnsToUpdate = [];
+    const values: (string | number | boolean)[] = [];
+    let paramIndex = 1;
 
-    Object.assign(paymentMethod, updatePaymentMethodDto);
+    for (const key of Object.keys(updatePaymentMethodDto) as Array<
+      keyof UpdatePaymentMethodDto
+    >) {
+      const value = updatePaymentMethodDto[key];
 
-    return this.paymentMethodRepository.save(paymentMethod);
-  }
-
-  async deletePaymentMethod(paymentMethodId: number): Promise<void> {
-    const paymentMethod = await this.paymentMethodRepository.findOne({
-      where: { id: paymentMethodId },
-      relations: ['customer_payment'],
-    });
-
-    if (!paymentMethod) {
+      if (value !== undefined) {
+        columnsToUpdate.push(`${key} = $${paramIndex++}`);
+        values.push(value);
+      }
+    }
+    if (columnsToUpdate.length === 0) {
+      throw new BadRequestException('The provided fields cannot be updated.');
+    }
+    const sql = `
+    UPDATE ${DATABASE.PAYMENT_METHODS}
+    SET ${columnsToUpdate.join(',')}
+    WHERE ${PaymentMethodsColumn.ID} = $${paramIndex}
+    RETURNING *
+    `;
+    const { rows } = await this.pool.query<PaymentMethod>(sql, [
+      ...values,
+      paymentMethodId,
+    ]);
+    if (rows.length === 0) {
       throw new NotFoundException(
         `Payment Method with id ${paymentMethodId} not found`,
       );
     }
+    return rows[0];
+  }
 
-    if (paymentMethod.customer_payment.length != 0) {
-      throw new ConflictException(
-        "Can't delete a Payment Method that already been used for Customer Payment, delete the Customer Payment First",
+  async deletePaymentMethod(paymentMethodId: number): Promise<void> {
+    const sql = `
+      DELETE FROM ${DATABASE.PAYMENT_METHODS}
+      WHERE ${PaymentMethodsColumn.ID} = $1
+      RETURNING *
+    `;
+    const { rows } = await this.pool.query(sql, [paymentMethodId]);
+    if (rows.length === 0) {
+      throw new NotFoundException(
+        `Payment Method with id ${paymentMethodId} not found`,
       );
     }
-    await this.paymentMethodRepository.delete(paymentMethodId);
   }
 }
