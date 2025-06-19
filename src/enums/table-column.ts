@@ -114,7 +114,7 @@ export enum ProductsColumn {
   NAME = 'name',
   PRICE = 'price',
   QTY = 'qty',
-  DESC = 'desc',
+  DESC = 'description',
   IS_DELETED = 'is_deleted',
   UPDATED_AT = 'updated_at',
   CREATED_AT = 'created_at',

@@ -136,7 +136,7 @@ export async function up(knex: Knex): Promise<void> {
         name varchar(55) not null,
         price int not null,
         qty decimal(10,2) not null,
-        "desc" varchar(255) not null,
+        description varchar(255) not null,
         is_deleted boolean not null default false,
         updated_at timestamp with time zone default current_timestamp,
         created_at timestamp with time zone default current_timestamp

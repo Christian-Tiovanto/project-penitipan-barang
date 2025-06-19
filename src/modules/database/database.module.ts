@@ -1,9 +1,10 @@
 import { Module, Global } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as pg from 'pg';
+import { types } from 'pg';
 
 export const DATABASE_POOL = 'DATABASE_POOL';
-
+types.setTypeParser(1700, (value: string) => parseFloat(value));
 @Global() // Make the module globally available
 @Module({
   providers: [

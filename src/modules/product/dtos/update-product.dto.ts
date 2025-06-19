@@ -31,7 +31,7 @@ export class UpdateProductDto
 
   @ApiProperty({ example: 'Product description' })
   @JoiSchema(Joi.string().optional())
-  desc?: string;
+  description?: string;
 
   @ApiProperty({ example: false })
   @JoiSchema(Joi.boolean().optional())

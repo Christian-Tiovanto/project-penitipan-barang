@@ -1,23 +1,10 @@
-import { ProductUnit } from '@app/modules/product-unit/models/product-unit.entity';
-import { TransactionIn } from '@app/modules/transaction-in/models/transaction-in.entity';
-import { TransactionOut } from '@app/modules/transaction-out/models/transaction-out.entity';
-import { ApiProperty } from '@nestjs/swagger';
-import {
-  Column,
-  Entity,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  OneToMany,
-} from 'typeorm';
-
 export interface Product {
   id: number;
   name: string;
   price: number;
   initial_qty: number;
   qty: number;
-  desc: string;
+  description: string;
   is_deleted: boolean;
   created_at: Date;
   updated_at: Date;
