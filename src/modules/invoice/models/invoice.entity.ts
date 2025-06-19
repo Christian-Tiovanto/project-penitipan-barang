@@ -38,7 +38,7 @@ export class Invoice implements IInvoice {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Customer, (customer) => customer.invoice)
+  // @ManyToOne(() => Customer, (customer) => customer.invoice)
   customer: number;
 
   @ApiProperty({ example: 1 })

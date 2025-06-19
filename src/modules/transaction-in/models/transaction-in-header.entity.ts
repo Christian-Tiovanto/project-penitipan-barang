@@ -25,7 +25,7 @@ export class TransactionInHeader implements ITransactionInHeader {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Customer, (customer) => customer.transaction_in)
+  // @ManyToOne(() => Customer, (customer) => customer.transaction_in)
   customer: Customer;
 
   @Column({ type: 'varchar', nullable: true })

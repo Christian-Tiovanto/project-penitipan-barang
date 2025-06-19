@@ -33,7 +33,7 @@ export class CustomerPayment implements ICustomerPayment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Customer, (customer) => customer.customer_payment)
+  // @ManyToOne(() => Customer, (customer) => customer.customer_payment)
   customer: Customer;
 
   @ApiProperty({ example: 1 })

@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
-import { ICustomer } from '../models/customer.entity';
+import { Customer } from '../models/customer.entity';
 
 @JoiSchemaOptions({
   allowUnknown: false,
 })
 export class UpdateCustomerDto
-  implements Partial<Omit<ICustomer, 'id' | 'created_at' | 'updated_at'>>
+  implements Partial<Omit<Customer, 'id' | 'created_at' | 'updated_at'>>
 {
   @ApiProperty({ example: 'Customer Name' })
   @JoiSchema(Joi.string().optional())

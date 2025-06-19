@@ -37,7 +37,7 @@ import { DatabaseModule } from './modules/database/database.module';
     AuthModule,
     ProductModule,
     ProductUnitModule,
-    // CustomerModule,
+    CustomerModule,
     // TransactionInModule,
     // PaymentMethodModule,
     // CustomerPaymentModule,

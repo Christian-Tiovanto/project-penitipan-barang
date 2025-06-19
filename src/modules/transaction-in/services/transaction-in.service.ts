@@ -318,7 +318,7 @@ export class TransactionInService {
       ])
       .from(`(${groupedQuery.getQuery()})`, 'grouped')
       .setParameters(groupedQuery.getParameters()) // Important: Pass the parameters!
-      .leftJoin(Customer, 'customer', 'customer.id = grouped.customerId')
+      // .leftJoin(Customer, 'customer', 'customer.id = grouped.customerId')
       // .leftJoin(Product, 'product', 'product.id = grouped.productId')
       .groupBy('grouped.customerId, grouped.productId')
       .getRawMany();

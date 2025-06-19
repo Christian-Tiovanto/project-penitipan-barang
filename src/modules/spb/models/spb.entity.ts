@@ -33,7 +33,7 @@ export class Spb implements ISpb {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Customer, (customer) => customer.spb)
+  // @ManyToOne(() => Customer, (customer) => customer.spb)
   customer: number;
 
   @ApiProperty({ example: 1 })

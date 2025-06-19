@@ -3,7 +3,6 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { User } from '../models/user';
@@ -160,23 +159,14 @@ export class UserService {
 
     values.push(pageSize, (pageNo - 1) * pageSize);
 
-    try {
-      const { rows: usersRow } = await this.pool.query<User>(sql, values);
-      const { rows: totalCountRows } = await this.pool.query<{
-        total_count: string;
-      }>(paginationCountSql);
+    const { rows: usersRow } = await this.pool.query<User>(sql, values);
+    const { rows: totalCountRows } = await this.pool.query<{
+      total_count: string;
+    }>(paginationCountSql);
 
-      const totalCount = parseInt(totalCountRows[0].total_count, 10);
+    const totalCount = parseInt(totalCountRows[0].total_count, 10);
 
-      return [usersRow, totalCount];
-    } catch (error) {
-      // Log the detailed error for debugging purposes
-      console.error('Failed to get all users:', error);
-      // Throw a generic error to the client
-      throw new InternalServerErrorException(
-        'An error occurred while fetching users.',
-      );
-    }
+    return [usersRow, totalCount];
   }
 
   async findUserById(userId: number) {
@@ -261,12 +251,21 @@ export class UserService {
       WHERE ${UsersColumn.ID} = $${paramIndex}
       RETURNING *
     `;
-    const { rows } = await this.pool.query<User>(sql, values);
-    if (rows.length === 0)
-      throw new NotFoundException(`User with ${userId} not found`);
-    const user = rows[0];
-    delete user.password;
-    return user;
+    try {
+      const { rows } = await this.pool.query<User>(sql, values);
+      if (rows.length === 0)
+        throw new NotFoundException(`User with ${userId} not found`);
+      const user = rows[0];
+      delete user.password;
+      return user;
+    } catch (err) {
+      if (isPgError(err) && err.code === ErrorCode.DUPLICATE_ENTRY) {
+        const duplicateValue = err.detail.match(RegexPatterns.DuplicateEntry);
+        throw new ConflictException(
+          `${duplicateValue[1]} with value ${duplicateValue[2]} already exist`,
+        );
+      }
+    }
   }
 
   async deleteUserById(userId: number) {

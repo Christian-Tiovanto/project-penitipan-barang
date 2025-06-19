@@ -53,7 +53,7 @@ export class ArPayment implements IArPayment {
   @Column({ type: 'int', nullable: true })
   customer_paymentId: number;
 
-  @ManyToOne(() => Customer, (customer) => customer)
+  // @ManyToOne(() => Customer, (customer) => customer)
   customer: number;
 
   @ApiProperty({ example: 1 })

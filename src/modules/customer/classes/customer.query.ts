@@ -1,10 +1,8 @@
-import { OptionalDateRangeQueryWithPagination } from '@app/commons/queries/date-range.query';
 import { SortOrder } from '@app/enums/sort-order';
 import { BasePaginationQuery } from '@app/interfaces/pagination.interface';
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 import { JoiSchema } from 'joi-class-decorators';
-import { Customer } from '../models/customer.entity';
 export enum CustomerSort {
   ID = 'id',
   NAME = 'name',
@@ -12,7 +10,7 @@ export enum CustomerSort {
   ADDRESS = 'address',
 }
 
-export class GetAllCustomerQuery extends OptionalDateRangeQueryWithPagination {
+export class GetAllCustomerQuery extends BasePaginationQuery {
   @ApiProperty({
     enum: CustomerSort,
     required: false,

@@ -37,7 +37,7 @@ export class Ar implements IAr {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Customer, (customer) => customer.ar)
+  // @ManyToOne(() => Customer, (customer) => customer.ar)
   customer: number;
 
   @ApiProperty({ example: 1 })

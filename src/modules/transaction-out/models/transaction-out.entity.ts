@@ -57,7 +57,7 @@ export class TransactionOut implements ITransactionOut {
   @Column({ type: 'varchar', nullable: true })
   productName: string;
 
-  @ManyToOne(() => Customer, (customer) => customer.transaction_out)
+  // @ManyToOne(() => Customer, (customer) => customer.transaction_out)
   customer: Customer;
 
   @ApiProperty({ example: 1 })

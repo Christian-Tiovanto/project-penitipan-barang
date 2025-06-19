@@ -49,30 +49,6 @@ export class CustomerController {
     return await this.customerService.getAllCustomers();
   }
 
-  // @ApiBearerAuth()
-  // @ApiOperation({
-  //   summary: 'Get All Customer Pagination',
-  // })
-  // @UseInterceptors(OffsetPaginationInterceptor<Customer>)
-  // @UseGuards(AuthenticateGuard)
-  // @Get()
-  // async getAllCustomersPagination(
-  //   @Query() { page_no, page_size }: BasePaginationQuery,
-  // ): Promise<OffsetPagination<Customer>> {
-  //   const pageSize = parseInt(page_size) || 10;
-  //   const pageNo = parseInt(page_no) || 1;
-
-  //   const customers = await this.customerService.getAllCustomersPagination({
-  //     pageNo,
-  //     pageSize,
-  //   });
-  //   return {
-  //     data: customers[0],
-  //     totalCount: customers[1],
-  //     filteredCount: customers[1],
-  //   };
-  // }
-
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get All Customer Pagination',
@@ -84,15 +60,7 @@ export class CustomerController {
   @Get()
   async getAllCustomersPagination(
     @Query()
-    {
-      page_no,
-      page_size,
-      start_date,
-      end_date,
-      sort,
-      order,
-      search,
-    }: GetAllCustomerQuery,
+    { page_no, page_size, sort, order, search }: GetAllCustomerQuery,
   ): Promise<OffsetPagination<GetCustomerResponse>> {
     const pageSize = parseInt(page_size) || 10;
     const pageNo = parseInt(page_no) || 1;
@@ -103,8 +71,6 @@ export class CustomerController {
       pageSize,
       sort,
       order,
-      startDate: start_date,
-      endDate: end_date,
       search,
     });
     return {
@@ -121,7 +87,7 @@ export class CustomerController {
   @PermissionsMetatada(CustomerPermission.VIEW)
   @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
   @Get(':id')
-  async getCustomerById(
+  async findCustomerById(
     @Param('id', ParseIntPipe) customerId: number,
   ): Promise<Customer> {
     return await this.customerService.findCustomerById(customerId);
