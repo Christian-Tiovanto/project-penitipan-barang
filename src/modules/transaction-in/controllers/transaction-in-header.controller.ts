@@ -36,92 +36,92 @@ export class TransactionInHeaderController {
     private readonly transactionInHeaderService: TransactionInHeaderService,
   ) {}
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get All Transaction In Header',
-  })
-  @ApiOkResponse({ type: GetTransactionInResponse })
-  @UseInterceptors(OffsetPaginationInterceptor)
-  @PermissionsMetatada(TransactionInPermission.LIST)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Get()
-  async getAllTransactionInHeader(
-    @Query()
-    {
-      page_no,
-      page_size,
-      sort,
-      order,
-      start_date,
-      end_date,
-      search,
-    }: GetAllTransactionInHeaderQuery,
-  ) {
-    const pageSize = parseInt(page_size) || 10;
-    const pageNo = parseInt(page_no) || 1;
-    sort = !sort ? TransactionInHeaderSort.ID : sort;
-    order = !order ? SortOrder.ASC : order;
-    const transactions =
-      await this.transactionInHeaderService.getAllTransactionInHeader({
-        pageNo,
-        pageSize,
-        sort,
-        order,
-        startDate: start_date,
-        endDate: end_date,
-        search,
-      });
-    return {
-      data: transactions[0],
-      totalCount: transactions[1],
-      filteredCount: transactions[1],
-    };
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get All Transaction In Header',
+  // })
+  // @ApiOkResponse({ type: GetTransactionInResponse })
+  // @UseInterceptors(OffsetPaginationInterceptor)
+  // @PermissionsMetatada(TransactionInPermission.LIST)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Get()
+  // async getAllTransactionInHeader(
+  //   @Query()
+  //   {
+  //     page_no,
+  //     page_size,
+  //     sort,
+  //     order,
+  //     start_date,
+  //     end_date,
+  //     search,
+  //   }: GetAllTransactionInHeaderQuery,
+  // ) {
+  //   const pageSize = parseInt(page_size) || 10;
+  //   const pageNo = parseInt(page_no) || 1;
+  //   sort = !sort ? TransactionInHeaderSort.ID : sort;
+  //   order = !order ? SortOrder.ASC : order;
+  //   const transactions =
+  //     await this.transactionInHeaderService.getAllTransactionInHeader({
+  //       pageNo,
+  //       pageSize,
+  //       sort,
+  //       order,
+  //       startDate: start_date,
+  //       endDate: end_date,
+  //       search,
+  //     });
+  //   return {
+  //     data: transactions[0],
+  //     totalCount: transactions[1],
+  //     filteredCount: transactions[1],
+  //   };
+  // }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get Transaction In Header by Id',
-  })
-  @PermissionsMetatada(TransactionInPermission.VIEW)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Get(':id')
-  async getTransactionInHeaderById(
-    @Param('id', ParseIntPipe) transactionInHeaderId: number,
-  ) {
-    return await this.transactionInHeaderService.findTransactionInHeaderById(
-      transactionInHeaderId,
-    );
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get Transaction In Header by Id',
+  // })
+  // @PermissionsMetatada(TransactionInPermission.VIEW)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Get(':id')
+  // async getTransactionInHeaderById(
+  //   @Param('id', ParseIntPipe) transactionInHeaderId: number,
+  // ) {
+  //   return await this.transactionInHeaderService.findTransactionInHeaderById(
+  //     transactionInHeaderId,
+  //   );
+  // }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get All Trans In Header By CustomerId',
-  })
-  @PermissionsMetatada(TransactionInPermission.LIST)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Get('/by-customer/:id')
-  async getAllProductUnits(
-    @Param('id', ParseIntPipe) customerId: number,
-  ): Promise<TransactionInHeader[]> {
-    return await this.transactionInHeaderService.getAllTransactionInHeadersByCustomerId(
-      customerId,
-    );
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get All Trans In Header By CustomerId',
+  // })
+  // @PermissionsMetatada(TransactionInPermission.LIST)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Get('/by-customer/:id')
+  // async getAllProductUnits(
+  //   @Param('id', ParseIntPipe) customerId: number,
+  // ): Promise<TransactionInHeader[]> {
+  //   return await this.transactionInHeaderService.getAllTransactionInHeadersByCustomerId(
+  //     customerId,
+  //   );
+  // }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Update Trans In Header',
-  })
-  @PermissionsMetatada(TransactionInPermission.EDIT)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Patch(':id')
-  async updateTransInHeader(
-    @Param('id', ParseIntPipe) transInHeaderId: number,
-    @Body() updateTransInHeaderDto: UpdateTransactionInHeaderDto,
-  ): Promise<TransactionInHeader> {
-    return await this.transactionInHeaderService.updateTransactionInHeader(
-      transInHeaderId,
-      updateTransInHeaderDto,
-    );
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Update Trans In Header',
+  // })
+  // @PermissionsMetatada(TransactionInPermission.EDIT)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Patch(':id')
+  // async updateTransInHeader(
+  //   @Param('id', ParseIntPipe) transInHeaderId: number,
+  //   @Body() updateTransInHeaderDto: UpdateTransactionInHeaderDto,
+  // ): Promise<TransactionInHeader> {
+  //   return await this.transactionInHeaderService.updateTransactionInHeader(
+  //     transInHeaderId,
+  //     updateTransInHeaderDto,
+  //   );
+  // }
 }

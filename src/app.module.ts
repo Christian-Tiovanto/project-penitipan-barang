@@ -14,7 +14,7 @@ import { ArPaymentModule } from './modules/ar-payment/ar-payment.module';
 import { CashflowModule } from './modules/cashflow/cashflow.module';
 import { ChargeModule } from './modules/charge/charge.module';
 import { TransactionOutModule } from './modules/transaction-out/transaction-out.module';
-import { ReportModule } from './modules/report/report.module';
+// import { ReportModule } from './modules/report/report.module';
 import { SpbModule } from './modules/spb/spb.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
 import { UserSeeder } from './seeder/user.seeder';
@@ -37,7 +37,7 @@ import { DatabaseModule } from './modules/database/database.module';
     ProductModule,
     ProductUnitModule,
     CustomerModule,
-    // TransactionInModule,
+    TransactionInModule,
     PaymentMethodModule,
     // CustomerPaymentModule,
     // ArPaymentModule,

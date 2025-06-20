@@ -1,5 +1,5 @@
 import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
-import { ITransactionIn } from '../models/transaction-in.entity';
+import { TransactionIn } from '../models/transaction-in.entity';
 import * as Joi from 'joi';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -7,7 +7,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class UpdateTransactionInDto
   implements
     Omit<
-      ITransactionIn,
+      TransactionIn,
       | 'id'
       | 'customer'
       | 'created_at'

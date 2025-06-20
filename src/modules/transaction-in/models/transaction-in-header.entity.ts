@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { TransactionIn } from './transaction-in.entity';
 
-export interface ITransactionInHeader {
+export interface TransactionInHeader {
   id: number;
   code: string;
   customer: Customer;
@@ -20,33 +20,33 @@ export interface ITransactionInHeader {
   desc: string;
 }
 
-@Entity('transaction_in_header')
-export class TransactionInHeader implements ITransactionInHeader {
-  @PrimaryGeneratedColumn()
-  id: number;
+// @Entity('transaction_in_header')
+// export class TransactionInHeader implements ITransactionInHeader {
+//   @PrimaryGeneratedColumn()
+//   id: number;
 
-  // @ManyToOne(() => Customer, (customer) => customer.transaction_in)
-  customer: Customer;
+//   // @ManyToOne(() => Customer, (customer) => customer.transaction_in)
+//   customer: Customer;
 
-  @Column({ type: 'varchar', nullable: true })
-  code: string;
+//   @Column({ type: 'varchar', nullable: true })
+//   code: string;
 
-  @CreateDateColumn()
-  created_at: Date;
+//   @CreateDateColumn()
+//   created_at: Date;
 
-  @UpdateDateColumn()
-  updated_at: Date;
+//   @UpdateDateColumn()
+//   updated_at: Date;
 
-  @OneToMany(
-    () => TransactionIn,
-    (transaction_in) => transaction_in.transaction_in_header,
-    { cascade: ['update'] },
-  )
-  transaction_in: TransactionIn[];
+//   @OneToMany(
+//     () => TransactionIn,
+//     (transaction_in) => transaction_in.transaction_in_header,
+//     { cascade: ['update'] },
+//   )
+//   transaction_in: TransactionIn[];
 
-  @Column()
-  customerId: number;
+//   @Column()
+//   customerId: number;
 
-  @Column({ type: 'varchar', nullable: true })
-  desc: string;
-}
+//   @Column({ type: 'varchar', nullable: true })
+//   desc: string;
+// }

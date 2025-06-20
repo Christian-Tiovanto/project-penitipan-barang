@@ -37,19 +37,6 @@ import { TransactionInPermission } from '@app/enums/permission';
 export class TransactionInController {
   constructor(private readonly transactionInService: TransactionInService) {}
 
-  @ApiOperation({ summary: 'Create a Transaction In' })
-  @ApiBearerAuth()
-  @PermissionsMetatada(TransactionInPermission.CREATE)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Post()
-  async createTransactionIn(
-    @Body() createTransactionInDto: CreateTransactionInDto,
-  ) {
-    return await this.transactionInService.createTransactionIn(
-      createTransactionInDto,
-    );
-  }
-
   @ApiOperation({ summary: 'Create bulk Transaction In' })
   @ApiBearerAuth()
   @PermissionsMetatada(TransactionInPermission.CREATE)
@@ -63,74 +50,74 @@ export class TransactionInController {
     );
   }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get All Transaction In',
-  })
-  @ApiOkResponse({ type: GetTransactionInResponse })
-  @UseInterceptors(OffsetPaginationInterceptor)
-  @PermissionsMetatada(TransactionInPermission.LIST)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Get()
-  async getAllTransactionIn(
-    @Query()
-    {
-      page_no,
-      page_size,
-      sort,
-      order,
-      start_date,
-      end_date,
-      search,
-    }: GetAllTransactionInQuery,
-  ): Promise<OffsetPagination<GetTransactionInResponse>> {
-    const pageSize = parseInt(page_size) || 10;
-    const pageNo = parseInt(page_no) || 1;
-    sort = !sort ? TransactionInSort.ID : sort;
-    order = !order ? SortOrder.ASC : order;
-    const transactions = await this.transactionInService.getAllTransactionIn({
-      pageNo,
-      pageSize,
-      sort,
-      order,
-      startDate: start_date,
-      endDate: end_date,
-      search,
-    });
-    return {
-      data: transactions[0],
-      totalCount: transactions[1],
-      filteredCount: transactions[1],
-    };
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get All Transaction In',
+  // })
+  // @ApiOkResponse({ type: GetTransactionInResponse })
+  // @UseInterceptors(OffsetPaginationInterceptor)
+  // @PermissionsMetatada(TransactionInPermission.LIST)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Get()
+  // async getAllTransactionIn(
+  //   @Query()
+  //   {
+  //     page_no,
+  //     page_size,
+  //     sort,
+  //     order,
+  //     start_date,
+  //     end_date,
+  //     search,
+  //   }: GetAllTransactionInQuery,
+  // ): Promise<OffsetPagination<GetTransactionInResponse>> {
+  //   const pageSize = parseInt(page_size) || 10;
+  //   const pageNo = parseInt(page_no) || 1;
+  //   sort = !sort ? TransactionInSort.ID : sort;
+  //   order = !order ? SortOrder.ASC : order;
+  //   const transactions = await this.transactionInService.getAllTransactionIn({
+  //     pageNo,
+  //     pageSize,
+  //     sort,
+  //     order,
+  //     startDate: start_date,
+  //     endDate: end_date,
+  //     search,
+  //   });
+  //   return {
+  //     data: transactions[0],
+  //     totalCount: transactions[1],
+  //     filteredCount: transactions[1],
+  //   };
+  // }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get Transaction In by Id',
-  })
-  @PermissionsMetatada(TransactionInPermission.VIEW)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Get(':id')
-  async getTransactionInById(@Param('id', ParseIntPipe) supplierId: number) {
-    return await this.transactionInService.findTransactionInById(supplierId);
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get Transaction In by Id',
+  // })
+  // @PermissionsMetatada(TransactionInPermission.VIEW)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Get(':id')
+  // async getTransactionInById(@Param('id', ParseIntPipe) supplierId: number) {
+  //   return await this.transactionInService.findTransactionInById(supplierId);
+  // }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Update Transaction In by id',
-  })
-  @PermissionsMetatada(TransactionInPermission.EDIT)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Patch(':id')
-  async updateTransactionInById(
-    @Param('id', ParseIntPipe) supplierId: number,
-    @Body() updateSupplierDto: UpdateTransactionInDto,
-  ) {
-    return await this.transactionInService.updateTransactionInByIdWithEM(
-      supplierId,
-      updateSupplierDto,
-    );
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Update Transaction In by id',
+  // })
+  // @PermissionsMetatada(TransactionInPermission.EDIT)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Patch(':id')
+  // async updateTransactionInById(
+  //   @Param('id', ParseIntPipe) supplierId: number,
+  //   @Body() updateSupplierDto: UpdateTransactionInDto,
+  // ) {
+  //   return await this.transactionInService.updateTransactionInByIdWithEM(
+  //     supplierId,
+  //     updateSupplierDto,
+  //   );
+  // }
 
   // @ApiBearerAuth()
   // @ApiOperation({
@@ -160,48 +147,48 @@ export class TransactionInController {
   //   };
   // }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get All Transaction In By Product Id',
-  })
-  @ApiOkResponse({ type: GetTransactionInResponse })
-  @UseInterceptors(OffsetPaginationInterceptor)
-  @PermissionsMetatada(TransactionInPermission.LIST)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Get('by-header/:id')
-  async getAllTransactionInByHeaderId(
-    @Param('id', ParseIntPipe) headerId: number,
-    @Query()
-    {
-      page_no,
-      page_size,
-      sort,
-      order,
-      start_date,
-      end_date,
-      search,
-    }: GetAllTransactionInQuery,
-  ): Promise<OffsetPagination<GetTransactionInResponse>> {
-    const pageSize = parseInt(page_size) || 10;
-    const pageNo = parseInt(page_no) || 1;
-    sort = !sort ? TransactionInSort.ID : sort;
-    order = !order ? SortOrder.ASC : order;
-    const transactions =
-      await this.transactionInService.getAllTransactionInByHeaderId(headerId, {
-        pageNo,
-        pageSize,
-        sort,
-        order,
-        startDate: start_date,
-        endDate: end_date,
-        search,
-      });
-    return {
-      data: transactions[0],
-      totalCount: transactions[1],
-      filteredCount: transactions[1],
-    };
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get All Transaction In By Product Id',
+  // })
+  // @ApiOkResponse({ type: GetTransactionInResponse })
+  // @UseInterceptors(OffsetPaginationInterceptor)
+  // @PermissionsMetatada(TransactionInPermission.LIST)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Get('by-header/:id')
+  // async getAllTransactionInByHeaderId(
+  //   @Param('id', ParseIntPipe) headerId: number,
+  //   @Query()
+  //   {
+  //     page_no,
+  //     page_size,
+  //     sort,
+  //     order,
+  //     start_date,
+  //     end_date,
+  //     search,
+  //   }: GetAllTransactionInQuery,
+  // ): Promise<OffsetPagination<GetTransactionInResponse>> {
+  //   const pageSize = parseInt(page_size) || 10;
+  //   const pageNo = parseInt(page_no) || 1;
+  //   sort = !sort ? TransactionInSort.ID : sort;
+  //   order = !order ? SortOrder.ASC : order;
+  //   const transactions =
+  //     await this.transactionInService.getAllTransactionInByHeaderId(headerId, {
+  //       pageNo,
+  //       pageSize,
+  //       sort,
+  //       order,
+  //       startDate: start_date,
+  //       endDate: end_date,
+  //       search,
+  //     });
+  //   return {
+  //     data: transactions[0],
+  //     totalCount: transactions[1],
+  //     filteredCount: transactions[1],
+  //   };
+  // }
 
   // @ApiBearerAuth()
   // @ApiOperation({

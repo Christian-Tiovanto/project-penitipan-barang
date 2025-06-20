@@ -64,10 +64,10 @@ export class TransactionOut implements ITransactionOut {
   @Column({ type: 'int', nullable: true })
   customerId: number;
 
-  @ManyToOne(
-    () => TransactionIn,
-    (transactionIn) => transactionIn.transaction_out,
-  )
+  // @ManyToOne(
+  //   () => TransactionIn,
+  //   (transactionIn) => transactionIn.transaction_out,
+  // )
   transaction_in: TransactionIn;
 
   @ApiProperty({ example: 1 })

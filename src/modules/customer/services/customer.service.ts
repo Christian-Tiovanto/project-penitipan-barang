@@ -14,7 +14,7 @@ import { GetCustomerResponse } from '../classes/customer.response';
 import { CustomersColumn, TransactionInsColumn } from '@app/enums/table-column';
 import { DATABASE } from '@app/enums/database-table';
 import { DATABASE_POOL } from '@app/modules/database/database.module';
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { isPgError } from '@app/utils/pg-error-check';
 import { ErrorCode } from '@app/enums/error-code';
 import { RegexPatterns } from '@app/enums/regex-pattern';
@@ -113,6 +113,24 @@ export class CustomerService {
       throw new NotFoundException(`Customer with id ${customerId} not found`);
     }
     return customer;
+  }
+
+  async findCustomerByIdNLock(
+    client: PoolClient,
+    customerId: number,
+  ): Promise<Customer> {
+    const sql = `
+      SELECT *
+      FROM ${DATABASE.CUSTOMERS}
+      WHERE ${CustomersColumn.ID} = $1 AND ${CustomersColumn.IS_DELETED} = false
+      FOR SHARE
+    `;
+    const { rows } = await client.query<Customer>(sql, [customerId]);
+
+    if (rows.length === 0) {
+      throw new NotFoundException(`Customer with id ${customerId} not found`);
+    }
+    return rows[0];
   }
 
   async createCustomer(

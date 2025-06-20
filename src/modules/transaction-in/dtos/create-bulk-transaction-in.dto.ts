@@ -1,12 +1,12 @@
 import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
-import { ITransactionIn } from '../models/transaction-in.entity';
+import { TransactionIn } from '../models/transaction-in.entity';
 import * as Joi from 'joi';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class BulkTransactionInDetailDto
   implements
     Omit<
-      ITransactionIn,
+      TransactionIn,
       | 'id'
       | 'created_at'
       | 'updated_at'
@@ -43,7 +43,7 @@ export class BulkTransactionInDetailDto
 
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateBulkTransactionInDto
-  implements Pick<ITransactionIn, 'customerId'>
+  implements Pick<TransactionIn, 'customerId'>
 {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
@@ -63,5 +63,5 @@ export class CreateBulkTransactionInDto
 
   @ApiProperty({ example: 'desc' })
   @JoiSchema(Joi.string().optional().allow(null))
-  desc: string;
+  description: string;
 }
