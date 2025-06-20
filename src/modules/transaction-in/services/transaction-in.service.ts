@@ -74,9 +74,9 @@ export class TransactionInService {
   async createBulkTransactionIn(
     createBulkTransactionInDto: CreateBulkTransactionInDto,
   ): Promise<TransactionIn[]> {
-    const { customerId } = createBulkTransactionInDto;
-    let { transaction_date } = createBulkTransactionInDto;
-    transaction_date = convertToUTC(transaction_date);
+    const { customerId, description } = createBulkTransactionInDto;
+    let { transaction_date: transactionDate } = createBulkTransactionInDto;
+    transactionDate = convertToUTC(transactionDate);
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
@@ -84,11 +84,19 @@ export class TransactionInService {
         client,
         customerId,
       );
+      const transHeader =
+        await this.transactionInHeaderService.createTransactionInHeader(
+          client,
+          customer,
+          transactionDate,
+          description,
+        );
       const createdTransaction = await this.createTransNUpdateProduct(
         client,
         createBulkTransactionInDto,
+        transHeader,
         customer,
-        transaction_date,
+        transactionDate,
       );
       await client.query('COMMIT');
       return createdTransaction;
@@ -107,6 +115,7 @@ export class TransactionInService {
   private async createTransNUpdateProduct(
     client: PoolClient,
     createBulkTransactionInDto: CreateBulkTransactionInDto,
+    transactionHeader: TransactionInHeader,
     customer: Customer,
     transactionDate: Date,
   ): Promise<TransactionIn[]> {
@@ -116,9 +125,9 @@ export class TransactionInService {
     const isCharges = createBulkTransactionInDto.data.map((d) => d.is_charge);
 
     const validationSql = `
-      SELECT u.productunitid, u.productid
+      SELECT d.productunitid, d.productid
       FROM unnest($1::int[], $2::int[]) as d(productunitid, productid)
-      LEFT JOIN ${DATABASE.PRODUCT_UNITS} as pu on ${DATABASE.PRODUCT_UNITS}.${ProductUnitsColumn.ID} = d.productunitid
+      LEFT JOIN ${DATABASE.PRODUCT_UNITS} as pu on pu.${ProductUnitsColumn.ID} = d.productunitid
       WHERE pu.${ProductUnitsColumn.ID} IS NULL or pu.${ProductUnitsColumn.PRODUCT_ID} != d.productid
     `;
     const { rows: validationResult } = await client.query<{
@@ -143,20 +152,6 @@ export class TransactionInService {
         FROM unnest($1::int[], $2::int[], $3::numeric[], $4::boolean[]) AS u(unit_id, product_id, qty, is_charge)
       ),
       
-      created_header AS (
-        INSERT INTO ${DATABASE.TRANSACTION_IN_HEADER} 
-          (${TransactionInHeaderColumn.CUSTOMER_ID}, ${TransactionInHeaderColumn.DESC}, ${TransactionInHeaderColumn.CREATED_AT}, ${TransactionInHeaderColumn.UPDATED_AT})
-        VALUES ($5, $6, $7, $7) 
-        RETURNING ${TransactionInHeaderColumn.ID}
-      ),
-
-      updated_header AS (
-        UPDATE ${DATABASE.TRANSACTION_IN_HEADER}
-        SET ${TransactionInHeaderColumn.CODE} = $8 || '-' || LPAD((SELECT id::text FROM created_header), 5, '0')
-        WHERE ${TransactionInHeaderColumn.ID} = (SELECT id FROM created_header)
-        RETURNING ${TransactionInHeaderColumn.ID}
-      ),
-
       ready_data AS (
         SELECT
           inp.product_id, inp.qty, inp.is_charge,
@@ -179,16 +174,16 @@ export class TransactionInService {
 
       inserted_transactions AS (
         INSERT INTO ${DATABASE.TRANSACTION_INS} (
-          product_id, qty, is_charge, unit, conversion_to_kg, remaining_qty, converted_qty,
-          customer_id, transaction_in_header_id, created_at, updated_at
+          productid, qty, is_charge, unit, conversion_to_kg, remaining_qty, converted_qty,
+          customerid, transaction_in_headerid, created_at, updated_at
         )
         SELECT
           r.product_id, r.qty, r.is_charge, r.unit_name, r.conversion_to_kg,
           r.converted_qty, r.converted_qty,
           $5, -- customer_id
-          (SELECT id FROM updated_header), -- the new header_id
-          $7, -- created_at
-          $7  -- updated_at
+          ${transactionHeader.id},
+          $6, -- created_at
+          $6  -- updated_at
         FROM ready_data AS r
         RETURNING *
       )
@@ -200,9 +195,7 @@ export class TransactionInService {
       qtys,
       isCharges,
       customer.id,
-      createBulkTransactionInDto.description,
       transactionDate,
-      customer.code,
     ];
 
     const { rows } = await client.query<TransactionIn>(executionSql, params);

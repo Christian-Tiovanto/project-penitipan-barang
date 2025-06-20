@@ -29,29 +29,32 @@ export class TransactionInHeaderService {
     private readonly customerService: CustomerService,
   ) {}
 
-  // async createTransactionInHeader(
-  //   client: PoolClient,
-  //   customer: Customer,
-  //   transactionDate: Date,
-  //   description: string,
-  // ): Promise<TransactionInHeader> {
-  //   const sql = `
-  //   WITH create_transin_header as (
-  //     INSERT INTO ${DATABASE.TRANSACTION_IN_HEADER} (${(TransactionInHeaderColumn.CUSTOMER_ID, TransactionInHeaderColumn.DESC, TransactionInHeaderColumn.CREATED_AT, TransactionInHeaderColumn.UPDATED_AT)}) values ($1, $2, $3, $3) RETURNING ${TransactionInHeaderColumn.ID}
-  //   )
-  //   UPDATE ${DATABASE.TRANSACTION_IN_HEADER}
-  //   SET ${TransactionInHeaderColumn.CODE} = '${customer.code}' || '-' || LPAD((SELECT id::text FROM create_transin_header), 5, '0')
-  //   FROM create_transin_header
-  //   WHERE ${TransactionInHeaderColumn.ID} = create_transin_header.${TransactionInHeaderColumn.ID}
-  //   RETURNING *
-  //   `;
-  //   const { rows } = await client.query(sql, [
-  //     customer.code,
-  //     description,
-  //     transactionDate,
-  //   ]);
-  //   return rows[0];
-  // }
+  async createTransactionInHeader(
+    client: PoolClient,
+    customer: Customer,
+    transactionDate: Date,
+    description: string,
+  ): Promise<TransactionInHeader> {
+    const createTransHeaderSql = `
+      INSERT INTO ${DATABASE.TRANSACTION_IN_HEADER} (${[TransactionInHeaderColumn.CUSTOMER_ID, TransactionInHeaderColumn.DESC, TransactionInHeaderColumn.CREATED_AT, TransactionInHeaderColumn.UPDATED_AT].join(', ')}) values ($1, $2, $3, $3) RETURNING ${TransactionInHeaderColumn.ID}
+    `;
+    console.log(createTransHeaderSql);
+    const { rows: createdTransHeader } = await client.query<{ id: number }>(
+      createTransHeaderSql,
+      [customer.id, description, transactionDate],
+    );
+    const updateTransHeaderCodeSql = `
+      UPDATE ${DATABASE.TRANSACTION_IN_HEADER}
+      SET ${TransactionInHeaderColumn.CODE} = $1 || '-' || LPAD(${createdTransHeader[0].id}::text, 5, '0')
+      WHERE ${TransactionInHeaderColumn.ID} = ${createdTransHeader[0].id}
+      RETURNING *
+    
+    `;
+    const { rows } = await client.query(updateTransHeaderCodeSql, [
+      customer.code,
+    ]);
+    return rows[0];
+  }
 
   // async getAllTransactionInHeader({
   //   pageNo,

@@ -135,7 +135,7 @@ export enum TransactionInHeaderColumn {
   ID = 'id',
   CUSTOMER_ID = 'customerId',
   CODE = 'code',
-  DESC = 'desc',
+  DESC = 'description',
   UPDATED_AT = 'updated_at',
   CREATED_AT = 'created_at',
 }
