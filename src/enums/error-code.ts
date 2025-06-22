@@ -1,4 +1,6 @@
 export enum ErrorCode {
   DUPLICATE_ENTRY = '23505',
+  NOT_FOUND = 'P0002',
+  CONFLICT = 'P0004',
   FOREIGN_KEY_CONSTRAINT = 1452,
 }

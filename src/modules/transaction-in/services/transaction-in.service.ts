@@ -3,6 +3,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -40,11 +41,14 @@ import { DATABASE_POOL } from '@app/modules/database/database.module';
 import { Pool, PoolClient } from 'pg';
 import { DATABASE } from '@app/enums/database-table';
 import {
+  CustomersColumn,
   ProductsColumn,
   ProductUnitsColumn,
   TransactionInHeaderColumn,
   TransactionInsColumn,
 } from '@app/enums/table-column';
+import { isPgError } from '@app/utils/pg-error-check';
+import { ErrorCode } from '@app/enums/error-code';
 
 interface GetAllTransactionInQuery {
   pageNo: number;
@@ -202,96 +206,109 @@ export class TransactionInService {
     return rows;
   }
 
-  // async getAllTransactionIn({
-  //   pageNo,
-  //   pageSize,
-  //   sort,
-  //   order,
-  //   startDate,
-  //   endDate,
-  //   search,
-  // }: GetAllTransactionInQuery): Promise<[GetTransactionInResponse[], number]> {
-  //   const skip = (pageNo - 1) * pageSize;
+  async getAllTransactionIn({
+    pageNo,
+    pageSize,
+    sort,
+    order,
+    search,
+    startDate,
+    endDate,
+  }: GetAllTransactionInQuery): Promise<[GetTransactionInResponse[], number]> {
+    const values: any[] = [];
+    const whereConditions = [];
+    let paramIndex = 1;
 
-  //   let sortBy: string = `transaction.${sort}`;
-  //   if (
-  //     sort === TransactionInSort.CUSTOMER ||
-  //     sort === TransactionInSort.PRODUCT
-  //   ) {
-  //     sortBy = `${sort}.name`;
-  //   }
-  //   if (sort === TransactionInSort.TRANSACTION_IN_HEADER) {
-  //     sortBy = `${sort}.code`;
-  //   }
+    let sortBy: string = `ti.${sort}`;
+    if (
+      sort === TransactionInSort.CUSTOMER ||
+      sort === TransactionInSort.PRODUCT
+    ) {
+      console.log(sort);
+      sortBy = `${sort}.name`;
+    }
+    if (sort === TransactionInSort.TRANSACTION_IN_HEADER) {
+      sortBy = `${sort}.code`;
+    }
 
-  //   const queryBuilder = this.transactionInRepository
-  //     .createQueryBuilder('transaction')
-  //     .leftJoinAndSelect('transaction.customer', 'customer')
-  //     .leftJoinAndSelect('transaction.product', 'product')
-  //     .leftJoinAndSelect(
-  //       'transaction.transaction_in_header',
-  //       'transaction_in_header',
-  //     )
-  //     .skip(skip)
-  //     .take(pageSize)
-  //     .select([
-  //       'transaction',
-  //       'customer.name',
-  //       'customer.id',
-  //       'product.name',
-  //       'product.id',
-  //       'transaction_in_header.id',
-  //       'transaction_in_header.code',
-  //     ])
+    if (startDate) {
+      whereConditions.push(`ti.created_at >= $${paramIndex++}`);
+      values.push(startDate);
+    }
+    if (endDate) {
+      whereConditions.push(`ti.created_at  < $${paramIndex++}`);
+      values.push(endDate);
+    }
+    if (search) {
+      whereConditions.push(
+        `(product.name ILIKE $${paramIndex} OR customer.name ILIKE $${paramIndex} OR ${DATABASE.TRANSACTION_IN_HEADER}.code ILIKE $${paramIndex})`,
+      );
+      values.push(`%${search}%`);
+      paramIndex++;
+    }
 
-  //     .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
+    const whereClause =
+      whereConditions.length > 0
+        ? `WHERE ${whereConditions.join(' AND ')}`
+        : '';
 
-  //   // Conditionally add filters
-  //   if (startDate) {
-  //     queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
-  //   }
+    const productColumnsToSelect = [ProductsColumn.ID, ProductsColumn.NAME]
+      .map((col) => `'${col}', product.${col}`)
+      .join(', ');
+    const customerColumnsToSelect = [CustomersColumn.ID, CustomersColumn.NAME]
+      .map((col) => `'${col}', customer.${col}`)
+      .join(', ');
+    const transHeaderColumnsToSelect = [
+      TransactionInHeaderColumn.ID,
+      TransactionInHeaderColumn.CODE,
+    ]
+      .map((col) => `'${col}', ${DATABASE.TRANSACTION_IN_HEADER}.${col}`)
+      .join(', ');
 
-  //   if (endDate) {
-  //     queryBuilder.andWhere({ created_at: LessThan(endDate) });
-  //   }
+    const getTransInDetailSql = `
+              SELECT ti.*, (jsonb_agg( jsonb_build_object (${productColumnsToSelect}) )) -> 0 as product, (jsonb_agg( jsonb_build_object (${customerColumnsToSelect}) )) -> 0 as customer, (jsonb_agg( jsonb_build_object (${transHeaderColumnsToSelect}) )) -> 0 as transaction_in_header
+              FROM ${DATABASE.TRANSACTION_INS} as ti
+              LEFT JOIN ${DATABASE.CUSTOMERS} customer on ti.customerid = customer.id
+              LEFT JOIN ${DATABASE.PRODUCTS} product on ti.productid = product.id
+              LEFT JOIN ${DATABASE.TRANSACTION_IN_HEADER} on ti.transaction_in_headerId = transaction_in_header.id 
+              ${whereClause}
+              GROUP BY ti.id
+              ORDER BY ${sortBy} ${order}
+              LIMIT $${paramIndex++}
+              OFFSET $${paramIndex++}
+              `;
 
-  //   if (search) {
-  //     queryBuilder.andWhere(
-  //       new Brackets((qb) => {
-  //         qb.where('customer.name LIKE :search', { search: `%${search}%` })
-  //           .orWhere('product.name LIKE :search', { search: `%${search}%` })
-  //           .orWhere('transaction.qty LIKE :search', { search: `%${search}%` })
-  //           .orWhere('unit LIKE :search', { search: `%${search}%` });
-  //       }),
-  //     );
-  //   }
+    const paginationCountSql = `
+              SELECT count(*) as total_count
+              FROM ${DATABASE.TRANSACTION_INS} ti
+              LEFT JOIN ${DATABASE.CUSTOMERS} customer on ti.customerid = customer.id
+              LEFT JOIN ${DATABASE.PRODUCTS} product on ti.productid = product.id
+              LEFT JOIN ${DATABASE.TRANSACTION_IN_HEADER} on ti.transaction_in_headerId = ${DATABASE.TRANSACTION_IN_HEADER}.id 
+              ${whereClause}
+              `;
 
-  //   const [transactionsIns, count] = await queryBuilder.getManyAndCount();
-  //   const transactionInResponse: GetTransactionInResponse[] =
-  //     transactionsIns.map((transaction: GetTransactionInResponse) => {
-  //       return {
-  //         id: transaction.id,
-  //         product: {
-  //           id: transaction.product.id,
-  //           name: transaction.product.name,
-  //         },
-  //         customer: {
-  //           id: transaction.customer.id,
-  //           name: transaction.customer.name,
-  //         },
-  //         qty: transaction.qty,
-  //         converted_qty: transaction.converted_qty,
-  //         unit: transaction.unit,
-  //         is_charge: transaction.is_charge,
-  //         created_at: transaction.created_at,
-  //         transaction_in_header: {
-  //           id: transaction.transaction_in_header.id,
-  //           code: transaction.transaction_in_header.code,
-  //         },
-  //       };
-  //     });
-  //   return [transactionInResponse, count];
-  // }
+    values.push(pageSize, (pageNo - 1) * pageSize);
+
+    try {
+      const { rows: transDetailRows } =
+        await this.pool.query<GetTransactionInResponse>(
+          getTransInDetailSql,
+          values,
+        );
+      const { rows: totalCountRows } = await this.pool.query<{
+        total_count: string;
+      }>(
+        paginationCountSql,
+        whereConditions.length != 0 ? values.slice(0, -2) : [],
+      );
+      const totalCount = parseInt(totalCountRows[0].total_count, 10);
+
+      return [transDetailRows, totalCount];
+    } catch (error) {
+      console.error('Failed to get all Transaction Ins:', error);
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 
   // async getTransactionForStockReport({
   //   endDate,
@@ -340,15 +357,28 @@ export class TransactionInService {
   //   return result;
   // }
 
-  // async findTransactionInById(id: number) {
-  //   const transactionIn = await this.transactionInRepository.findOne({
-  //     where: { id },
-  //     relations: ['customer', 'product'],
-  //   });
-  //   if (!transactionIn)
-  //     throw new NotFoundException('No Transaction In with that id');
-  //   return transactionIn;
-  // }
+  async findTransactionInById(transInId: number) {
+    const productColumnsToSelect = [ProductsColumn.ID, ProductsColumn.NAME]
+      .map((col) => `'${col}', p.${col}`)
+      .join(', ');
+    const customerColumnsToSelect = [CustomersColumn.ID, CustomersColumn.NAME]
+      .map((col) => `'${col}', c.${col}`)
+      .join(', ');
+    const sql = `
+      SELECT ti.*, (jsonb_agg( jsonb_build_object (${productColumnsToSelect}) )) -> 0 as product, (jsonb_agg( jsonb_build_object (${customerColumnsToSelect}) )) -> 0 as customer
+      FROM ${DATABASE.TRANSACTION_INS} ti
+      LEFT JOIN ${DATABASE.CUSTOMERS} c on c.id = ti.customerid
+      LEFT JOIN ${DATABASE.PRODUCTS} p on p.id = ti.productid
+      WHERE ti.id = $1
+      GROUP BY ti.id 
+    `;
+    const { rows } = await this.pool.query(sql, [transInId]);
+    if (rows.length === 0)
+      throw new NotFoundException(
+        `No Transaction In Found with id ${transInId}`,
+      );
+    return rows[0];
+  }
 
   // async sumCustProductQty(
   //   productId: number,
@@ -445,125 +475,30 @@ export class TransactionInService {
   //   return transactionIns;
   // }
 
-  // async updateTransactionInByIdWithEM(
-  //   transactionInId: number,
-  //   updateTransactionInDto: UpdateTransactionInDto,
-  // ) {
-  //   const transactionIn = await this.findTransactionInById(transactionInId);
-  //   const transactionOutCount = await this.transactionOutRepository.count({
-  //     where: { transaction_inId: transactionInId },
-  //   });
-
-  //   if (transactionOutCount > 0) {
-  //     throw new ConflictException(
-  //       "Can't update a Transaction In that already have Transaction Out",
-  //     );
-  //   }
-  //   let transactionInToUpdate: TransactionIn[] = [];
-
-  //   if (
-  //     updateTransactionInDto.customerId ||
-  //     updateTransactionInDto.is_charge !== undefined
-  //   ) {
-  //     if (updateTransactionInDto.customerId) {
-  //       await this.customerService.findCustomerById(
-  //         updateTransactionInDto.customerId,
-  //       );
-  //       updateTransactionInDto.customerId = parseInt(
-  //         `${updateTransactionInDto.customerId}`,
-  //       );
-  //       transactionIn.customer.id = updateTransactionInDto.customerId;
-  //     }
-  //     if (updateTransactionInDto.is_charge) {
-  //       transactionIn.is_charge = updateTransactionInDto.is_charge;
-  //     }
-  //     const transIn = await this.transactionInRepository.find({
-  //       where: {
-  //         transaction_in_header: { id: transactionIn.transaction_in_headerId },
-  //       },
-  //     });
-  //     transactionInToUpdate = transIn.map((transactionIn) => ({
-  //       ...transactionIn,
-  //       customerId:
-  //         updateTransactionInDto.customerId ?? transactionIn.customerId,
-  //       is_charge:
-  //         updateTransactionInDto.is_charge !== undefined
-  //           ? updateTransactionInDto.is_charge
-  //           : transactionIn.is_charge,
-  //     }));
-  //   }
-  //   let currentProductUnit: Pick<ProductUnit, 'conversion_to_kg' | 'name'> = {
-  //     conversion_to_kg: transactionIn.conversion_to_kg,
-  //     name: transactionIn.unit,
-  //   };
-  //   const currentQty: Pick<TransactionIn, 'qty'> = {
-  //     qty: transactionIn.qty,
-  //   };
-  //   if (!updateTransactionInDto.productId) {
-  //     updateTransactionInDto.productId = transactionIn.productId;
-  //   }
-  //   if (updateTransactionInDto.unitId) {
-  //     currentProductUnit =
-  //       await this.productUnitService.findProductUnitByIdNProductId(
-  //         updateTransactionInDto.unitId,
-  //         updateTransactionInDto.productId,
-  //       );
-  //     updateTransactionInDto.unit = currentProductUnit.name;
-  //     updateTransactionInDto.conversion_to_kg =
-  //       currentProductUnit.conversion_to_kg;
-  //   }
-  //   if (updateTransactionInDto.qty) {
-  //     currentQty.qty = updateTransactionInDto.qty;
-  //   }
-  //   updateTransactionInDto.converted_qty =
-  //     currentQty.qty * currentProductUnit.conversion_to_kg;
-  //   transactionIn.product.id = updateTransactionInDto.productId;
-  //   await this.transactionInRepository.manager.transaction(
-  //     async (entityManager: EntityManager) => {
-  //       await this.updateTransactionInProduct(
-  //         transactionIn,
-  //         updateTransactionInDto,
-  //         entityManager,
-  //       );
-
-  //       updateTransactionInDto.remaining_qty =
-  //         updateTransactionInDto.converted_qty;
-  //       if (
-  //         updateTransactionInDto.customerId ||
-  //         updateTransactionInDto.is_charge !== undefined
-  //       ) {
-  //         await entityManager.save(TransactionIn, transactionInToUpdate);
-  //         if (updateTransactionInDto.customerId) {
-  //           await this.transactionInHeaderService.updateTransactionInHeaderCustomerId(
-  //             transactionIn.transaction_in_headerId,
-  //             updateTransactionInDto.customerId,
-  //             entityManager,
-  //           );
-  //         }
-  //       }
-  //       Object.assign(transactionIn, updateTransactionInDto);
-  //       await entityManager.save(transactionIn);
-  //     },
-  //   );
-  //   return transactionIn;
-  // }
-
-  // private async updateTransactionInProductQty(
-  //   transactionIn: TransactionIn,
-  //   updateTransactionInDto: UpdateTransactionInDto,
-  //   entityManager: EntityManager,
-  // ) {
-  //   const product = await this.productService.findProductById(
-  //     transactionIn.productId,
-  //   );
-  //   const qtyToUpdate =
-  //     transactionIn.converted_qty - updateTransactionInDto.converted_qty;
-  //   product.qty = product.qty - qtyToUpdate;
-  //   await this.productService.updateProductQtyWithEntityManager(
-  //     entityManager,
-  //     product,
-  //   );
-  // }
+  async updateTransactionInByIdWithEM(
+    transactionInId: number,
+    updateTransactionInDto: UpdateTransactionInDto,
+  ) {
+    try {
+      const sql = `SELECT * FROM update_transaction_n_product($1, $2, $3, $4)`;
+      const { rows } = await this.pool.query(sql, [
+        transactionInId,
+        updateTransactionInDto.productId,
+        updateTransactionInDto.unitId,
+        updateTransactionInDto.qty,
+      ]);
+      return rows[0];
+    } catch (err) {
+      if (isPgError(err)) {
+        if (err.code === ErrorCode.NOT_FOUND) {
+          throw new NotFoundException(err.message);
+        } else if (err.code === ErrorCode.CONFLICT) {
+          throw new ConflictException(err.message);
+        }
+        throw new InternalServerErrorException(err.message);
+      }
+    }
+  }
 
   // async withdrawRemainingQtyWithEntityManager(
   //   entityManager: EntityManager,
@@ -574,144 +509,229 @@ export class TransactionInService {
   //   return entityManager.save(transactionIn);
   // }
 
-  // private async updateTransactionInProduct(
-  //   transactionIn: TransactionIn,
-  //   updateTransactionInDto: UpdateTransactionInDto,
-  //   entityManager: EntityManager,
-  // ) {
-  //   if (transactionIn.productId === updateTransactionInDto.productId) {
-  //     await this.updateTransactionInProductQty(
-  //       transactionIn,
-  //       updateTransactionInDto,
-  //       entityManager,
-  //     );
-  //   } else {
-  //     const previousProduct = await this.productService.findProductById(
-  //       transactionIn.productId,
-  //     );
-  //     previousProduct.qty = previousProduct.qty - transactionIn.converted_qty;
-  //     await this.productService.updateProductQtyWithEntityManager(
-  //       entityManager,
-  //       previousProduct,
-  //     );
-  //     const updatedToProduct = await this.productService.findProductById(
-  //       updateTransactionInDto.productId,
-  //     );
-  //     await this.productService.addProductQtyWithEntityManager(
-  //       entityManager,
-  //       updatedToProduct,
-  //       updateTransactionInDto.converted_qty,
-  //     );
-  //   }
-  // }
+  async getAllTransactionInByProductId(
+    { pageNo, pageSize }: GetAllTransactionInQuery,
+    productId: number,
+  ): Promise<[TransactionIn[], number]> {
+    const productColumnsToSelect = [ProductsColumn.ID, ProductsColumn.NAME]
+      .map((col) => `'${col}', p.${col}`)
+      .join(', ');
+    const customerColumnsToSelect = [CustomersColumn.ID, CustomersColumn.NAME]
+      .map((col) => `'${col}', c.${col}`)
+      .join(', ');
+    const sql = `
+      SELECT ti.*, (jsonb_agg( jsonb_build_object (${productColumnsToSelect}) )) -> 0 as product, (jsonb_agg( jsonb_build_object (${customerColumnsToSelect}) )) -> 0 as customer FROM
+      ${DATABASE.TRANSACTION_INS} ti
+      LEFT JOIN ${DATABASE.CUSTOMERS} c on c.id = ti.customerid
+      LEFT JOIN ${DATABASE.PRODUCTS} p on p.id = ti.productid
+      WHERE ti.productid = $1
+      GROUP BY ti.id
+      ORDER BY ti.created_at desc
+      LIMIT $2
+      OFFSET $3 
+    `;
+    const paginationCountSql = `
+      SELECT count(*) as total_count FROM
+      ${DATABASE.TRANSACTION_INS} ti
+      LEFT JOIN ${DATABASE.CUSTOMERS} c on c.id = ti.customerid
+      LEFT JOIN ${DATABASE.PRODUCTS} p on p.id = ti.productid
+      WHERE ti.productid = $1
+    `;
+    const { rows } = await this.pool.query<TransactionIn>(sql, [
+      productId,
+      pageSize,
+      (pageNo - 1) * pageSize,
+    ]);
+    const { rows: count } = await this.pool.query<{ total_count: string }>(
+      paginationCountSql,
+      [productId],
+    );
 
-  // async getAllTransactionInByProductId(
-  //   { pageNo, pageSize }: GetAllTransactionInQuery,
-  //   productId: number,
-  // ) {
-  //   const skip = (pageNo - 1) * pageSize;
-  //   const transactions = await this.transactionInRepository.findAndCount({
-  //     skip,
-  //     take: pageSize,
-  //     where: {
-  //       productId,
-  //     },
-  //     order: {
-  //       created_at: 'DESC',
-  //     },
-  //     relations: ['customer', 'product'],
-  //   });
-  //   return transactions;
-  // }
+    return [rows, parseInt(count[0].total_count)];
+  }
 
-  // async getAllTransactionInByHeaderId(
-  //   headerId: number,
-  //   {
-  //     pageNo,
-  //     pageSize,
-  //     sort,
-  //     order,
-  //     startDate,
-  //     endDate,
-  //     search,
-  //   }: GetAllTransactionInQuery,
-  // ): Promise<[GetTransactionInResponse[], number]> {
-  //   const skip = (pageNo - 1) * pageSize;
+  async getAllTransactionInByHeaderId(
+    headerId: number,
+    {
+      pageNo,
+      pageSize,
+      sort,
+      order,
+      startDate,
+      endDate,
+      search,
+    }: GetAllTransactionInQuery,
+  ): Promise<[GetTransactionInResponse[], number]> {
+    const values: any[] = [];
+    let paramIndex = 1;
+    const whereConditions = [`ti.transaction_in_headerid = $${paramIndex++}`];
+    values.push(headerId);
+    let sortBy: string = `ti.${sort}`;
+    if (
+      sort === TransactionInSort.CUSTOMER ||
+      sort === TransactionInSort.PRODUCT
+    ) {
+      console.log(sort);
+      sortBy = `${sort}.name`;
+    }
+    if (sort === TransactionInSort.TRANSACTION_IN_HEADER) {
+      sortBy = `${sort}.code`;
+    }
 
-  //   let sortBy: string = `transaction.${sort}`;
-  //   if (
-  //     sort === TransactionInSort.CUSTOMER ||
-  //     sort === TransactionInSort.PRODUCT
-  //   ) {
-  //     sortBy = `${sort}.name`;
-  //   }
+    if (startDate) {
+      whereConditions.push(`ti.created_at >= $${paramIndex++}`);
+      values.push(startDate);
+    }
+    if (endDate) {
+      whereConditions.push(`ti.created_at  < $${paramIndex++}`);
+      values.push(endDate);
+    }
+    if (search) {
+      whereConditions.push(
+        `(product.name ILIKE $${paramIndex} OR customer.name ILIKE $${paramIndex} OR ti.unit ILIKE $${paramIndex})`,
+      );
+      values.push(`%${search}%`);
+      paramIndex++;
+    }
 
-  //   const queryBuilder = this.transactionInRepository
-  //     .createQueryBuilder('transaction')
-  //     .leftJoinAndSelect('transaction.customer', 'customer')
-  //     .leftJoinAndSelect('transaction.product', 'product')
-  //     .leftJoinAndSelect(
-  //       'transaction.transaction_in_header',
-  //       'transaction_in_header',
-  //     )
-  //     .skip(skip)
-  //     .take(pageSize)
-  //     .select([
-  //       'transaction',
-  //       'customer.name',
-  //       'customer.id',
-  //       'product.name',
-  //       'product.id',
-  //       'transaction_in_header.id',
-  //       'transaction_in_header.code',
-  //     ])
-  //     .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder)
-  //     .andWhere('transaction_in_headerId = :headerId', { headerId });
+    const whereClause =
+      whereConditions.length > 0
+        ? `WHERE ${whereConditions.join(' AND ')}`
+        : '';
 
-  //   // Conditionally add filters
-  //   if (startDate) {
-  //     queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
-  //   }
+    const productColumnsToSelect = [ProductsColumn.ID, ProductsColumn.NAME]
+      .map((col) => `'${col}', product.${col}`)
+      .join(', ');
+    const customerColumnsToSelect = [CustomersColumn.ID, CustomersColumn.NAME]
+      .map((col) => `'${col}', customer.${col}`)
+      .join(', ');
+    const transHeaderColumnsToSelect = [
+      TransactionInHeaderColumn.ID,
+      TransactionInHeaderColumn.CODE,
+    ]
+      .map((col) => `'${col}', ${DATABASE.TRANSACTION_IN_HEADER}.${col}`)
+      .join(', ');
 
-  //   if (endDate) {
-  //     queryBuilder.andWhere({ created_at: LessThan(endDate) });
-  //   }
+    const getTransInDetailSql = `
+              SELECT ti.*, (jsonb_agg( jsonb_build_object (${productColumnsToSelect}) )) -> 0 as product, (jsonb_agg( jsonb_build_object (${customerColumnsToSelect}) )) -> 0 as customer, (jsonb_agg( jsonb_build_object (${transHeaderColumnsToSelect}) )) -> 0 as transaction_in_header
+              FROM ${DATABASE.TRANSACTION_INS} as ti
+              LEFT JOIN ${DATABASE.CUSTOMERS} customer on ti.customerid = customer.id
+              LEFT JOIN ${DATABASE.PRODUCTS} product on ti.productid = product.id
+              LEFT JOIN ${DATABASE.TRANSACTION_IN_HEADER} on ti.transaction_in_headerId = transaction_in_header.id 
+              ${whereClause}
+              GROUP BY ti.id
+              ORDER BY ${sortBy} ${order}
+              LIMIT $${paramIndex++}
+              OFFSET $${paramIndex++}
+              `;
 
-  //   if (search) {
-  //     queryBuilder.andWhere(
-  //       new Brackets((qb) => {
-  //         qb.where('customer.name LIKE :search', { search: `%${search}%` })
-  //           .orWhere('product.name LIKE :search', { search: `%${search}%` })
-  //           .orWhere('transaction.qty LIKE :search', { search: `%${search}%` })
-  //           .orWhere('unit LIKE :search', { search: `%${search}%` });
-  //       }),
-  //     );
-  //   }
+    const paginationCountSql = `
+              SELECT count(*) as total_count
+              FROM ${DATABASE.TRANSACTION_INS} ti
+              LEFT JOIN ${DATABASE.CUSTOMERS} customer on ti.customerid = customer.id
+              LEFT JOIN ${DATABASE.PRODUCTS} product on ti.productid = product.id
+              LEFT JOIN ${DATABASE.TRANSACTION_IN_HEADER} on ti.transaction_in_headerId = ${DATABASE.TRANSACTION_IN_HEADER}.id 
+              ${whereClause}
+              `;
 
-  //   const [transactionsIns, count] = await queryBuilder.getManyAndCount();
-  //   const transactionInResponse: GetTransactionInResponse[] =
-  //     transactionsIns.map((transaction: GetTransactionInResponse) => {
-  //       return {
-  //         id: transaction.id,
-  //         product: {
-  //           id: transaction.product.id,
-  //           name: transaction.product.name,
-  //         },
-  //         customer: {
-  //           id: transaction.customer.id,
-  //           name: transaction.customer.name,
-  //         },
-  //         qty: transaction.qty,
-  //         converted_qty: transaction.qty,
-  //         unit: transaction.unit,
-  //         is_charge: transaction.is_charge,
-  //         created_at: transaction.created_at,
-  //         transaction_in_header: {
-  //           id: transaction.transaction_in_header.id,
-  //           code: transaction.transaction_in_header.code,
-  //         },
-  //       };
-  //     });
-  //   return [transactionInResponse, count];
-  // }
+    values.push(pageSize, (pageNo - 1) * pageSize);
+
+    try {
+      const { rows: transDetailRows } =
+        await this.pool.query<GetTransactionInResponse>(
+          getTransInDetailSql,
+          values,
+        );
+      const { rows: totalCountRows } = await this.pool.query<{
+        total_count: string;
+      }>(
+        paginationCountSql,
+        whereConditions.length != 0 ? values.slice(0, -2) : [],
+      );
+      const totalCount = parseInt(totalCountRows[0].total_count, 10);
+
+      return [transDetailRows, totalCount];
+    } catch (error) {
+      console.error('Failed to get all Transaction Ins:', error);
+      throw new InternalServerErrorException(error.message);
+    }
+
+    // const skip = (pageNo - 1) * pageSize;
+
+    // let sortBy: string = `transaction.${sort}`;
+    // if (
+    //   sort === TransactionInSort.CUSTOMER ||
+    //   sort === TransactionInSort.PRODUCT
+    // ) {
+    //   sortBy = `${sort}.name`;
+    // }
+
+    // const queryBuilder = this.transactionInRepository
+    //   .createQueryBuilder('transaction')
+    //   .leftJoinAndSelect('transaction.customer', 'customer')
+    //   .leftJoinAndSelect('transaction.product', 'product')
+    //   .leftJoinAndSelect(
+    //     'transaction.transaction_in_header',
+    //     'transaction_in_header',
+    //   )
+    //   .skip(skip)
+    //   .take(pageSize)
+    //   .select([
+    //     'transaction',
+    //     'customer.name',
+    //     'customer.id',
+    //     'product.name',
+    //     'product.id',
+    //     'transaction_in_header.id',
+    //     'transaction_in_header.code',
+    //   ])
+    //   .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder)
+    //   .andWhere('transaction_in_headerId = :headerId', { headerId });
+
+    // // Conditionally add filters
+    // if (startDate) {
+    //   queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+    // }
+
+    // if (endDate) {
+    //   queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    // }
+
+    // if (search) {
+    //   queryBuilder.andWhere(
+    //     new Brackets((qb) => {
+    //       qb.where('customer.name LIKE :search', { search: `%${search}%` })
+    //         .orWhere('product.name LIKE :search', { search: `%${search}%` })
+    //         .orWhere('transaction.qty LIKE :search', { search: `%${search}%` })
+    //         .orWhere('unit LIKE :search', { search: `%${search}%` });
+    //     }),
+    //   );
+    // }
+
+    // const [transactionsIns, count] = await queryBuilder.getManyAndCount();
+    // const transactionInResponse: GetTransactionInResponse[] =
+    //   transactionsIns.map((transaction: GetTransactionInResponse) => {
+    //     return {
+    //       id: transaction.id,
+    //       product: {
+    //         id: transaction.product.id,
+    //         name: transaction.product.name,
+    //       },
+    //       customer: {
+    //         id: transaction.customer.id,
+    //         name: transaction.customer.name,
+    //       },
+    //       qty: transaction.qty,
+    //       converted_qty: transaction.qty,
+    //       unit: transaction.unit,
+    //       is_charge: transaction.is_charge,
+    //       created_at: transaction.created_at,
+    //       transaction_in_header: {
+    //         id: transaction.transaction_in_header.id,
+    //         code: transaction.transaction_in_header.code,
+    //       },
+    //     };
+    //   });
+    // return [transactionInResponse, count];
+  }
 }
