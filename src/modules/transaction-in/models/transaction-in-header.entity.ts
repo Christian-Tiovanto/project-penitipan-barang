@@ -13,7 +13,6 @@ import { TransactionIn } from './transaction-in.entity';
 export interface TransactionInHeader {
   id: number;
   code: string;
-  customer: Customer;
   customerId: number;
   created_at: Date;
   updated_at: Date;

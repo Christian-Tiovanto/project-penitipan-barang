@@ -17,6 +17,7 @@ import {
 } from '@app/enums/table-column';
 import { Pool, PoolClient } from 'pg';
 import { DATABASE_POOL } from '@app/modules/database/database.module';
+import { GetTransactionInHeaderByIdResponse } from '../classes/transaction-in-header.response';
 interface GetAllTransactionInHeaderQuery {
   pageNo: number;
   pageSize: number;
@@ -150,7 +151,9 @@ export class TransactionInHeaderService {
     }
   }
 
-  async findTransactionInHeaderById(id: number) {
+  async findTransactionInHeaderById(
+    id: number,
+  ): Promise<GetTransactionInHeaderByIdResponse> {
     const customerColumnsToSelect = [CustomersColumn.ID, CustomersColumn.NAME]
       .map((col) => `'${col}', c.${col}`)
       .join(', ');
@@ -159,7 +162,7 @@ export class TransactionInHeaderService {
       .join(', ');
 
     const sql = `
-      SELECT th.*, (jsonb_agg( jsonb_build_object (${customerColumnsToSelect}) )) -> 0 as customer, (jsonb_agg( jsonb_build_object (${transInColumnsToSelect}, 'product',jsonb_build_object('id',p.id,'name',p.name) ) )) -> 0 as transaction_ins
+      SELECT th.*, (jsonb_agg( jsonb_build_object (${customerColumnsToSelect}) )) -> 0 as customer, (jsonb_agg( jsonb_build_object (${transInColumnsToSelect}, 'product',jsonb_build_object('id',p.id,'name',p.name) ) )) -> 0 as transaction_in
       FROM ${DATABASE.TRANSACTION_IN_HEADER} th
       LEFT JOIN ${DATABASE.CUSTOMERS} c on c.id = th.customerid
       LEFT JOIN ${DATABASE.TRANSACTION_INS} ti on ti.transaction_in_headerid = th.id
@@ -167,10 +170,13 @@ export class TransactionInHeaderService {
       WHERE th.id = $1
       GROUP BY th.id
     `;
-    const { rows } = await this.pool.query(sql, [id]);
+    const { rows } = await this.pool.query<GetTransactionInHeaderByIdResponse>(
+      sql,
+      [id],
+    );
     if (rows.length === 0)
       throw new NotFoundException('No Transaction In Header with that id');
-    return rows;
+    return rows[0];
   }
 
   async getAllTransactionInHeadersByCustomerId(
