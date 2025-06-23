@@ -5,7 +5,7 @@ import { TransactionInHeader } from '../models/transaction-in-header.entity';
 
 @JoiSchemaOptions({ allowUnknown: false })
 export class UpdateTransactionInHeaderDto
-  implements Pick<TransactionInHeader, 'customerId' | 'desc'>
+  implements Pick<TransactionInHeader, 'customerId' | 'description'>
 {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().optional())
@@ -13,5 +13,5 @@ export class UpdateTransactionInHeaderDto
 
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.string().optional())
-  desc: string;
+  description: string;
 }

@@ -6,11 +6,7 @@ import {
 } from '@nestjs/common';
 import { TransactionInHeader } from '../models/transaction-in-header.entity';
 import { Customer } from '@app/modules/customer/models/customer.entity';
-import {
-  SortOrder,
-  SortOrderQueryBuilder,
-  TransactionInHeaderSort,
-} from '@app/enums/sort-order';
+import { SortOrder, TransactionInHeaderSort } from '@app/enums/sort-order';
 import { UpdateTransactionInHeaderDto } from '../dtos/update-trans-in-header.dto';
 import { CustomerService } from '@app/modules/customer/services/customer.service';
 import { DATABASE } from '@app/enums/database-table';
@@ -147,8 +143,10 @@ export class TransactionInHeaderService {
 
       return [transDetailRows, totalCount];
     } catch (error) {
-      console.error('Failed to get all Transaction Ins:', error);
-      throw new InternalServerErrorException(error.message);
+      if (error instanceof Error) {
+        throw new InternalServerErrorException(error.message);
+      }
+      throw error;
     }
   }
 
@@ -169,54 +167,50 @@ export class TransactionInHeaderService {
       WHERE th.id = $1
       GROUP BY th.id
     `;
-    console.log(sql);
     const { rows } = await this.pool.query(sql, [id]);
     if (rows.length === 0)
       throw new NotFoundException('No Transaction In Header with that id');
     return rows;
   }
 
-  // async getAllTransactionInHeadersByCustomerId(
-  //   customerId: number,
-  // ): Promise<TransactionInHeader[]> {
-  //   return await this.transactionInHeaderRepository.find({
-  //     where: { customerId },
-  //   });
-  // }
+  async getAllTransactionInHeadersByCustomerId(
+    customerId: number,
+  ): Promise<TransactionInHeader[]> {
+    const sql = `
+      SELECT *
+      FROM ${DATABASE.TRANSACTION_IN_HEADER}
+      WHERE customerid = $1
+    `;
+    const { rows } = await this.pool.query<TransactionInHeader>(sql, [
+      customerId,
+    ]);
+    return rows;
+  }
 
-  // async updateTransactionInHeaderCustomerId(
-  //   transactionHeaderId: number,
-  //   customerId: number,
-  //   entityManager: EntityManager,
-  // ) {
-  //   const transactionInHeader =
-  //     await this.findTransactionInHeaderById(transactionHeaderId);
-  //   transactionInHeader.customer.id = customerId;
-  //   await entityManager.save(transactionInHeader);
-  // }
+  async updateTransactionInHeader(
+    transactionHeaderId: number,
+    updateTransInHeaderDto: UpdateTransactionInHeaderDto,
+  ) {
+    const transactionInHeader =
+      await this.findTransactionInHeaderById(transactionHeaderId);
+    Object.assign(transactionInHeader, updateTransInHeaderDto);
+    const sql = `
+        WITH update_trans_detail as (
+          UPDATE transaction_ins ti
+          SET customerid = $1::integer
+          WHERE ti.transaction_in_headerid = $3 and $1::integer is not null
+        )
+        UPDATE transaction_in_header th
+        SET customerid = coalesce($1,th.customerid), description = coalesce($2,th.description)
+        WHERE th.id = $3
+        RETURNING *;
 
-  // async updateTransactionInHeader(
-  //   transactionHeaderId: number,
-  //   updateTransInHeaderDto: UpdateTransactionInHeaderDto,
-  // ) {
-  //   const transactionInHeader =
-  //     await this.findTransactionInHeaderById(transactionHeaderId);
-  //   Object.assign(transactionInHeader, updateTransInHeaderDto);
-  //   if (updateTransInHeaderDto.customerId) {
-  //     await this.customerService.findCustomerById(
-  //       updateTransInHeaderDto.customerId,
-  //     );
-  //     transactionInHeader.customer.id = updateTransInHeaderDto.customerId;
-  //     for (const transactionIn of transactionInHeader.transaction_in) {
-  //       transactionIn.customerId = updateTransInHeaderDto.customerId;
-  //     }
-  //   }
-  //   const transInHeader =
-  //     await this.transactionInHeaderRepository.manager.transaction(
-  //       async (entityManager: EntityManager) => {
-  //         return await entityManager.save(transactionInHeader);
-  //       },
-  //     );
-  //   return transInHeader;
-  // }
+      `;
+    const { rows: updatedTransDetail } = await this.pool.query(sql, [
+      updateTransInHeaderDto.customerId,
+      updateTransInHeaderDto.description,
+      transactionHeaderId,
+    ]);
+    return updatedTransDetail[0];
+  }
 }

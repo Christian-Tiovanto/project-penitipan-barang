@@ -17,7 +17,7 @@ export interface TransactionInHeader {
   customerId: number;
   created_at: Date;
   updated_at: Date;
-  desc: string;
+  description: string;
 }
 
 // @Entity('transaction_in_header')

@@ -93,35 +93,35 @@ export class TransactionInHeaderController {
     );
   }
 
-  // @ApiBearerAuth()
-  // @ApiOperation({
-  //   summary: 'Get All Trans In Header By CustomerId',
-  // })
-  // @PermissionsMetatada(TransactionInPermission.LIST)
-  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  // @Get('/by-customer/:id')
-  // async getAllProductUnits(
-  //   @Param('id', ParseIntPipe) customerId: number,
-  // ): Promise<TransactionInHeader[]> {
-  //   return await this.transactionInHeaderService.getAllTransactionInHeadersByCustomerId(
-  //     customerId,
-  //   );
-  // }
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get All Trans In Header By CustomerId',
+  })
+  @PermissionsMetatada(TransactionInPermission.LIST)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  @Get('/by-customer/:id')
+  async getAllProductUnits(
+    @Param('id', ParseIntPipe) customerId: number,
+  ): Promise<TransactionInHeader[]> {
+    return await this.transactionInHeaderService.getAllTransactionInHeadersByCustomerId(
+      customerId,
+    );
+  }
 
-  // @ApiBearerAuth()
-  // @ApiOperation({
-  //   summary: 'Update Trans In Header',
-  // })
-  // @PermissionsMetatada(TransactionInPermission.EDIT)
-  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  // @Patch(':id')
-  // async updateTransInHeader(
-  //   @Param('id', ParseIntPipe) transInHeaderId: number,
-  //   @Body() updateTransInHeaderDto: UpdateTransactionInHeaderDto,
-  // ): Promise<TransactionInHeader> {
-  //   return await this.transactionInHeaderService.updateTransactionInHeader(
-  //     transInHeaderId,
-  //     updateTransInHeaderDto,
-  //   );
-  // }
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update Trans In Header',
+  })
+  @PermissionsMetatada(TransactionInPermission.EDIT)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  @Patch(':id')
+  async updateTransInHeader(
+    @Param('id', ParseIntPipe) transInHeaderId: number,
+    @Body() updateTransInHeaderDto: UpdateTransactionInHeaderDto,
+  ): Promise<TransactionInHeader> {
+    return await this.transactionInHeaderService.updateTransactionInHeader(
+      transInHeaderId,
+      updateTransInHeaderDto,
+    );
+  }
 }
