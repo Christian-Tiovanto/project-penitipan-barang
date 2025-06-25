@@ -180,6 +180,7 @@ export async function up(knex: Knex): Promise<void> {
                 30,
                 p_transout_date, p_transout_date
             );
+            total_amount_for_invoice := total_amount_for_invoice + (trans_out_luar_item ->> 'price')::integer;
         END LOOP;
         UPDATE invoices SET invoice_no = customer_code || '-' || LPAD(invoice_id::text, 5, '0'), total_amount = total_amount_for_invoice, charge = total_charge_for_invoice, fine = total_fine_for_invoice, discount = 0, total_order = total_order_for_invoice, total_order_converted = total_order_converted_for_invoice, tax = 0 where id = invoice_id;
         -- Return the ID of the invoice that these transactions belong to
