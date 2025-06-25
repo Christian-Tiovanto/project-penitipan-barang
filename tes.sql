@@ -1,5 +1,6 @@
 CREATE OR REPLACE FUNCTION create_trans_out(
     trans_out_dto jsonb,
+    trans_out_luar_dto jsonb,
     p_customerid integer,
     p_spbid integer,
     p_transout_date date
@@ -166,12 +167,13 @@ BEGIN
             productid, productname, customerid, invoiceid, spbid,
             converted_qty,
             price, total_price,
-            total_fine, total_charge,
+            total_days,
             created_at, updated_at
         ) VALUES (
-            null, (trans_out_item ->> 'productName'), p_customerid, invoice_id, p_spbid,
-            (trans_out_item ->> 'converted_qty'),
-            (trans_out_item ->> 'price'), (trans_out_item ->> 'total_price'),
+            null, (trans_out_luar_item ->> 'productName'), p_customerid, invoice_id, p_spbid,
+            (trans_out_luar_item ->> 'converted_qty')::integer,
+            (trans_out_luar_item ->> 'price')::integer, (trans_out_luar_item ->> 'total_price')::integer,
+            30,
             p_transout_date, p_transout_date
         );
     END LOOP;

@@ -2,19 +2,21 @@ import type { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
   return knex.raw(`
-    CREATE OR REPLACE FUNCTION create_trans_out(
+   CREATE OR REPLACE FUNCTION create_trans_out(
     trans_out_dto jsonb,
+    trans_out_luar_dto jsonb,
     p_customerid integer,
     p_spbid integer,
     p_transout_date date
-)
+    )
     RETURNS integer
     LANGUAGE plpgsql
     AS $$
     DECLARE
         -- Loop variables
-        trans_out_item      jsonb;
-        trans_in_record     record;
+        trans_out_item          jsonb;
+        trans_out_luar_item     jsonb;
+        trans_in_record         record;
 
         -- Product and Unit Information
         product_info        products%ROWTYPE;
@@ -164,12 +166,26 @@ export async function up(knex: Knex): Promise<void> {
             END LOOP; -- end of trans_in loop
 
         END LOOP; -- end of trans_out_dto loop
+        FOR trans_out_luar_item IN SELECT * FROM jsonb_array_elements(trans_out_luar_dto) LOOP
+            INSERT INTO transaction_outs(
+                productid, productname, customerid, invoiceid, spbid,
+                converted_qty,
+                price, total_price,
+                total_days,
+                created_at, updated_at
+            ) VALUES (
+                null, (trans_out_luar_item ->> 'productName'), p_customerid, invoice_id, p_spbid,
+                (trans_out_luar_item ->> 'converted_qty')::integer,
+                (trans_out_luar_item ->> 'price')::integer, (trans_out_luar_item ->> 'total_price')::integer,
+                30,
+                p_transout_date, p_transout_date
+            );
+        END LOOP;
         UPDATE invoices SET invoice_no = customer_code || '-' || LPAD(invoice_id::text, 5, '0'), total_amount = total_amount_for_invoice, charge = total_charge_for_invoice, fine = total_fine_for_invoice, discount = 0, total_order = total_order_for_invoice, total_order_converted = total_order_converted_for_invoice, tax = 0 where id = invoice_id;
         -- Return the ID of the invoice that these transactions belong to
         RETURN invoice_id;
     END;
     $$;
-
     CREATE OR REPLACE FUNCTION is_past_days(
     start_date timestamptz,
     days integer,
