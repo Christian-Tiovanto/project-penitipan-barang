@@ -99,7 +99,7 @@ export async function up(knex: Knex): Promise<void> {
     (
       id serial not null primary key,
       customerId int,
-      invoice_no varchar(55) not null,
+      invoice_no varchar(55),
       total_amount int,
       charge int,
       fine int,

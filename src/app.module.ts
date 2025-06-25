@@ -43,7 +43,7 @@ import { DatabaseModule } from './modules/database/database.module';
     // ArPaymentModule,
     // CashflowModule,
     // ChargeModule,
-    // TransactionOutModule,
+    TransactionOutModule,
     // ReportModule,
     // SpbModule,
     // InvoiceModule,

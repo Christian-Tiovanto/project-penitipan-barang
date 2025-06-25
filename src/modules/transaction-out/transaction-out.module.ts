@@ -15,18 +15,13 @@ import { ProductUnitModule } from '../product-unit/product-unit.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([TransactionOut]),
     ProductModule,
     TransactionInModule,
-    InvoiceModule,
-    ArModule,
-    SpbModule,
-    ChargeModule,
     CustomerModule,
     ProductUnitModule,
   ],
   controllers: [TransactionOutController],
   providers: [TransactionOutService],
-  exports: [TransactionOutService, TypeOrmModule],
+  exports: [TransactionOutService],
 })
 export class TransactionOutModule {}

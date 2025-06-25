@@ -43,7 +43,6 @@ export class TransactionInHeaderService {
     const createTransHeaderSql = `
       INSERT INTO ${DATABASE.TRANSACTION_IN_HEADER} (${[TransactionInHeaderColumn.CUSTOMER_ID, TransactionInHeaderColumn.DESC, TransactionInHeaderColumn.CREATED_AT, TransactionInHeaderColumn.UPDATED_AT].join(', ')}) values ($1, $2, $3, $3) RETURNING ${TransactionInHeaderColumn.ID}
     `;
-    console.log(createTransHeaderSql);
     const { rows: createdTransHeader } = await client.query<{ id: number }>(
       createTransHeaderSql,
       [customer.id, description, transactionDate],

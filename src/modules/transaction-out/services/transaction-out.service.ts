@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   Between,
@@ -47,6 +47,8 @@ import {
   InvalidDateRangeException,
 } from '@app/exceptions/validation.exception';
 import { ProductUnitService } from '@app/modules/product-unit/services/product-unit.service';
+import { DATABASE_POOL } from '@app/modules/database/database.module';
+import { Pool } from 'pg';
 
 interface GetAllQuery {
   pageNo: number;
@@ -65,17 +67,9 @@ interface getTransactionForStockReportQuery {
 @Injectable()
 export class TransactionOutService {
   constructor(
-    @InjectRepository(TransactionOut)
-    private readonly transactionOutRepository: Repository<TransactionOut>,
+    @Inject(DATABASE_POOL) private readonly pool: Pool,
     private productService: ProductService,
     private transactionInService: TransactionInService,
-    private invoiceService: InvoiceService,
-    private customerService: CustomerService,
-    private arService: ArService,
-    private spbService: SpbService,
-    private chargeService: ChargeService,
-    private transactionInHeaderService: TransactionInHeaderService,
-    private productUnitService: ProductUnitService,
   ) {}
 
   // async getAllTransactionOuts({
@@ -317,7 +311,6 @@ export class TransactionOutService {
 
   //       let totalCharge: number = 0;
   //       let totalFine: number = 0;
-
   //       const valueCharge = await this.chargeService.findChargeById(1);
 
   //       for (const transactionOut of createTransactionOutWithSpbDto.transaction_outs) {
@@ -334,7 +327,6 @@ export class TransactionOutService {
   //           transactionOut.productId,
   //           transactionOut.converted_qty,
   //         );
-
   //         const productTransactionIns = detailTransIn.transaction_in.filter(
   //           (t) => t.productId === transactionOut.productId,
   //         );
@@ -583,301 +575,18 @@ export class TransactionOutService {
   //   return transaction;
   // }
 
-  // async createTransactionOutFifo(
-  //   createTransactionOutFifoWithSpbDto: CreateTransactionOutFifoWithSpbDto,
-  // ): Promise<Invoice> {
-  //   const transaction = await this.transactionOutRepository.manager.transaction(
-  //     async (entityManager: EntityManager) => {
-  //       let amount: number = 0;
-  //       // let totalQty: number = 0;
-  //       const customerId = createTransactionOutFifoWithSpbDto.customerId;
-  //       const noPlat = createTransactionOutFifoWithSpbDto.no_plat;
-  //       const clockOut = createTransactionOutFifoWithSpbDto.clock_out;
-  //       const transDate = createTransactionOutFifoWithSpbDto.transaction_date;
-  //       const spbDesc = createTransactionOutFifoWithSpbDto.desc;
-  //       // const transinHeaderId =
-  //       //   createTransactionOutWithSpbDto.transaction_in_headerId;
-
-  //       // const detailTransIn =
-  //       //   await this.transactionInHeaderService.findTransactionInHeaderById(
-  //       //     transinHeaderId,
-  //       //   );
-  //       let totalConvertedQty: number = 0;
-  //       const totalQtyOut: number =
-  //         createTransactionOutFifoWithSpbDto.transaction_outs.reduce(
-  //           (sum, transaction) => sum + transaction.qty,
-  //           0,
-  //         );
-
-  //       let totalCharge: number = 0;
-  //       let totalFine: number = 0;
-
-  //       const valueCharge = await this.chargeService.findChargeById(1);
-
-  //       for (const transactionOut of createTransactionOutFifoWithSpbDto.transaction_outs) {
-  //         const productUnit =
-  //           await this.productUnitService.getProductUnitsByProductId(
-  //             transactionOut.productId,
-  //           );
-
-  //         transactionOut.converted_qty =
-  //           transactionOut.qty * productUnit[0].conversion_to_kg;
-
-  //         const product = await this.productService.lockingProductById(
-  //           entityManager,
-  //           transactionOut.productId,
-  //           transactionOut.converted_qty,
-  //         );
-
-  //         // const productTransactionIns = detailTransIn.transaction_in.filter(
-  //         //   (t) => t.productId === transactionOut.productId,
-  //         // );
-
-  //         // if (productTransactionIns.length === 0) {
-  //         //   throw new NotFoundException(
-  //         //     `No incoming transaction In Detail found for productId ${transactionOut.productId}.`,
-  //         //   );
-  //         // }
-
-  //         let productQty: number = transactionOut.converted_qty;
-
-  //         const totalPrice: number =
-  //           transactionOut.converted_qty * product.price;
-  //         amount += totalPrice;
-
-  //         const productTransactionIns =
-  //           await this.transactionInService.getTransactionInsWithRemainingQty(
-  //             product.id,
-  //             customerId,
-  //             transactionOut.converted_qty,
-  //           );
-
-  //         for (const transactionIn of productTransactionIns) {
-  //           if (productQty == 0) {
-  //             break;
-  //           }
-  //           let qtyOut: number;
-
-  //           const transOutDate = new Date(transDate);
-
-  //           if (transOutDate < convertToWIB(transactionIn.created_at)) {
-  //             throw new InvalidDateRangeException(
-  //               `Transaction In Date can't be later than Transaction Out Date.`,
-  //             );
-  //           }
-
-  //           // if (transactionIn.remaining_qty < productQty) {
-  //           //   throw new InsufficientStockException(
-  //           //     `Insufficient stock : ${product.name} required ${productQty}, but only ${transactionIn.remaining_qty} available in Transaction In`,
-  //           //   );
-  //           // }
-
-  //           await this.transactionInService.lockingTransactionInById(
-  //             entityManager,
-  //             transactionIn.id,
-  //           );
-
-  //           if (transactionIn.remaining_qty > productQty) {
-  //             await this.productService.withdrawProductQtyWithEntityManager(
-  //               entityManager,
-  //               product,
-  //               productQty,
-  //             );
-
-  //             await this.transactionInService.withdrawRemainingQtyWithEntityManager(
-  //               entityManager,
-  //               transactionIn,
-  //               productQty,
-  //             );
-
-  //             qtyOut = productQty / transactionIn.conversion_to_kg;
-  //             totalConvertedQty += productQty;
-  //             transactionOut.converted_qty = productQty;
-  //             productQty = 0;
-  //           } else {
-  //             productQty -= transactionIn.remaining_qty;
-
-  //             qtyOut =
-  //               transactionIn.remaining_qty / transactionIn.conversion_to_kg;
-  //             totalConvertedQty += transactionIn.remaining_qty;
-
-  //             transactionOut.converted_qty = transactionIn.remaining_qty;
-
-  //             await this.productService.withdrawProductQtyWithEntityManager(
-  //               entityManager,
-  //               product,
-  //               transactionIn.remaining_qty,
-  //             );
-
-  //             await this.transactionInService.withdrawRemainingQtyWithEntityManager(
-  //               entityManager,
-  //               transactionIn,
-  //               transactionIn.remaining_qty,
-  //             );
-  //           }
-
-  //           let totalPriceOut = product.price * transactionOut.converted_qty;
-  //           let fine: number = 0;
-  //           let priceOut: number = product.price;
-  //           if (isPastDays(transactionIn.created_at, 120, transDate)) {
-  //             fine = totalPriceOut * 4;
-  //             priceOut = product.price * 5;
-  //           } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
-  //             fine = totalPriceOut * 3;
-  //             priceOut = product.price * 4;
-  //           } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
-  //             fine = totalPriceOut * 2;
-  //             priceOut = product.price * 3;
-  //           } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
-  //             fine = totalPriceOut;
-  //             priceOut = product.price * 2;
-  //           }
-
-  //           const totalDays = pastDaysCount(
-  //             transactionIn.created_at,
-  //             transDate,
-  //           );
-  //           totalFine += fine;
-
-  //           let charge: number = 0;
-  //           let chargeAmount: number = 0;
-
-  //           if (valueCharge.type == ChargeType.PERCENTAGE) {
-  //             chargeAmount = (valueCharge.amount * totalPrice) / 100;
-  //           } else {
-  //             chargeAmount = valueCharge.amount * transactionOut.converted_qty;
-  //           }
-
-  //           if (transactionIn.is_charge == true) {
-  //             charge += chargeAmount;
-  //           }
-
-  //           if (transactionOut.is_charge == true) {
-  //             charge += chargeAmount;
-  //           }
-
-  //           totalCharge += charge;
-
-  //           transactionOut.productId = transactionIn.productId;
-  //           transactionOut.customerId = customerId;
-  //           transactionOut.conversion_to_kg = transactionIn.conversion_to_kg;
-  //           transactionOut.qty = qtyOut;
-  //           transactionOut.price = priceOut;
-  //           transactionOut.total_charge = charge;
-  //           transactionOut.total_days = totalDays;
-  //           transactionOut.total_fine = fine;
-  //           transactionOut.total_price =
-  //             product.price * transactionOut.converted_qty;
-  //           transactionOut.unit = transactionIn.unit;
-  //           transactionOut.transaction_inId = transactionIn.id;
-  //           transactionOut.created_at = convertToUTC(transDate);
-  //           transactionOut.updated_at = convertToUTC(transDate);
-
-  //           const transactionOutSave = entityManager.create(
-  //             TransactionOut,
-  //             transactionOut,
-  //           );
-  //           //save
-  //           await entityManager.save(transactionOutSave);
-  //         }
-  //         //here
-  //       }
-
-  //       //brg luar
-  //       for (const transactionOutBrgLuar of createTransactionOutFifoWithSpbDto.transaction_outs_brg_luar) {
-  //         transactionOutBrgLuar.converted_qty =
-  //           transactionOutBrgLuar.converted_qty;
-  //         transactionOutBrgLuar.productName = transactionOutBrgLuar.productName;
-  //         transactionOutBrgLuar.total_price = transactionOutBrgLuar.total_price;
-  //         transactionOutBrgLuar.price = transactionOutBrgLuar.price;
-  //         transactionOutBrgLuar.conversion_to_kg = 0;
-  //         transactionOutBrgLuar.unit = '';
-  //         transactionOutBrgLuar.total_fine = 0;
-  //         transactionOutBrgLuar.total_charge = 0;
-  //         transactionOutBrgLuar.total_days = 0;
-  //         transactionOutBrgLuar.customerId = customerId;
-  //         transactionOutBrgLuar.created_at = convertToUTC(transDate);
-  //         transactionOutBrgLuar.updated_at = convertToUTC(transDate);
-
-  //         amount += transactionOutBrgLuar.total_price;
-
-  //         const transactionOutSave = entityManager.create(
-  //           TransactionOut,
-  //           transactionOutBrgLuar,
-  //         );
-  //         //save
-  //         await entityManager.save(transactionOutSave);
-  //       }
-
-  //       const customer =
-  //         await this.customerService.findCustomerById(customerId);
-
-  //       let invoiceMaxId: number = await this.invoiceService.getMaxIdInvoice();
-  //       invoiceMaxId += 1;
-  //       const invoiceNo = `${customer.code}-${String(invoiceMaxId).padStart(5, '0')}`;
-
-  //       let arMaxId: number = await this.arService.getMaxIdAr();
-  //       arMaxId += 1;
-  //       const arNo = `${customer.code}-${String(arMaxId).padStart(5, '0')}`;
-
-  //       const createInvoice = new CreateInvoiceDto();
-  //       createInvoice.total_amount = amount;
-  //       createInvoice.customerId = customerId;
-  //       createInvoice.discount = 0;
-  //       createInvoice.fine = totalFine;
-  //       createInvoice.invoice_no = invoiceNo;
-  //       createInvoice.status = InvoiceStatus.PENDING;
-  //       createInvoice.tax = 0;
-  //       createInvoice.total_order = totalQtyOut;
-  //       createInvoice.total_order_converted = totalConvertedQty;
-  //       createInvoice.charge = totalCharge;
-  //       createInvoice.created_at = convertToUTC(transDate);
-  //       createInvoice.updated_at = convertToUTC(transDate);
-
-  //       const invoice = await this.invoiceService.createInvoice(
-  //         createInvoice,
-  //         entityManager,
-  //       );
-
-  //       const createSpb = new CreateSpbDto();
-  //       createSpb.clock_out = convertToUTC(clockOut);
-  //       createSpb.invoiceId = invoice.id;
-  //       createSpb.customerId = customerId;
-  //       createSpb.no_plat = noPlat;
-  //       createSpb.desc = spbDesc;
-  //       createSpb.created_at = convertToUTC(transDate);
-  //       createSpb.updated_at = convertToUTC(transDate);
-
-  //       const spb = await this.spbService.createSpb(createSpb, entityManager);
-
-  //       const createAr = new CreateArDto();
-  //       createAr.ar_no = arNo;
-  //       createAr.customerId = customerId;
-  //       createAr.invoiceId = invoice.id;
-  //       createAr.status = ArStatus.PENDING;
-  //       createAr.to_paid =
-  //         invoice.total_amount +
-  //         invoice.fine +
-  //         invoice.charge +
-  //         invoice.tax -
-  //         invoice.discount;
-  //       createAr.paid_date = null;
-  //       createAr.total_bill =
-  //         invoice.total_amount +
-  //         invoice.fine +
-  //         invoice.charge +
-  //         invoice.tax -
-  //         invoice.discount;
-  //       createAr.created_at = convertToUTC(transDate);
-  //       createAr.updated_at = convertToUTC(transDate);
-  //       const ar = await this.arService.createAr(createAr, entityManager);
-
-  //       await this.updateTransactionOutNull(entityManager, invoice.id, spb.id);
-  //       return invoice;
-  //     },
-  //   );
-  //   return transaction;
-  // }
+  async createTransactionOutFifo(
+    createTransactionOutFifoWithSpbDto: CreateTransactionOutFifoWithSpbDto,
+  ): Promise<any> {
+    const sql = `SELECT * FROM create_trans_out($1, $2, $3, $4);`;
+    const { rows } = await this.pool.query(sql, [
+      JSON.stringify(createTransactionOutFifoWithSpbDto.transaction_outs),
+      JSON.stringify(createTransactionOutFifoWithSpbDto.customerId),
+      1,
+      JSON.stringify(createTransactionOutFifoWithSpbDto.transaction_date),
+    ]);
+    return rows;
+  }
 
   // async updateTransactionOut(
   //   transactionOutId: number,
@@ -1167,11 +876,8 @@ export class TransactionOutService {
   //   const transaction = await this.transactionOutRepository.manager.transaction(
   //     async (entityManager: EntityManager) => {
   //       let amount: number = 0;
-  //       // let totalQty: number = 0;
   //       const customerId = createTransactionOutFifoWithSpbDto.customerId;
   //       const transDate = createTransactionOutFifoWithSpbDto.transaction_date;
-  //       // const noPlat = createTransactionOutWithSpbDto.no_plat;
-  //       // const clockOut = createTransactionOutWithSpbDto.clock_out;
 
   //       let totalConvertedQty: number = 0;
 
@@ -1234,16 +940,6 @@ export class TransactionOutService {
   //           );
 
   //           if (transactionIn.remaining_qty > productQty) {
-  //             // await this.productService.withdrawProductQtyWithEntityManager(
-  //             //   entityManager,
-  //             //   product,
-  //             //   productQty,)
-
-  //             // await this.transactionInService.withdrawRemainingQtyWithEntityManager(
-  //             //   entityManager,
-  //             //   transactionIn,
-  //             //   productQty,)
-
   //             qtyOut = productQty / transactionIn.conversion_to_kg;
   //             totalConvertedQty += productQty;
   //             transactionOut.converted_qty = productQty;
@@ -1256,16 +952,6 @@ export class TransactionOutService {
   //             totalConvertedQty += transactionIn.remaining_qty;
 
   //             transactionOut.converted_qty = transactionIn.remaining_qty;
-
-  //             // await this.productService.withdrawProductQtyWithEntityManager(
-  //             //   entityManager,
-  //             //   product,
-  //             //   transactionIn.remaining_qty,);
-
-  //             // await this.transactionInService.withdrawRemainingQtyWithEntityManager(
-  //             //   entityManager,
-  //             //   transactionIn,
-  //             //   transactionIn.remaining_qty,);
   //           }
 
   //           let totalPriceOut = product.price * transactionOut.converted_qty;
@@ -1324,13 +1010,6 @@ export class TransactionOutService {
   //           transactionOut.transaction_inId = transactionIn.id;
   //           transactionOut.created_at = convertToUTC(transDate);
   //           transactionOut.updated_at = convertToUTC(transDate);
-
-  //           // const transactionOutSave = entityManager.create(
-  //           //   TransactionOut,
-  //           //   transactionOut,
-  //           // );
-  //           //save
-  //           // await entityManager.save(transactionOutSave);
   //         }
   //       }
 
@@ -1350,13 +1029,6 @@ export class TransactionOutService {
   //         transactionOutBrgLuar.updated_at = convertToUTC(transDate);
 
   //         amount += transactionOutBrgLuar.total_price;
-
-  //         // const transactionOutSave = entityManager.create(
-  //         //   TransactionOut,
-  //         //   transactionOutBrgLuar,
-  //         // );
-  //         // //save
-  //         // await entityManager.save(transactionOutSave);
   //       }
 
   //       const customer =
@@ -1383,27 +1055,6 @@ export class TransactionOutService {
   //       createInvoice.charge = totalCharge;
   //       createInvoice.created_at = convertToUTC(transDate);
   //       createInvoice.updated_at = convertToUTC(transDate);
-  //       // const invoice = await this.invoiceService.createInvoice(createInvoice, entityManager)
-
-  //       // const createSpb = new CreateSpbDto();
-  //       // createSpb.clock_out = clockOut;
-  //       // createSpb.invoiceId = invoice.id
-  //       // createSpb.customerId = customerId;
-  //       // createSpb.no_plat = noPlat;
-
-  //       // const spb = await this.spbService.createSpb(createSpb, entityManager);
-
-  //       // const createAr = new CreateArDto();
-  //       // createAr.ar_no = arNo;
-  //       // createAr.customerId = customerId;
-  //       // createAr.invoiceId = invoice.id
-  //       // createAr.status = ArStatus.PENDING;
-  //       // createAr.to_paid = (invoice.total_amount + invoice.fine + invoice.charge + invoice.tax) - invoice.discount;
-  //       // createAr.paid_date = null;
-  //       // createAr.total_bill = (invoice.total_amount + invoice.fine + invoice.charge + invoice.tax) - invoice.discount;
-  //       // const ar = await this.arService.createAr(createAr, entityManager);
-
-  //       // await this.updateTransactionOutNull(entityManager, invoice.id, spb.id);
   //       return createInvoice;
   //     },
   //   );
