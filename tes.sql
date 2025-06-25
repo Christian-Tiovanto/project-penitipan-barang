@@ -9,8 +9,9 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
     -- Loop variables
-    trans_out_item      jsonb;
-    trans_in_record     record;
+    trans_out_item          jsonb;
+    trans_out_luar_item     jsonb;
+    trans_in_record         record;
 
     -- Product and Unit Information
     product_info        products%ROWTYPE;
@@ -160,6 +161,20 @@ BEGIN
         END LOOP; -- end of trans_in loop
 
     END LOOP; -- end of trans_out_dto loop
+    FOR trans_out_luar_item IN SELECT * FROM jsonb_array_elements(trans_out_luar_dto) LOOP
+        INSERT INTO transaction_outs(
+            productid, productname, customerid, invoiceid, spbid,
+            converted_qty,
+            price, total_price,
+            total_fine, total_charge,
+            created_at, updated_at
+        ) VALUES (
+            null, (trans_out_item ->> 'productName'), p_customerid, invoice_id, p_spbid,
+            (trans_out_item ->> 'converted_qty'),
+            (trans_out_item ->> 'price'), (trans_out_item ->> 'total_price'),
+            p_transout_date, p_transout_date
+        );
+    END LOOP;
     UPDATE invoices SET invoice_no = customer_code || '-' || LPAD(invoice_id::text, 5, '0'), total_amount = total_amount_for_invoice, charge = total_charge_for_invoice, fine = total_fine_for_invoice, discount = 0, total_order = total_order_for_invoice, total_order_converted = total_order_converted_for_invoice, tax = 0 where id = invoice_id;
     -- Return the ID of the invoice that these transactions belong to
     RETURN invoice_id;
