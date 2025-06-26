@@ -143,21 +143,21 @@ export class TransactionOutController {
   //   );
   // }
 
-  // @ApiBearerAuth()
-  // @ApiOperation({
-  //   summary: 'Preview Transaction Out Fifo',
-  // })
-  // @PermissionsMetatada(TransactionOutPermission.CREATE)
-  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  // @Post('/preview/fifo')
-  // async previewTransactionOutFifo(
-  //   @Body()
-  //   createTransactionOutFifoWithSpbDto: CreateTransactionOutFifoWithSpbDto,
-  // ) {
-  //   return await this.transactionOutService.previewTransactionOutFifo(
-  //     createTransactionOutFifoWithSpbDto,
-  //   );
-  // }
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Preview Transaction Out Fifo',
+  })
+  @PermissionsMetatada(TransactionOutPermission.CREATE)
+  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  @Post('/preview/fifo')
+  async previewTransactionOutFifo(
+    @Body()
+    createTransactionOutFifoWithSpbDto: CreateTransactionOutFifoWithSpbDto,
+  ) {
+    return await this.transactionOutService.previewTransactionOutFifo(
+      createTransactionOutFifoWithSpbDto,
+    );
+  }
 
   // @ApiBearerAuth()
   // @ApiOperation({

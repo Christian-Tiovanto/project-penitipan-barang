@@ -578,8 +578,22 @@ export class TransactionOutService {
   async createTransactionOutFifo(
     createTransactionOutFifoWithSpbDto: CreateTransactionOutFifoWithSpbDto,
   ): Promise<any> {
+    const sql = `SELECT * FROM create_trans_out($1, $2, $3, $4, $5);`;
+    const { rows } = await this.pool.query(sql, [
+      JSON.stringify(createTransactionOutFifoWithSpbDto.transaction_outs),
+      JSON.stringify(
+        createTransactionOutFifoWithSpbDto.transaction_outs_brg_luar,
+      ),
+      JSON.stringify(createTransactionOutFifoWithSpbDto.customerId),
+      1,
+      JSON.stringify(createTransactionOutFifoWithSpbDto.transaction_date),
+    ]);
+    return rows;
+  }
+  async previewTransactionOutFifo(
+    createTransactionOutFifoWithSpbDto: CreateTransactionOutFifoWithSpbDto,
+  ): Promise<any> {
     const sql = `SELECT * FROM preview_trans_out($1, $2, $3, $4, $5);`;
-    console.log(createTransactionOutFifoWithSpbDto);
     const { rows } = await this.pool.query(sql, [
       JSON.stringify(createTransactionOutFifoWithSpbDto.transaction_outs),
       JSON.stringify(
