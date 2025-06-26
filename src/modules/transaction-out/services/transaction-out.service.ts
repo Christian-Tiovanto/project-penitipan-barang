@@ -1,4 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   Between,
@@ -49,6 +54,12 @@ import {
 import { ProductUnitService } from '@app/modules/product-unit/services/product-unit.service';
 import { DATABASE_POOL } from '@app/modules/database/database.module';
 import { Pool } from 'pg';
+import { DATABASE } from '@app/enums/database-table';
+import {
+  CustomersColumn,
+  InvoicesColumn,
+  ProductsColumn,
+} from '@app/enums/table-column';
 
 interface GetAllQuery {
   pageNo: number;
@@ -66,92 +77,181 @@ interface getTransactionForStockReportQuery {
 
 @Injectable()
 export class TransactionOutService {
-  constructor(
-    @Inject(DATABASE_POOL) private readonly pool: Pool,
-    private productService: ProductService,
-    private transactionInService: TransactionInService,
-  ) {}
+  constructor(@Inject(DATABASE_POOL) private readonly pool: Pool) {}
 
-  // async getAllTransactionOuts({
-  //   pageNo,
-  //   pageSize,
-  //   sort,
-  //   order,
-  //   startDate,
-  //   endDate,
-  // }: GetAllQuery): Promise<[GetTransactionOutResponse[], number]> {
-  //   const skip = (pageNo - 1) * pageSize;
-  //   let sortBy: string = `transaction.${sort}`;
-  //   if (
-  //     sort === TransactionOutSort.CUSTOMER ||
-  //     sort === TransactionOutSort.PRODUCT
-  //   ) {
-  //     sortBy = `${sort}.name`;
-  //   }
-  //   if (sort === TransactionOutSort.INVOICE) {
-  //     sortBy = `${sort}.invoice_no`;
-  //   }
-  //   const queryBuilder = this.transactionOutRepository
-  //     .createQueryBuilder('transaction')
-  //     .leftJoinAndSelect('transaction.customer', 'customer')
-  //     .leftJoinAndSelect('transaction.product', 'product')
-  //     .leftJoinAndSelect('transaction.invoice', 'invoice')
-  //     .skip(skip)
-  //     .take(pageSize)
-  //     .select([
-  //       'transaction',
-  //       'customer.name',
-  //       'customer.id',
-  //       'product.name',
-  //       'product.id',
-  //       'invoice.id',
-  //       'invoice.invoice_no',
-  //     ])
-  //     .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
+  async getAllTransactionOuts({
+    pageNo,
+    pageSize,
+    sort,
+    order,
+    startDate,
+    endDate,
+  }: GetAllQuery): Promise<[GetTransactionOutResponse[], number]> {
+    const values: any[] = [];
+    const whereConditions = [];
+    let paramIndex = 1;
 
-  //   // Conditionally add filters
-  //   if (startDate) {
-  //     queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
-  //   }
+    let sortBy: string = `trans_out.${sort}`;
+    if (
+      sort === TransactionOutSort.CUSTOMER ||
+      sort === TransactionOutSort.PRODUCT
+    ) {
+      console.log(sort);
+      sortBy = `MIN(${sort}.name)`;
+    }
+    if (sort === TransactionOutSort.INVOICE) {
+      sortBy = `${sort}.invoice_no`;
+    }
 
-  //   if (endDate) {
-  //     queryBuilder.andWhere({ created_at: LessThan(endDate) });
-  //   }
+    if (startDate) {
+      whereConditions.push(`trans_out.created_at >= $${paramIndex++}`);
+      values.push(startDate);
+    }
+    if (endDate) {
+      whereConditions.push(`trans_out.created_at  < $${paramIndex++}`);
+      values.push(endDate);
+    }
 
-  //   const [transactionsOuts, count] = await queryBuilder.getManyAndCount();
-  //   console.log('transactionsOuts');
-  //   console.log(transactionsOuts);
-  //   const transactionOutResponse: GetTransactionOutResponse[] =
-  //     transactionsOuts.map((transaction: GetTransactionOutResponse) => {
-  //       return {
-  //         id: transaction.id,
-  //         product: {
-  //           id: transaction.product?.id ?? 0,
-  //           name: transaction?.product?.name ?? transaction.productName,
-  //         },
-  //         customer: {
-  //           id: transaction.customer.id,
-  //           name: transaction.customer.name,
-  //         },
-  //         invoice: {
-  //           id: transaction.invoice.id,
-  //           invoice_no: transaction.invoice.invoice_no,
-  //         },
-  //         converted_qty: transaction.converted_qty,
-  //         is_charge: transaction.is_charge,
-  //         total_days: transaction.total_days,
-  //       };
-  //     });
-  //   return [transactionOutResponse, count];
-  // }
+    const whereClause =
+      whereConditions.length > 0
+        ? `WHERE ${whereConditions.join(' AND ')}`
+        : '';
 
-  // async getTransactionOutById(
-  //   transactionOutId: number,
-  // ): Promise<TransactionOut> {
-  //   return await this.transactionOutRepository.findOne({
-  //     where: { id: transactionOutId },
-  //   });
-  // }
+    const productColumnsToSelect = [ProductsColumn.ID, ProductsColumn.NAME]
+      .map((col) => `'${col}', product.${col}`)
+      .join(', ');
+    const customerColumnsToSelect = [CustomersColumn.ID, CustomersColumn.NAME]
+      .map((col) => `'${col}', customer.${col}`)
+      .join(', ');
+    const transHeaderColumnsToSelect = [
+      InvoicesColumn.ID,
+      InvoicesColumn.INVOICE_NO,
+    ]
+      .map((col) => `'${col}', ${DATABASE.INVOICES}.${col}`)
+      .join(', ');
+
+    const getTransInDetailSql = `
+      SELECT trans_out.*, (jsonb_agg( jsonb_build_object (${productColumnsToSelect}) )) -> 0 as product, (jsonb_agg( jsonb_build_object (${customerColumnsToSelect}) )) -> 0 as customer, (jsonb_agg( jsonb_build_object (${transHeaderColumnsToSelect}) )) -> 0 as transaction_in_header
+      FROM ${DATABASE.TRANSACTION_OUTS} as trans_out
+      LEFT JOIN ${DATABASE.CUSTOMERS} customer on trans_out.customerid = customer.id
+      LEFT JOIN ${DATABASE.PRODUCTS} product on trans_out.productid = product.id
+      LEFT JOIN ${DATABASE.INVOICES} on trans_out.invoiceid = invoices.id 
+      ${whereClause}
+      GROUP BY trans_out.id
+      ORDER BY ${sortBy} ${order}
+      LIMIT $${paramIndex++}
+      OFFSET $${paramIndex++}
+      `;
+
+    const paginationCountSql = `
+      SELECT count(*) as total_count
+      FROM ${DATABASE.TRANSACTION_OUTS} as trans_out
+      LEFT JOIN ${DATABASE.CUSTOMERS} customer on trans_out.customerid = customer.id
+      LEFT JOIN ${DATABASE.PRODUCTS} product on trans_out.productid = product.id
+      LEFT JOIN ${DATABASE.INVOICES} on trans_out.invoiceid = invoices.id 
+      ${whereClause}
+      `;
+    console.log(getTransInDetailSql);
+    values.push(pageSize, (pageNo - 1) * pageSize);
+
+    try {
+      const { rows: transDetailRows } =
+        await this.pool.query<GetTransactionOutResponse>(
+          getTransInDetailSql,
+          values,
+        );
+      const { rows: totalCountRows } = await this.pool.query<{
+        total_count: string;
+      }>(
+        paginationCountSql,
+        whereConditions.length != 0 ? values.slice(0, -2) : [],
+      );
+      const totalCount = parseInt(totalCountRows[0].total_count, 10);
+
+      return [transDetailRows, totalCount];
+    } catch (error) {
+      console.error('Failed to get all Transaction Outs:', error);
+      throw new InternalServerErrorException(error.message);
+    }
+    // const skip = (pageNo - 1) * pageSize;
+    // let sortBy: string = `transaction.${sort}`;
+    // if (
+    //   sort === TransactionOutSort.CUSTOMER ||
+    //   sort === TransactionOutSort.PRODUCT
+    // ) {
+    //   sortBy = `${sort}.name`;
+    // }
+    // if (sort === TransactionOutSort.INVOICE) {
+    //   sortBy = `${sort}.invoice_no`;
+    // }
+    // const queryBuilder = this.transactionOutRepository
+    //   .createQueryBuilder('transaction')
+    //   .leftJoinAndSelect('transaction.customer', 'customer')
+    //   .leftJoinAndSelect('transaction.product', 'product')
+    //   .leftJoinAndSelect('transaction.invoice', 'invoice')
+    //   .skip(skip)
+    //   .take(pageSize)
+    //   .select([
+    //     'transaction',
+    //     'customer.name',
+    //     'customer.id',
+    //     'product.name',
+    //     'product.id',
+    //     'invoice.id',
+    //     'invoice.invoice_no',
+    //   ])
+    //   .orderBy(sortBy, order.toUpperCase() as SortOrderQueryBuilder);
+    // // Conditionally add filters
+    // if (startDate) {
+    //   queryBuilder.andWhere({ created_at: MoreThanOrEqual(startDate) });
+    // }
+    // if (endDate) {
+    //   queryBuilder.andWhere({ created_at: LessThan(endDate) });
+    // }
+    // const [transactionsOuts, count] = await queryBuilder.getManyAndCount();
+    // console.log('transactionsOuts');
+    // console.log(transactionsOuts);
+    // const transactionOutResponse: GetTransactionOutResponse[] =
+    //   transactionsOuts.map((transaction: GetTransactionOutResponse) => {
+    //     return {
+    //       id: transaction.id,
+    //       product: {
+    //         id: transaction.product?.id ?? 0,
+    //         name: transaction?.product?.name ?? transaction.productName,
+    //       },
+    //       customer: {
+    //         id: transaction.customer.id,
+    //         name: transaction.customer.name,
+    //       },
+    //       invoice: {
+    //         id: transaction.invoice.id,
+    //         invoice_no: transaction.invoice.invoice_no,
+    //       },
+    //       converted_qty: transaction.converted_qty,
+    //       is_charge: transaction.is_charge,
+    //       total_days: transaction.total_days,
+    //     };
+    //   });
+    // return [transactionOutResponse, count];
+  }
+
+  async findTransactionOutById(
+    transactionOutId: number,
+  ): Promise<TransactionOut> {
+    const sql = `
+      SELECT *
+      FROM ${DATABASE.TRANSACTION_OUTS}
+      WHERE id = $1
+    `;
+    const { rows } = await this.pool.query<TransactionOut>(sql, [
+      transactionOutId,
+    ]);
+    if (rows.length === 0)
+      throw new NotFoundException(
+        `Transaction Out With ID ${transactionOutId} not found`,
+      );
+    return rows[0];
+  }
 
   // async sumCustProductQty(
   //   productId: number,
@@ -282,299 +382,6 @@ export class TransactionOutService {
   //   return result;
   // }
 
-  // async createTransactionOut(
-  //   createTransactionOutWithSpbDto: CreateTransactionOutWithSpbDto,
-  // ): Promise<Invoice> {
-  //   const transaction = await this.transactionOutRepository.manager.transaction(
-  //     async (entityManager: EntityManager) => {
-  //       let amount: number = 0;
-  //       // let totalQty: number = 0;
-  //       let totalConvertedQty: number = 0;
-  //       const customerId = createTransactionOutWithSpbDto.customerId;
-  //       const noPlat = createTransactionOutWithSpbDto.no_plat;
-  //       const clockOut = createTransactionOutWithSpbDto.clock_out;
-  //       const transinHeaderId =
-  //         createTransactionOutWithSpbDto.transaction_in_headerId;
-  //       const transDate = createTransactionOutWithSpbDto.transaction_date;
-  //       const spbDesc = createTransactionOutWithSpbDto.desc;
-
-  //       const detailTransIn =
-  //         await this.transactionInHeaderService.findTransactionInHeaderById(
-  //           transinHeaderId,
-  //         );
-
-  //       const totalQtyOut: number =
-  //         createTransactionOutWithSpbDto.transaction_outs.reduce(
-  //           (sum, transaction) => sum + transaction.qty,
-  //           0,
-  //         );
-
-  //       let totalCharge: number = 0;
-  //       let totalFine: number = 0;
-  //       const valueCharge = await this.chargeService.findChargeById(1);
-
-  //       for (const transactionOut of createTransactionOutWithSpbDto.transaction_outs) {
-  //         const productUnit =
-  //           await this.productUnitService.getProductUnitsByProductId(
-  //             transactionOut.productId,
-  //           );
-
-  //         transactionOut.converted_qty =
-  //           transactionOut.qty * productUnit[0].conversion_to_kg;
-
-  //         const product = await this.productService.lockingProductById(
-  //           entityManager,
-  //           transactionOut.productId,
-  //           transactionOut.converted_qty,
-  //         );
-  //         const productTransactionIns = detailTransIn.transaction_in.filter(
-  //           (t) => t.productId === transactionOut.productId,
-  //         );
-
-  //         if (productTransactionIns.length === 0) {
-  //           throw new NotFoundException(
-  //             `No incoming transaction In Detail found for productId ${transactionOut.productId}.`,
-  //           );
-  //         }
-
-  //         let productQty: number = transactionOut.converted_qty;
-
-  //         const totalPrice: number =
-  //           transactionOut.converted_qty * product.price;
-  //         amount += totalPrice;
-
-  //         // const productTransactionIns =
-  //         //   await this.transactionInService.getTransactionInsWithRemainingQty(
-  //         //     product.id,
-  //         //     customerId,
-  //         //     transactionOut.converted_qty,
-  //         //   );
-
-  //         for (const transactionIn of productTransactionIns) {
-  //           if (productQty == 0) {
-  //             break;
-  //           }
-  //           let qtyOut: number;
-
-  //           if (transactionIn.remaining_qty < productQty) {
-  //             throw new InsufficientStockException(
-  //               `Insufficient stock : ${product.name} required ${productQty}, but only ${transactionIn.remaining_qty} available in Transaction In`,
-  //             );
-  //           }
-
-  //           const transOutDate = new Date(transDate);
-
-  //           if (transOutDate < convertToWIB(transactionIn.created_at)) {
-  //             throw new InvalidDateRangeException(
-  //               `Transaction In Date can't be later than Transaction Out Date.`,
-  //             );
-  //           }
-  //           await this.transactionInService.lockingTransactionInById(
-  //             entityManager,
-  //             transactionIn.id,
-  //           );
-
-  //           if (transactionIn.remaining_qty > productQty) {
-  //             await this.productService.withdrawProductQtyWithEntityManager(
-  //               entityManager,
-  //               product,
-  //               productQty,
-  //             );
-
-  //             await this.transactionInService.withdrawRemainingQtyWithEntityManager(
-  //               entityManager,
-  //               transactionIn,
-  //               productQty,
-  //             );
-
-  //             qtyOut = productQty / transactionIn.conversion_to_kg;
-  //             totalConvertedQty += productQty;
-  //             transactionOut.converted_qty = productQty;
-  //             productQty = 0;
-  //           } else {
-  //             productQty -= transactionIn.remaining_qty;
-
-  //             qtyOut =
-  //               transactionIn.remaining_qty / transactionIn.conversion_to_kg;
-  //             totalConvertedQty += transactionIn.remaining_qty;
-
-  //             transactionOut.converted_qty = transactionIn.remaining_qty;
-
-  //             await this.productService.withdrawProductQtyWithEntityManager(
-  //               entityManager,
-  //               product,
-  //               transactionIn.remaining_qty,
-  //             );
-
-  //             await this.transactionInService.withdrawRemainingQtyWithEntityManager(
-  //               entityManager,
-  //               transactionIn,
-  //               transactionIn.remaining_qty,
-  //             );
-  //           }
-
-  //           let totalPriceOut = product.price * transactionOut.converted_qty;
-  //           let fine: number = 0;
-  //           let priceOut: number = product.price;
-  //           if (isPastDays(transactionIn.created_at, 120, transDate)) {
-  //             fine = totalPriceOut * 4;
-  //             priceOut = product.price * 5;
-  //           } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
-  //             fine = totalPriceOut * 3;
-  //             priceOut = product.price * 4;
-  //           } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
-  //             fine = totalPriceOut * 2;
-  //             priceOut = product.price * 3;
-  //           } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
-  //             fine = totalPriceOut;
-  //             priceOut = product.price * 2;
-  //           }
-
-  //           const totalDays = pastDaysCount(
-  //             transactionIn.created_at,
-  //             transDate,
-  //           );
-  //           totalFine += fine;
-
-  //           let charge: number = 0;
-  //           let chargeAmount: number = 0;
-
-  //           if (valueCharge.type == ChargeType.PERCENTAGE) {
-  //             chargeAmount = (valueCharge.amount * totalPrice) / 100;
-  //           } else {
-  //             chargeAmount = valueCharge.amount * transactionOut.converted_qty;
-  //           }
-
-  //           if (transactionIn.is_charge == true) {
-  //             charge += chargeAmount;
-  //           }
-
-  //           if (transactionOut.is_charge == true) {
-  //             charge += chargeAmount;
-  //           }
-
-  //           totalCharge += charge;
-  //           transactionOut.productId = transactionIn.productId;
-  //           transactionOut.customerId = customerId;
-  //           transactionOut.conversion_to_kg = transactionIn.conversion_to_kg;
-  //           transactionOut.qty = qtyOut;
-  //           transactionOut.price = priceOut;
-  //           transactionOut.total_charge = charge;
-  //           transactionOut.total_days = totalDays;
-  //           transactionOut.total_fine = fine;
-  //           transactionOut.total_price =
-  //             product.price * transactionOut.converted_qty;
-  //           transactionOut.unit = transactionIn.unit;
-  //           transactionOut.transaction_inId = transactionIn.id;
-  //           transactionOut.created_at = convertToUTC(transDate);
-  //           transactionOut.updated_at = convertToUTC(transDate);
-
-  //           const transactionOutSave = entityManager.create(
-  //             TransactionOut,
-  //             transactionOut,
-  //           );
-  //           //save
-  //           await entityManager.save(transactionOutSave);
-  //         }
-  //         //here
-  //       }
-
-  //       for (const transactionOutBrgLuar of createTransactionOutWithSpbDto.transaction_outs_brg_luar) {
-  //         transactionOutBrgLuar.converted_qty =
-  //           transactionOutBrgLuar.converted_qty;
-  //         transactionOutBrgLuar.productName = transactionOutBrgLuar.productName;
-  //         transactionOutBrgLuar.total_price = transactionOutBrgLuar.total_price;
-  //         transactionOutBrgLuar.price = transactionOutBrgLuar.price;
-  //         transactionOutBrgLuar.conversion_to_kg = 0;
-  //         transactionOutBrgLuar.unit = '';
-  //         transactionOutBrgLuar.total_fine = 0;
-  //         transactionOutBrgLuar.total_charge = 0;
-  //         transactionOutBrgLuar.total_days = 0;
-  //         transactionOutBrgLuar.customerId = customerId;
-  //         transactionOutBrgLuar.created_at = convertToUTC(transDate);
-  //         transactionOutBrgLuar.updated_at = convertToUTC(transDate);
-
-  //         amount += transactionOutBrgLuar.total_price;
-
-  //         const transactionOutSave = entityManager.create(
-  //           TransactionOut,
-  //           transactionOutBrgLuar,
-  //         );
-  //         //save
-  //         await entityManager.save(transactionOutSave);
-  //       }
-
-  //       const customer =
-  //         await this.customerService.findCustomerById(customerId);
-
-  //       let invoiceMaxId: number = await this.invoiceService.getMaxIdInvoice();
-  //       invoiceMaxId += 1;
-  //       const invoiceNo = `${customer.code}-${String(invoiceMaxId).padStart(5, '0')}`;
-
-  //       let arMaxId: number = await this.arService.getMaxIdAr();
-  //       arMaxId += 1;
-  //       const arNo = `${customer.code}-${String(arMaxId).padStart(5, '0')}`;
-
-  //       const createInvoice = new CreateInvoiceDto();
-  //       createInvoice.total_amount = amount;
-  //       createInvoice.customerId = customerId;
-  //       createInvoice.discount = 0;
-  //       createInvoice.fine = totalFine;
-  //       createInvoice.invoice_no = invoiceNo;
-  //       createInvoice.status = InvoiceStatus.PENDING;
-  //       createInvoice.tax = 0;
-  //       createInvoice.total_order = totalQtyOut;
-  //       createInvoice.total_order_converted = totalConvertedQty;
-  //       createInvoice.charge = totalCharge;
-  //       createInvoice.created_at = convertToUTC(transDate);
-  //       createInvoice.updated_at = convertToUTC(transDate);
-
-  //       const invoice = await this.invoiceService.createInvoice(
-  //         createInvoice,
-  //         entityManager,
-  //       );
-
-  //       const createSpb = new CreateSpbDto();
-  //       createSpb.clock_out = convertToUTC(clockOut);
-  //       createSpb.invoiceId = invoice.id;
-  //       createSpb.customerId = customerId;
-  //       createSpb.no_plat = noPlat;
-  //       createSpb.desc = spbDesc;
-  //       createSpb.created_at = convertToUTC(transDate);
-  //       createSpb.updated_at = convertToUTC(transDate);
-
-  //       const spb = await this.spbService.createSpb(createSpb, entityManager);
-
-  //       const createAr = new CreateArDto();
-  //       createAr.ar_no = arNo;
-  //       createAr.customerId = customerId;
-  //       createAr.invoiceId = invoice.id;
-  //       createAr.status = ArStatus.PENDING;
-  //       createAr.to_paid =
-  //         invoice.total_amount +
-  //         invoice.fine +
-  //         invoice.charge +
-  //         invoice.tax -
-  //         invoice.discount;
-  //       createAr.paid_date = null;
-  //       createAr.total_bill =
-  //         invoice.total_amount +
-  //         invoice.fine +
-  //         invoice.charge +
-  //         invoice.tax -
-  //         invoice.discount;
-  //       createAr.created_at = convertToUTC(transDate);
-  //       createAr.updated_at = convertToUTC(transDate);
-
-  //       const ar = await this.arService.createAr(createAr, entityManager);
-
-  //       await this.updateTransactionOutNull(entityManager, invoice.id, spb.id);
-  //       return invoice;
-  //     },
-  //   );
-  //   return transaction;
-  // }
-
   async createTransactionOutFifo(
     createTransactionOutFifoWithSpbDto: CreateTransactionOutFifoWithSpbDto,
   ): Promise<any> {
@@ -617,502 +424,61 @@ export class TransactionOutService {
   //   return this.transactionOutRepository.save(transactionOut);
   // }
 
-  // async previewTransactionOut(
-  //   createTransactionOutWithSpbDto: CreateTransactionOutWithSpbDto,
-  // ): Promise<CreateInvoiceDto> {
-  //   const transaction = await this.transactionOutRepository.manager.transaction(
-  //     async (entityManager: EntityManager) => {
-  //       let amount: number = 0;
-  //       // let totalQty: number = 0;
-  //       const customerId = createTransactionOutWithSpbDto.customerId;
-  //       // const noPlat = createTransactionOutWithSpbDto.no_plat;
-  //       // const clockOut = createTransactionOutWithSpbDto.clock_out;
-  //       const transinHeaderId =
-  //         createTransactionOutWithSpbDto.transaction_in_headerId;
-
-  //       const detailTransIn =
-  //         await this.transactionInHeaderService.findTransactionInHeaderById(
-  //           transinHeaderId,
-  //         );
-
-  //       const transDate = createTransactionOutWithSpbDto.transaction_date;
-
-  //       let totalConvertedQty: number = 0;
-
-  //       const totalQtyOut: number =
-  //         createTransactionOutWithSpbDto.transaction_outs.reduce(
-  //           (sum, transaction) => sum + transaction.qty,
-  //           0,
-  //         );
-
-  //       let totalCharge: number = 0;
-  //       let totalFine: number = 0;
-
-  //       const valueCharge = await this.chargeService.findChargeById(1);
-
-  //       for (const transactionOut of createTransactionOutWithSpbDto.transaction_outs) {
-  //         const productUnit =
-  //           await this.productUnitService.getProductUnitsByProductId(
-  //             transactionOut.productId,
-  //           );
-
-  //         transactionOut.converted_qty =
-  //           transactionOut.qty * productUnit[0].conversion_to_kg;
-
-  //         const product = await this.productService.lockingProductById(
-  //           entityManager,
-  //           transactionOut.productId,
-  //           transactionOut.converted_qty,
-  //         );
-
-  //         const productTransactionIns = detailTransIn.transaction_in.filter(
-  //           (t) => t.productId === transactionOut.productId,
-  //         );
-
-  //         if (productTransactionIns.length === 0) {
-  //           throw new NotFoundException(
-  //             `No incoming transaction In Detail found for productId ${transactionOut.productId}.`,
-  //           );
-  //         }
-
-  //         let productQty: number = transactionOut.converted_qty;
-
-  //         const totalPrice: number =
-  //           transactionOut.converted_qty * product.price;
-  //         amount += totalPrice;
-
-  //         // const productTransactionIns =
-  //         //   await this.transactionInService.getTransactionInsWithRemainingQty(
-  //         //     product.id,
-  //         //     customerId,
-  //         //     transactionOut.converted_qty,
-  //         //   );
-  //         for (const transactionIn of productTransactionIns) {
-  //           if (productQty == 0) {
-  //             break;
-  //           }
-  //           let qtyOut: number;
-
-  //           if (transactionIn.remaining_qty < productQty) {
-  //             throw new InsufficientStockException(
-  //               `Insufficient stock : ${product.name} required ${productQty}, but only ${transactionIn.remaining_qty} available in Transaction In`,
-  //             );
-  //           }
-
-  //           const transOutDate = new Date(transDate);
-
-  //           if (transOutDate < convertToWIB(transactionIn.created_at)) {
-  //             throw new InvalidDateRangeException(
-  //               `Transaction In Date can't be later than Transaction Out Date.`,
-  //             );
-  //           }
-
-  //           await this.transactionInService.lockingTransactionInById(
-  //             entityManager,
-  //             transactionIn.id,
-  //           );
-
-  //           if (transactionIn.remaining_qty > productQty) {
-  //             // await this.productService.withdrawProductQtyWithEntityManager(
-  //             //   entityManager,
-  //             //   product,
-  //             //   productQty,)
-
-  //             // await this.transactionInService.withdrawRemainingQtyWithEntityManager(
-  //             //   entityManager,
-  //             //   transactionIn,
-  //             //   productQty,)
-
-  //             qtyOut = productQty / transactionIn.conversion_to_kg;
-  //             totalConvertedQty += productQty;
-  //             transactionOut.converted_qty = productQty;
-  //             productQty = 0;
-  //           } else {
-  //             productQty -= transactionIn.remaining_qty;
-
-  //             qtyOut =
-  //               transactionIn.remaining_qty / transactionIn.conversion_to_kg;
-  //             totalConvertedQty += transactionIn.remaining_qty;
-
-  //             transactionOut.converted_qty = transactionIn.remaining_qty;
-
-  //             // await this.productService.withdrawProductQtyWithEntityManager(
-  //             //   entityManager,
-  //             //   product,
-  //             //   transactionIn.remaining_qty,);
-
-  //             // await this.transactionInService.withdrawRemainingQtyWithEntityManager(
-  //             //   entityManager,
-  //             //   transactionIn,
-  //             //   transactionIn.remaining_qty,);
-  //           }
-
-  //           let totalPriceOut = product.price * transactionOut.converted_qty;
-  //           let fine: number = 0;
-  //           let priceOut: number = product.price;
-  //           if (isPastDays(transactionIn.created_at, 120, transDate)) {
-  //             fine = totalPriceOut * 4;
-  //             priceOut = product.price * 5;
-  //           } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
-  //             fine = totalPriceOut * 3;
-  //             priceOut = product.price * 4;
-  //           } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
-  //             fine = totalPriceOut * 2;
-  //             priceOut = product.price * 3;
-  //           } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
-  //             fine = totalPriceOut;
-  //             priceOut = product.price * 2;
-  //           }
-
-  //           const totalDays = pastDaysCount(
-  //             transactionIn.created_at,
-  //             transDate,
-  //           );
-  //           totalFine += fine;
-
-  //           let charge: number = 0;
-  //           let chargeAmount: number = 0;
-
-  //           if (valueCharge.type == ChargeType.PERCENTAGE) {
-  //             chargeAmount = (valueCharge.amount * totalPrice) / 100;
-  //           } else {
-  //             chargeAmount = valueCharge.amount * transactionOut.converted_qty;
-  //           }
-
-  //           if (transactionIn.is_charge == true) {
-  //             charge += chargeAmount;
-  //           }
-
-  //           if (transactionOut.is_charge == true) {
-  //             charge += chargeAmount;
-  //           }
-
-  //           totalCharge += charge;
-
-  //           transactionOut.productId = transactionIn.productId;
-  //           transactionOut.customerId = customerId;
-  //           transactionOut.conversion_to_kg = transactionIn.conversion_to_kg;
-  //           transactionOut.qty = qtyOut;
-  //           transactionOut.price = priceOut;
-  //           transactionOut.total_charge = charge;
-  //           transactionOut.total_days = totalDays;
-  //           transactionOut.total_fine = fine;
-  //           transactionOut.total_price =
-  //             product.price * transactionOut.converted_qty;
-  //           transactionOut.unit = transactionIn.unit;
-  //           transactionOut.transaction_inId = transactionIn.id;
-  //           transactionOut.created_at = convertToUTC(transDate);
-  //           transactionOut.updated_at = convertToUTC(transDate);
-
-  //           // const transactionOutSave = entityManager.create(
-  //           //   TransactionOut,
-  //           //   transactionOut,
-  //           // );
-  //           //save
-  //           // await entityManager.save(transactionOutSave);
-  //         }
-  //       }
-  //       for (const transactionOutBrgLuar of createTransactionOutWithSpbDto.transaction_outs_brg_luar) {
-  //         transactionOutBrgLuar.converted_qty =
-  //           transactionOutBrgLuar.converted_qty;
-  //         transactionOutBrgLuar.productName = transactionOutBrgLuar.productName;
-  //         transactionOutBrgLuar.total_price = transactionOutBrgLuar.total_price;
-  //         transactionOutBrgLuar.price = transactionOutBrgLuar.price;
-  //         transactionOutBrgLuar.conversion_to_kg = 0;
-  //         transactionOutBrgLuar.unit = '';
-  //         transactionOutBrgLuar.total_fine = 0;
-  //         transactionOutBrgLuar.total_charge = 0;
-  //         transactionOutBrgLuar.total_days = 0;
-  //         transactionOutBrgLuar.customerId = customerId;
-  //         transactionOutBrgLuar.created_at = convertToUTC(transDate);
-  //         transactionOutBrgLuar.updated_at = convertToUTC(transDate);
-
-  //         amount += transactionOutBrgLuar.total_price;
-
-  //         // const transactionOutSave = entityManager.create(
-  //         //   TransactionOut,
-  //         //   transactionOutBrgLuar,
-  //         // );
-  //         // //save
-  //         // await entityManager.save(transactionOutSave);
-  //       }
-
-  //       const customer =
-  //         await this.customerService.findCustomerById(customerId);
-
-  //       let invoiceMaxId: number = await this.invoiceService.getMaxIdInvoice();
-  //       invoiceMaxId += 1;
-  //       const invoiceNo = `${customer.code}-${String(invoiceMaxId).padStart(5, '0')}`;
-
-  //       let arMaxId: number = await this.arService.getMaxIdAr();
-  //       arMaxId += 1;
-  //       const arNo = `${customer.code}-${String(arMaxId).padStart(5, '0')}`;
-
-  //       const createInvoice = new CreateInvoiceDto();
-  //       createInvoice.total_amount = amount;
-  //       createInvoice.customerId = customerId;
-  //       createInvoice.discount = 0;
-  //       createInvoice.fine = totalFine;
-  //       createInvoice.invoice_no = invoiceNo;
-  //       createInvoice.status = InvoiceStatus.PENDING;
-  //       createInvoice.tax = 0;
-  //       createInvoice.total_order = totalQtyOut;
-  //       createInvoice.total_order_converted = totalConvertedQty;
-  //       createInvoice.charge = totalCharge;
-  //       createInvoice.created_at = convertToUTC(transDate);
-  //       createInvoice.updated_at = convertToUTC(transDate);
-  //       // const invoice = await this.invoiceService.createInvoice(createInvoice, entityManager)
-
-  //       // const createSpb = new CreateSpbDto();
-  //       // createSpb.clock_out = clockOut;
-  //       // createSpb.invoiceId = invoice.id
-  //       // createSpb.customerId = customerId;
-  //       // createSpb.no_plat = noPlat;
-
-  //       // const spb = await this.spbService.createSpb(createSpb, entityManager);
-
-  //       // const createAr = new CreateArDto();
-  //       // createAr.ar_no = arNo;
-  //       // createAr.customerId = customerId;
-  //       // createAr.invoiceId = invoice.id
-  //       // createAr.status = ArStatus.PENDING;
-  //       // createAr.to_paid = (invoice.total_amount + invoice.fine + invoice.charge + invoice.tax) - invoice.discount;
-  //       // createAr.paid_date = null;
-  //       // createAr.total_bill = (invoice.total_amount + invoice.fine + invoice.charge + invoice.tax) - invoice.discount;
-  //       // const ar = await this.arService.createAr(createAr, entityManager);
-
-  //       // await this.updateTransactionOutNull(entityManager, invoice.id, spb.id);
-  //       return createInvoice;
-  //     },
-  //   );
-  //   return transaction;
-  // }
-
-  // async previewTransactionOutFifo(
-  //   createTransactionOutFifoWithSpbDto: CreateTransactionOutFifoWithSpbDto,
-  // ): Promise<CreateInvoiceDto> {
-  //   const transaction = await this.transactionOutRepository.manager.transaction(
-  //     async (entityManager: EntityManager) => {
-  //       let amount: number = 0;
-  //       const customerId = createTransactionOutFifoWithSpbDto.customerId;
-  //       const transDate = createTransactionOutFifoWithSpbDto.transaction_date;
-
-  //       let totalConvertedQty: number = 0;
-
-  //       const totalQtyOut: number =
-  //         createTransactionOutFifoWithSpbDto.transaction_outs.reduce(
-  //           (sum, transaction) => sum + transaction.qty,
-  //           0,
-  //         );
-
-  //       let totalCharge: number = 0;
-  //       let totalFine: number = 0;
-
-  //       const valueCharge = await this.chargeService.findChargeById(1);
-
-  //       for (const transactionOut of createTransactionOutFifoWithSpbDto.transaction_outs) {
-  //         const productUnit =
-  //           await this.productUnitService.getProductUnitsByProductId(
-  //             transactionOut.productId,
-  //           );
-
-  //         transactionOut.converted_qty =
-  //           transactionOut.qty * productUnit[0].conversion_to_kg;
-
-  //         const product = await this.productService.lockingProductById(
-  //           entityManager,
-  //           transactionOut.productId,
-  //           transactionOut.converted_qty,
-  //         );
-
-  //         let productQty: number = transactionOut.converted_qty;
-
-  //         const totalPrice: number =
-  //           transactionOut.converted_qty * product.price;
-  //         amount += totalPrice;
-
-  //         const productTransactionIns =
-  //           await this.transactionInService.getTransactionInsWithRemainingQty(
-  //             product.id,
-  //             customerId,
-  //             transactionOut.converted_qty,
-  //           );
-
-  //         for (const transactionIn of productTransactionIns) {
-  //           if (productQty == 0) {
-  //             break;
-  //           }
-  //           let qtyOut: number;
-
-  //           const transOutDate = new Date(transDate);
-
-  //           if (transOutDate < convertToWIB(transactionIn.created_at)) {
-  //             throw new InvalidDateRangeException(
-  //               `Transaction In Date can't be later than Transaction Out Date.`,
-  //             );
-  //           }
-
-  //           await this.transactionInService.lockingTransactionInById(
-  //             entityManager,
-  //             transactionIn.id,
-  //           );
-
-  //           if (transactionIn.remaining_qty > productQty) {
-  //             qtyOut = productQty / transactionIn.conversion_to_kg;
-  //             totalConvertedQty += productQty;
-  //             transactionOut.converted_qty = productQty;
-  //             productQty = 0;
-  //           } else {
-  //             productQty -= transactionIn.remaining_qty;
-
-  //             qtyOut =
-  //               transactionIn.remaining_qty / transactionIn.conversion_to_kg;
-  //             totalConvertedQty += transactionIn.remaining_qty;
-
-  //             transactionOut.converted_qty = transactionIn.remaining_qty;
-  //           }
-
-  //           let totalPriceOut = product.price * transactionOut.converted_qty;
-  //           let fine: number = 0;
-  //           let priceOut: number = product.price;
-  //           if (isPastDays(transactionIn.created_at, 120, transDate)) {
-  //             fine = totalPriceOut * 4;
-  //             priceOut = product.price * 5;
-  //           } else if (isPastDays(transactionIn.created_at, 90, transDate)) {
-  //             fine = totalPriceOut * 3;
-  //             priceOut = product.price * 4;
-  //           } else if (isPastDays(transactionIn.created_at, 60, transDate)) {
-  //             fine = totalPriceOut * 2;
-  //             priceOut = product.price * 3;
-  //           } else if (isPastDays(transactionIn.created_at, 30, transDate)) {
-  //             fine = totalPriceOut;
-  //             priceOut = product.price * 2;
-  //           }
-
-  //           const totalDays = pastDaysCount(
-  //             transactionIn.created_at,
-  //             transDate,
-  //           );
-  //           totalFine += fine;
-
-  //           let charge: number = 0;
-  //           let chargeAmount: number = 0;
-
-  //           if (valueCharge.type == ChargeType.PERCENTAGE) {
-  //             chargeAmount = (valueCharge.amount * totalPrice) / 100;
-  //           } else {
-  //             chargeAmount = valueCharge.amount * transactionOut.converted_qty;
-  //           }
-
-  //           if (transactionIn.is_charge == true) {
-  //             charge += chargeAmount;
-  //           }
-
-  //           if (transactionOut.is_charge == true) {
-  //             charge += chargeAmount;
-  //           }
-
-  //           totalCharge += charge;
-
-  //           transactionOut.productId = transactionIn.productId;
-  //           transactionOut.customerId = customerId;
-  //           transactionOut.conversion_to_kg = transactionIn.conversion_to_kg;
-  //           transactionOut.qty = qtyOut;
-  //           transactionOut.price = priceOut;
-  //           transactionOut.total_charge = charge;
-  //           transactionOut.total_days = totalDays;
-  //           transactionOut.total_fine = fine;
-  //           transactionOut.total_price =
-  //             product.price * transactionOut.converted_qty;
-  //           transactionOut.unit = transactionIn.unit;
-  //           transactionOut.transaction_inId = transactionIn.id;
-  //           transactionOut.created_at = convertToUTC(transDate);
-  //           transactionOut.updated_at = convertToUTC(transDate);
-  //         }
-  //       }
-
-  //       for (const transactionOutBrgLuar of createTransactionOutFifoWithSpbDto.transaction_outs_brg_luar) {
-  //         transactionOutBrgLuar.converted_qty =
-  //           transactionOutBrgLuar.converted_qty;
-  //         transactionOutBrgLuar.productName = transactionOutBrgLuar.productName;
-  //         transactionOutBrgLuar.total_price = transactionOutBrgLuar.total_price;
-  //         transactionOutBrgLuar.price = transactionOutBrgLuar.price;
-  //         transactionOutBrgLuar.conversion_to_kg = 0;
-  //         transactionOutBrgLuar.unit = '';
-  //         transactionOutBrgLuar.total_fine = 0;
-  //         transactionOutBrgLuar.total_charge = 0;
-  //         transactionOutBrgLuar.total_days = 0;
-  //         transactionOutBrgLuar.customerId = customerId;
-  //         transactionOutBrgLuar.created_at = convertToUTC(transDate);
-  //         transactionOutBrgLuar.updated_at = convertToUTC(transDate);
-
-  //         amount += transactionOutBrgLuar.total_price;
-  //       }
-
-  //       const customer =
-  //         await this.customerService.findCustomerById(customerId);
-
-  //       let invoiceMaxId: number = await this.invoiceService.getMaxIdInvoice();
-  //       invoiceMaxId += 1;
-  //       const invoiceNo = `${customer.code}-${String(invoiceMaxId).padStart(5, '0')}`;
-
-  //       let arMaxId: number = await this.arService.getMaxIdAr();
-  //       arMaxId += 1;
-  //       const arNo = `${customer.code}-${String(arMaxId).padStart(5, '0')}`;
-
-  //       const createInvoice = new CreateInvoiceDto();
-  //       createInvoice.total_amount = amount;
-  //       createInvoice.customerId = customerId;
-  //       createInvoice.discount = 0;
-  //       createInvoice.fine = totalFine;
-  //       createInvoice.invoice_no = invoiceNo;
-  //       createInvoice.status = InvoiceStatus.PENDING;
-  //       createInvoice.tax = 0;
-  //       createInvoice.total_order = totalQtyOut;
-  //       createInvoice.total_order_converted = totalConvertedQty;
-  //       createInvoice.charge = totalCharge;
-  //       createInvoice.created_at = convertToUTC(transDate);
-  //       createInvoice.updated_at = convertToUTC(transDate);
-  //       return createInvoice;
-  //     },
-  //   );
-  //   return transaction;
-  // }
-
-  // async getTransactionOutsByInvoiceId(
-  //   invoiceId: number,
-  // ): Promise<TransactionOut[]> {
-  //   const allTransactionOuts = await this.transactionOutRepository.find({
-  //     where: { invoiceId },
-  //     relations: ['product', 'customer'],
-  //   });
-
-  //   if (allTransactionOuts.length === 0) {
-  //     throw new NotFoundException(
-  //       `Transaction Out with Invoice Id ${invoiceId} not found`,
-  //     );
-  //   }
-
-  //   const transactionOuts = allTransactionOuts.filter(
-  //     (t) => t.productId !== null,
-  //   );
-  //   return transactionOuts;
-  // }
-
-  // async getTransactionOutsByInvoiceIdWithBrgLuar(
-  //   invoiceId: number,
-  // ): Promise<TransactionOut[]> {
-  //   const allTransactionOuts = await this.transactionOutRepository.find({
-  //     where: { invoiceId },
-  //     relations: ['product', 'customer'],
-  //   });
-
-  //   if (allTransactionOuts.length === 0) {
-  //     throw new NotFoundException(
-  //       `Transaction Out with Invoice Id ${invoiceId} not found`,
-  //     );
-  //   }
-
-  //   return allTransactionOuts;
-  // }
+  async getTransactionOutsByInvoiceId(
+    invoiceId: number,
+  ): Promise<TransactionOut[]> {
+    const customerColumnsToSelect = [CustomersColumn.ID, CustomersColumn.NAME]
+      .map((col) => `'${col}', c.${col}`)
+      .join(', ');
+    const productColumnsToSelect = [ProductsColumn.ID, ProductsColumn.NAME]
+      .map((col) => `'${col}', p.${col}`)
+      .join(', ');
+
+    const sql = `
+      SELECT tr_o.*, (jsonb_agg( jsonb_build_object (${customerColumnsToSelect}) )) -> 0 as customer, (jsonb_agg( jsonb_build_object (${productColumnsToSelect}) )) -> 0 as product
+      FROM ${DATABASE.TRANSACTION_OUTS} tr_o
+      LEFT JOIN ${DATABASE.PRODUCTS} p on p.id = tr_o.productid
+      LEFT JOIN ${DATABASE.CUSTOMERS} c on c.id = tr_o.customerid
+      WHERE tr_o.invoiceid = $1 and tr_o.productid is not null
+      GROUP BY tr_o.id 
+    `;
+    const { rows } = await this.pool.query<TransactionOut>(sql, [invoiceId]);
+
+    if (rows.length === 0) {
+      throw new NotFoundException(
+        `Transaction Out with Invoice Id ${invoiceId} not found`,
+      );
+    }
+
+    return rows;
+  }
+
+  async getTransactionOutsByInvoiceIdWithBrgLuar(
+    invoiceId: number,
+  ): Promise<TransactionOut[]> {
+    const customerColumnsToSelect = [CustomersColumn.ID, CustomersColumn.NAME]
+      .map((col) => `'${col}', c.${col}`)
+      .join(', ');
+    const productColumnsToSelect = [ProductsColumn.ID, ProductsColumn.NAME]
+      .map((col) => `'${col}', p.${col}`)
+      .join(', ');
+
+    const sql = `
+      SELECT tr_o.*, (jsonb_agg( jsonb_build_object (${customerColumnsToSelect}) )) -> 0 as customer, (jsonb_agg( jsonb_build_object (${productColumnsToSelect}) )) -> 0 as product
+      FROM ${DATABASE.TRANSACTION_OUTS} tr_o
+      LEFT JOIN ${DATABASE.PRODUCTS} p on p.id = tr_o.productid
+      LEFT JOIN ${DATABASE.CUSTOMERS} c on c.id = tr_o.customerid
+      WHERE tr_o.invoiceid = $1
+      GROUP BY tr_o.id 
+    `;
+    const { rows } = await this.pool.query<TransactionOut>(sql, [invoiceId]);
+
+    if (rows.length === 0) {
+      throw new NotFoundException(
+        `Transaction Out with Invoice Id ${invoiceId} not found`,
+      );
+    }
+
+    return rows;
+  }
 }
