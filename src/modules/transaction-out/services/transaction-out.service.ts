@@ -578,7 +578,7 @@ export class TransactionOutService {
   async createTransactionOutFifo(
     createTransactionOutFifoWithSpbDto: CreateTransactionOutFifoWithSpbDto,
   ): Promise<any> {
-    const sql = `SELECT * FROM create_trans_out($1, $2, $3, $4, $5);`;
+    const sql = `SELECT * FROM preview_trans_out($1, $2, $3, $4, $5);`;
     console.log(createTransactionOutFifoWithSpbDto);
     const { rows } = await this.pool.query(sql, [
       JSON.stringify(createTransactionOutFifoWithSpbDto.transaction_outs),
