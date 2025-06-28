@@ -31,42 +31,42 @@ import { ArPaymentPermission } from '@app/enums/permission';
 export class ArPaymentController {
   constructor(private readonly arPaymentService: ArPaymentService) {}
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get All Acc Receivable Payment',
-  })
-  @UseInterceptors(OffsetPaginationInterceptor<ArPayment>)
-  @PermissionsMetatada(ArPaymentPermission.LIST)
-  @UseGuards(AuthenticateGuard)
-  @Get()
-  async getAllArPayments(
-    @Query() { page_no, page_size }: BasePaginationQuery,
-  ): Promise<OffsetPagination<ArPayment>> {
-    const pageSize = parseInt(page_size) || 10;
-    const pageNo = parseInt(page_no) || 1;
-    const productUnits = await this.arPaymentService.getAllArPayments({
-      pageNo,
-      pageSize,
-    });
-    return {
-      data: productUnits[0],
-      totalCount: productUnits[1],
-      filteredCount: productUnits[1],
-    };
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get All Acc Receivable Payment',
+  // })
+  // @UseInterceptors(OffsetPaginationInterceptor<ArPayment>)
+  // @PermissionsMetatada(ArPaymentPermission.LIST)
+  // @UseGuards(AuthenticateGuard)
+  // @Get()
+  // async getAllArPayments(
+  //   @Query() { page_no, page_size }: BasePaginationQuery,
+  // ): Promise<OffsetPagination<ArPayment>> {
+  //   const pageSize = parseInt(page_size) || 10;
+  //   const pageNo = parseInt(page_no) || 1;
+  //   const productUnits = await this.arPaymentService.getAllArPayments({
+  //     pageNo,
+  //     pageSize,
+  //   });
+  //   return {
+  //     data: productUnits[0],
+  //     totalCount: productUnits[1],
+  //     filteredCount: productUnits[1],
+  //   };
+  // }
 
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Get Acc Receivable Payment by Id',
-  })
-  @PermissionsMetatada(ArPaymentPermission.VIEW)
-  @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
-  @Get(':id')
-  async getProductUnitById(
-    @Param('id', ParseIntPipe) arPaymentId: number,
-  ): Promise<ArPayment> {
-    return await this.arPaymentService.findArPaymentById(arPaymentId);
-  }
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Get Acc Receivable Payment by Id',
+  // })
+  // @PermissionsMetatada(ArPaymentPermission.VIEW)
+  // @UseGuards(AuthenticateGuard, IntermediateGuard, AuthorizeGuard)
+  // @Get(':id')
+  // async getProductUnitById(
+  //   @Param('id', ParseIntPipe) arPaymentId: number,
+  // ): Promise<ArPayment> {
+  //   return await this.arPaymentService.findArPaymentById(arPaymentId);
+  // }
 
   @ApiBearerAuth()
   @ApiOperation({

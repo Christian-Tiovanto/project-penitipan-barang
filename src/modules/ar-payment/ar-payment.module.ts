@@ -9,13 +9,7 @@ import { InvoiceModule } from '../invoice/invoice.module';
 import { PaymentMethodModule } from '../payment-method/payment-method.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([ArPayment]),
-    CashflowModule,
-    ArModule,
-    InvoiceModule,
-    PaymentMethodModule,
-  ],
+  imports: [],
   controllers: [ArPaymentController],
   providers: [ArPaymentService],
   exports: [ArPaymentService],

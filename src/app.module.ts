@@ -40,7 +40,7 @@ import { DatabaseModule } from './modules/database/database.module';
     TransactionInModule,
     PaymentMethodModule,
     // CustomerPaymentModule,
-    // ArPaymentModule,
+    ArPaymentModule,
     // CashflowModule,
     // ChargeModule,
     TransactionOutModule,
