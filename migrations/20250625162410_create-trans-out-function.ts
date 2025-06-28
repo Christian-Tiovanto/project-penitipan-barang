@@ -41,6 +41,8 @@ export async function up(knex: Knex): Promise<void> {
         total_fine_for_invoice integer := 0;
         total_order_for_invoice integer := 0;
         total_order_converted_for_invoice integer := 0;
+        invoice_no_generated text;
+        total_bill_for_ar integer := 0;
 
         -- Aggregates for the invoice (optional, can be calculated later with a SUM query)
         -- total_charge_for_invoice integer := 0;
@@ -182,9 +184,35 @@ export async function up(knex: Knex): Promise<void> {
             );
             total_amount_for_invoice := total_amount_for_invoice + (trans_out_luar_item ->> 'price')::integer;
         END LOOP;
-        UPDATE invoices SET invoice_no = customer_code || '-' || LPAD(invoice_id::text, 5, '0'), total_amount = total_amount_for_invoice, charge = total_charge_for_invoice, fine = total_fine_for_invoice, discount = 0, total_order = total_order_for_invoice, total_order_converted = total_order_converted_for_invoice, tax = 0 where id = invoice_id;
+
+        invoice_no_generated := customer_code || '-' || LPAD(invoice_id::text, 5, '0');
+        UPDATE invoices SET invoice_no = invoice_no_generated, total_amount = total_amount_for_invoice, charge = total_charge_for_invoice, fine = total_fine_for_invoice, discount = 0, total_order = total_order_for_invoice, total_order_converted = total_order_converted_for_invoice, tax = 0 where id = invoice_id;
         -- Return the ID of the invoice that these transactions belong to
-        RETURN invoice_id;
+        
+        total_bill_for_ar := total_amount_for_invoice + total_charge_for_invoice + total_fine_for_invoice;
+        
+        INSERT INTO ar(
+            ar_no, 
+            customerid, 
+            invoiceid, 
+            status, 
+            to_paid, 
+            paid_date, 
+            total_bill, 
+            created_at, 
+            updated_at
+        ) VALUES (
+            invoice_no_generated,
+            p_customerid,
+            invoice_id,
+            'PENDING', -- Set initial status
+            total_bill_for_ar,
+            NULL, -- No paid date initially
+            total_bill_for_ar,
+            p_transout_date,
+            p_transout_date
+        );
+    RETURN invoice_id;
     END;
     $$;
 

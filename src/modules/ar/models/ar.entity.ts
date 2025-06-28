@@ -109,7 +109,7 @@ export class Ar implements IAr {
   @Column({ type: 'datetime', nullable: true })
   paid_date: Date;
 
-  @OneToMany(() => ArPayment, (arPayment) => arPayment.ar)
+  // @OneToMany(() => ArPayment, (arPayment) => arPayment.ar)
   ar_payment: ArPayment;
 
   @ApiProperty({ example: '2023-01-01T00:00:00.000Z' })

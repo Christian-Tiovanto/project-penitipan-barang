@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
-import { IArPayment } from '../models/ar-payment.entity';
+import { ArPayment } from '../models/ar-payment.entity';
 
 @JoiSchemaOptions({ allowUnknown: false })
 export class CreateArPaymentDto
   implements
     Omit<
-      IArPayment,
+      ArPayment,
       | 'id'
       | 'created_at'
       | 'updated_at'

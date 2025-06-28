@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import * as Joi from 'joi';
 import { JoiSchema, JoiSchemaOptions } from 'joi-class-decorators';
-import { IArPayment } from '../models/ar-payment.entity';
+import { ArPayment } from '../models/ar-payment.entity';
 
 export class BulkArPaymentDetailDto
-  implements Pick<IArPayment, 'arId' | 'total_paid'>
+  implements Pick<ArPayment, 'arId' | 'total_paid'>
 {
   @ApiProperty({ example: 1 })
   @JoiSchema(Joi.number().required())
@@ -19,7 +19,7 @@ export class BulkArPaymentDetailDto
 export class CreateBulkArPaymentDto
   implements
     Omit<
-      IArPayment,
+      ArPayment,
       | 'id'
       | 'created_at'
       | 'updated_at'
