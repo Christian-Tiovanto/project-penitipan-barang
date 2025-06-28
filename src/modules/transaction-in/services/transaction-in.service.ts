@@ -304,9 +304,15 @@ export class TransactionInService {
       const totalCount = parseInt(totalCountRows[0].total_count, 10);
 
       return [transDetailRows, totalCount];
-    } catch (error) {
-      console.error('Failed to get all Transaction Ins:', error);
-      throw new InternalServerErrorException(error.message);
+    } catch (err) {
+      if (isPgError(err)) {
+        if (err.code === ErrorCode.NOT_FOUND) {
+          throw new NotFoundException(err.message);
+        } else if (err.code === ErrorCode.CONFLICT) {
+          throw new ConflictException(err.message);
+        }
+      }
+      throw new InternalServerErrorException(err);
     }
   }
 

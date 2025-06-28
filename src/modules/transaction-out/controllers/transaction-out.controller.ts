@@ -155,17 +155,4 @@ export class TransactionOutController {
       invoiceId,
     );
   }
-
-  //   @ApiBearerAuth()
-  //   @ApiOperation({
-  //     summary: 'Update Transaction Out by Id',
-  //   })
-  //   @UseGuards(AuthenticateGuard, AuthorizeGuard)
-  //   @Patch(':id')
-  //   async updateTransactionOut(
-  //     @Param('id', ParseIntPipe) transactionOutId: number,
-  //     @Body() updateTransactionOutDto: UpdateTransactionOutDto,
-  //   ) {
-  //     return await this.transactionOutService.updateTransactionOut(transactionOutId, updateTransactionOutDto);
-  //   }
 }
