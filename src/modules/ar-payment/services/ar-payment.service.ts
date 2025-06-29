@@ -1,26 +1,9 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ArPayment } from '../models/ar-payment.entity';
-import { CreateArPaymentDto } from '../dtos/create-ar-payment.dto';
-import { CashflowService } from '@app/modules/cashflow/services/cashflow.service';
-import { CreateCashflowDto } from '@app/modules/cashflow/dtos/create-cashflow.dto';
-import { CashflowType } from '@app/enums/cashflow-type';
-import { ArService } from '@app/modules/ar/services/ar.service';
 import { CreateBulkArPaymentDto } from '../dtos/create-bulk-ar-payment.dto';
-import { Ar } from '@app/modules/ar/models/ar.entity';
-import { ArStatus } from '@app/enums/ar-status';
-import { InvoiceService } from '@app/modules/invoice/services/invoice.service';
-import { InvoiceStatus } from '@app/enums/invoice-status';
-import { CashflowFrom } from '@app/modules/cashflow/models/cashflow.entity';
-import { PaymentMethodService } from '@app/modules/payment-method/services/payment-method.service';
 import { DATABASE_POOL } from '@app/modules/database/database.module';
 import { Pool } from 'pg';
+import { DATABASE } from '@app/enums/database-table';
 interface GetAllQuery {
   pageNo: number;
   pageSize: number;
@@ -29,30 +12,50 @@ interface GetAllQuery {
 export class ArPaymentService {
   constructor(@Inject(DATABASE_POOL) private readonly pool: Pool) {}
 
-  // async getAllArPayments({
-  //   pageNo,
-  //   pageSize,
-  // }: GetAllQuery): Promise<[ArPayment[], number]> {
-  //   const skip = (pageNo - 1) * pageSize;
-  //   const arPayments = await this.arPaymentRepository.findAndCount({
-  //     skip,
-  //     take: pageSize,
-  //   });
-  //   return arPayments;
-  // }
+  async getAllArPayments({
+    pageNo,
+    pageSize,
+  }: GetAllQuery): Promise<[ArPayment[], number]> {
+    const values = [];
+    const getProductsSql = `
+      SELECT *
+      FROM ${DATABASE.AR_PAYMENT}
+      LIMIT $1
+      OFFSET $2
+  `;
+    const paginationCountSql = `
+      SELECT count(*) as total_count
+      FROM ${DATABASE.AR_PAYMENT}
+    `;
+    values.push(pageSize, (pageNo - 1) * pageSize);
 
-  // async findArPaymentById(arPaymentId: number): Promise<ArPayment> {
-  //   const arPayment = await this.arPaymentRepository.findOne({
-  //     where: { id: arPaymentId },
-  //   });
+    const { rows: arPaymentRows } = await this.pool.query<ArPayment>(
+      getProductsSql,
+      values,
+    );
+    const { rows: totalCountRows } = await this.pool.query<{
+      total_count: string;
+    }>(paginationCountSql);
 
-  //   if (!arPayment) {
-  //     throw new NotFoundException(
-  //       `Acc Receivable Payment with id ${arPaymentId} not found`,
-  //     );
-  //   }
-  //   return arPayment;
-  // }
+    const totalCount = parseInt(totalCountRows[0].total_count, 10);
+
+    return [arPaymentRows, totalCount];
+  }
+
+  async findArPaymentById(arPaymentId: number): Promise<ArPayment> {
+    const sql = `
+      SELECT *
+      FROM ${DATABASE.AR_PAYMENT}
+      WHERE id = $1
+    `;
+    const { rows } = await this.pool.query<ArPayment>(sql, [arPaymentId]);
+    if (rows.length === 0) {
+      throw new NotFoundException(
+        `Acc Receivable Payment with id ${arPaymentId} not found`,
+      );
+    }
+    return rows[0];
+  }
 
   async createBulkArPayment(
     createBulkArPaymentDto: CreateBulkArPaymentDto,
@@ -69,63 +72,5 @@ export class ArPaymentService {
       ],
     );
     return rows;
-    // const toCreateArPayment: CreateArPaymentDto[] = [];
-    // const toCreateCashflow: CreateCashflowDto[] = [];
-    // const toUpdateAr: Ar[] = [];
-    // const toUpdateInvoice: number[] = [];
-    // for (const data of createBulkArPaymentDto.data) {
-    //   const ar = await this.arService.findArById(data.arId);
-    //   const paymentMethod =
-    //     await this.paymentMethodService.findPaymentMethodById(payment_methodId);
-    //   ar.to_paid -= data.total_paid;
-    //   ar.total_paid += data.total_paid;
-    //   ar.status = ArStatus.PARTIAL;
-    //   if (ar.to_paid < 0) {
-    //     throw new BadRequestException(
-    //       `AR ${ar.ar_no} To paid only ${Number(ar.to_paid + data.total_paid).toLocaleString('id-Id')}`,
-    //     );
-    //   }
-    //   if (ar.to_paid === 0) {
-    //     ar.status = ArStatus.COMPLETED;
-    //     ar.paid_date = createBulkArPaymentDto.transfer_date;
-    //     toUpdateInvoice.push(ar.invoiceId);
-    //   }
-    //   const createArPaymentDto: CreateArPaymentDto = {
-    //     arId: data.arId,
-    //     total_paid: data.total_paid,
-    //     customer_paymentId: paymentMethod.id,
-    //     transfer_date,
-    //     reference_no,
-    //     customerId: ar.customerId,
-    //     payment_method_name: paymentMethod.name,
-    //   };
-    //   const createCashflowDto: CreateCashflowDto = {
-    //     type: CashflowType.IN,
-    //     amount: data.total_paid,
-    //     from: CashflowFrom.PAYMENT,
-    //   };
-    //   toCreateCashflow.push(createCashflowDto);
-    //   toCreateArPayment.push(createArPaymentDto);
-    //   toUpdateAr.push(ar);
-    // }
-    // const arPayment = await this.arPaymentRepository.manager.transaction(
-    //   async (entityManager: EntityManager) => {
-    //     const newArPayment = entityManager.create(ArPayment, toCreateArPayment);
-    //     await this.cashflowService.createBulkCashflowFromArPaymentWithEM(
-    //       entityManager,
-    //       toCreateCashflow,
-    //     );
-    //     await this.arService.updateBulkArWithEM(entityManager, toUpdateAr);
-    //     if (toUpdateInvoice.length > 0) {
-    //       await this.invoiceService.updateBulkInvoiceStatusById(
-    //         toUpdateInvoice,
-    //         InvoiceStatus.COMPLETED,
-    //         entityManager,
-    //       );
-    //     }
-    //     return entityManager.save(newArPayment);
-    //   },
-    // );
-    // return arPayment;
   }
 }
